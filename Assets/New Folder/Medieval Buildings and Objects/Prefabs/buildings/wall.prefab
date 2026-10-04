@@ -105,4 +105,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b174ecc5795d46e5a242cd9f36cb4f20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  footprint: {x: 5, y: 4}
+  footprint: {x: 7, y: 6}

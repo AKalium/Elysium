@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class GridPlacementSystem : MonoBehaviour
-{
+public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Camera targetCamera;
     [SerializeField, Min(0.01f)] private float cellSize = 1f;
     [SerializeField, Min(1)] private int gridWidth = 100;
@@ -14,7 +13,8 @@ public class GridPlacementSystem : MonoBehaviour
     [SerializeField] private Color validPlacementColor = new Color(0.2f, 1f, 0.2f, 0.9f);
     [SerializeField] private Color invalidPlacementColor = new Color(1f, 0.2f, 0.2f, 0.9f);
 
-    private readonly HashSet<Vector2Int> occupiedCells = new HashSet<Vector2Int>();
+    private readonly Dictionary<Vector2Int, GameObject> cellOwners = new();
+    private readonly Dictionary<GameObject, List<Vector2Int>> objectCells = new();
     private Mesh previewMesh;
     private Mesh gridMesh;
     private Material previewMaterial;
@@ -26,8 +26,7 @@ public class GridPlacementSystem : MonoBehaviour
     private bool hasHoveredCell;
     private bool hoveredCellIsValid;
 
-    private void Awake()
-    {
+    private void Awake() {
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
@@ -44,16 +43,15 @@ public class GridPlacementSystem : MonoBehaviour
         CreatePlacementPreview();
     }
 
-    private void Update()
-    {
+    private void Update() {
         UpdateSelection();
         UpdateHoveredCell();
         UpdatePlacementPreview();
         HandlePlacementInput();
+        HandleDeletionInput();
     }
 
-    private void OnDestroy()
-    {
+    private void OnDestroy() {
         if (previewMesh != null)
         {
             Destroy(previewMesh);
@@ -75,23 +73,20 @@ public class GridPlacementSystem : MonoBehaviour
         }
     }
 
-    public Vector2Int WorldToCell(Vector2 worldPosition)
-    {
+    public Vector2Int WorldToCell(Vector2 worldPosition) {
         return new Vector2Int(
             Mathf.FloorToInt((worldPosition.x - gridOrigin.x) / cellSize),
             Mathf.FloorToInt((worldPosition.y - gridOrigin.y) / cellSize));
     }
 
-    public Vector3 CellToWorld(Vector2Int cell)
-    {
+    public Vector3 CellToWorld(Vector2Int cell) {
         return new Vector3(
             gridOrigin.x + (cell.x + 0.5f) * cellSize,
             gridOrigin.y + (cell.y + 0.5f) * cellSize,
             0f);
     }
 
-    public bool TryPlace(GameObject prefab, Vector2Int cell, out GameObject placedObject)
-    {
+    public bool TryPlace(GameObject prefab, Vector2Int cell, out GameObject placedObject) {
         placedObject = null;
         if (prefab == null)
         {
@@ -110,35 +105,64 @@ public class GridPlacementSystem : MonoBehaviour
             prefab.transform.position.z);
         placedObject = Instantiate(prefab, position, prefab.transform.rotation);
 
+        List<Vector2Int> cells = new List<Vector2Int>(footprint.x * footprint.y);
         for (int x = 0; x < footprint.x; x++)
         {
             for (int y = 0; y < footprint.y; y++)
             {
-                occupiedCells.Add(cell + new Vector2Int(x, y));
+                Vector2Int occupiedCell = cell + new Vector2Int(x, y);
+                cellOwners.Add(occupiedCell, placedObject);
+                cells.Add(occupiedCell);
             }
         }
 
+        objectCells.Add(placedObject, cells);
         return true;
     }
 
-    public bool IsCellOccupied(Vector2Int cell)
-    {
-        return occupiedCells.Contains(cell);
+    public void DestroyBuilding(Vector2Int cell) {
+        if (!cellOwners.TryGetValue(cell, out GameObject placedObject))
+        {
+            return;
+        }
+
+        if (objectCells.TryGetValue(placedObject, out List<Vector2Int> cells))
+        {
+            foreach (Vector2Int occupiedCell in cells)
+            {
+                if (cellOwners.TryGetValue(occupiedCell, out GameObject owner) &&
+                    owner == placedObject)
+                {
+                    cellOwners.Remove(occupiedCell);
+                }
+            }
+
+            objectCells.Remove(placedObject);
+        }
+
+        Destroy(placedObject);
     }
 
-    public void SelectPlaceable(int index)
-    {
+    private void HandleDeletionInput() {
+        Mouse mouse = Mouse.current;
+        if (mouse != null && mouse.rightButton.wasPressedThisFrame && hasHoveredCell)
+            DestroyBuilding(hoveredCell);
+    }
+
+    public bool IsCellOccupied(Vector2Int cell) {
+        return cellOwners.ContainsKey(cell);
+    }
+
+    public void SelectPlaceable(int index) {
         if (index < 0 || index >= placeablePrefabs.Length || placeablePrefabs[index] == null)
         {
             selectedPrefabIndex = -1;
             return;
         }
-
         selectedPrefabIndex = index;
     }
 
-    private bool CanPlace(Vector2Int anchor, Vector2Int footprint)
-    {
+    private bool CanPlace(Vector2Int anchor, Vector2Int footprint) {
         if (anchor.x < 0 || anchor.y < 0 ||
             anchor.x + footprint.x > gridWidth ||
             anchor.y + footprint.y > gridHeight)
@@ -150,7 +174,7 @@ public class GridPlacementSystem : MonoBehaviour
         {
             for (int y = 0; y < footprint.y; y++)
             {
-                if (occupiedCells.Contains(anchor + new Vector2Int(x, y)))
+                if (cellOwners.ContainsKey(anchor + new Vector2Int(x, y)))
                 {
                     return false;
                 }
@@ -160,56 +184,46 @@ public class GridPlacementSystem : MonoBehaviour
         return true;
     }
 
-    private Vector2Int GetFootprint(GameObject prefab)
-    {
+    private Vector2Int GetFootprint(GameObject prefab) {
         GridPlaceable placeable = prefab.GetComponent<GridPlaceable>();
         return placeable != null ? placeable.Footprint : Vector2Int.one;
     }
 
-    private void UpdateSelection()
-    {
+    private void UpdateSelection() {
         Keyboard keyboard = Keyboard.current;
-        if (keyboard == null)
-        {
+        if (keyboard == null) {
             return;
         }
 
-        if (keyboard.escapeKey.wasPressedThisFrame)
-        {
+        if (keyboard.escapeKey.wasPressedThisFrame) {
             SelectPlaceable(-1);
             return;
         }
 
-        Key[] numberKeys =
-        {
+        Key[] numberKeys = {
             Key.Digit1, Key.Digit2, Key.Digit3,
             Key.Digit4, Key.Digit5, Key.Digit6,
             Key.Digit7, Key.Digit8, Key.Digit9
         };
 
-        for (int i = 0; i < numberKeys.Length && i < placeablePrefabs.Length; i++)
-        {
-            if (keyboard[numberKeys[i]].wasPressedThisFrame)
-            {
+        for (int i = 0; i < numberKeys.Length && i < placeablePrefabs.Length; i++) {
+            if (keyboard[numberKeys[i]].wasPressedThisFrame) {
                 SelectPlaceable(i);
                 return;
             }
         }
     }
 
-    private void UpdateHoveredCell()
-    {
+    private void UpdateHoveredCell() {
         Mouse mouse = Mouse.current;
         hasHoveredCell = false;
-        if (mouse == null)
-        {
+        if (mouse == null) {
             return;
         }
 
         Ray ray = targetCamera.ScreenPointToRay(mouse.position.ReadValue());
         Plane placementPlane = new Plane(Vector3.forward, Vector3.zero);
-        if (!placementPlane.Raycast(ray, out float distance))
-        {
+        if (!placementPlane.Raycast(ray, out float distance)) {
             return;
         }
 
@@ -223,8 +237,7 @@ public class GridPlacementSystem : MonoBehaviour
         hasHoveredCell = true;
     }
 
-    private void HandlePlacementInput()
-    {
+    private void HandlePlacementInput() {
         Mouse mouse = Mouse.current;
         if (mouse == null || !mouse.leftButton.wasPressedThisFrame ||
             !hasHoveredCell || !hoveredCellIsValid)
@@ -235,8 +248,7 @@ public class GridPlacementSystem : MonoBehaviour
         TryPlace(placeablePrefabs[selectedPrefabIndex], hoveredCell, out _);
     }
 
-    private void CreateGridVisual()
-    {
+    private void CreateGridVisual() {
         Shader shader = Shader.Find("Sprites/Default");
         if (shader == null)
         {
@@ -254,8 +266,7 @@ public class GridPlacementSystem : MonoBehaviour
         int[] indices = new int[vertices.Length];
         int vertex = 0;
 
-        for (int x = 0; x <= gridWidth; x++)
-        {
+        for (int x = 0; x <= gridWidth; x++) {
             float worldX = gridOrigin.x + x * cellSize;
             vertices[vertex] = new Vector3(worldX, gridOrigin.y, -0.05f);
             vertices[vertex + 1] = new Vector3(worldX, gridOrigin.y + gridHeight * cellSize, -0.05f);
@@ -264,8 +275,7 @@ public class GridPlacementSystem : MonoBehaviour
             vertex += 2;
         }
 
-        for (int y = 0; y <= gridHeight; y++)
-        {
+        for (int y = 0; y <= gridHeight; y++) {
             float worldY = gridOrigin.y + y * cellSize;
             vertices[vertex] = new Vector3(gridOrigin.x, worldY, -0.05f);
             vertices[vertex + 1] = new Vector3(gridOrigin.x + gridWidth * cellSize, worldY, -0.05f);
@@ -285,8 +295,7 @@ public class GridPlacementSystem : MonoBehaviour
         meshRenderer.receiveShadows = false;
     }
 
-    private void CreatePlacementPreview()
-    {
+    private void CreatePlacementPreview() {
         GameObject previewObject = new GameObject("Placement Preview");
         MeshFilter meshFilter = previewObject.AddComponent<MeshFilter>();
         previewRenderer = previewObject.AddComponent<MeshRenderer>();
@@ -307,8 +316,7 @@ public class GridPlacementSystem : MonoBehaviour
         previewObject.SetActive(false);
     }
 
-    private void UpdatePlacementPreview()
-    {
+    private void UpdatePlacementPreview() {
         if (previewRenderer == null || previewMesh == null)
         {
             return;
@@ -339,8 +347,7 @@ public class GridPlacementSystem : MonoBehaviour
             : invalidPlacementColor;
     }
 
-    private void OnValidate()
-    {
+    private void OnValidate() {
         cellSize = Mathf.Max(0.01f, cellSize);
         gridWidth = Mathf.Max(1, gridWidth);
         gridHeight = Mathf.Max(1, gridHeight);

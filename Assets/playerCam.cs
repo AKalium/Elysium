@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 public class playerCam : MonoBehaviour
 {
     [SerializeField, Min(0f)] private float moveSpeed = 10f;
-    [SerializeField, Min(0f)] private float zoomSpeed = 2f;
+    [SerializeField, Min(0f)] private float zoomSpeed = 20f;
     [SerializeField, Min(0.1f)] private float minZoom = 3f;
     [SerializeField, Min(0.1f)] private float maxZoom = 20f;
 
