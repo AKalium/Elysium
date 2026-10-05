@@ -285,7 +285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ce7d2903aa9c4ac8b794c1b0861728a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ElysiumMainMenu
-  gameplayScene: SampleScene
+  gameplayScene: IntroScene
   credits: "Seven \u2014 Project Manager\nAiden \u2014 Sustainability Systems\nDaniel \u2014 Economy & Game Logic\nKelsey \u2014 Buildings & Population\nJanet \u2014 UI/UX & Visuals\nElyam \u2014 Events & QA"
   backgroundSprite: {fileID: 0}
   buttonSprite: {fileID: 0}
