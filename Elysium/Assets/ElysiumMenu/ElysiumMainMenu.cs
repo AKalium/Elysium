@@ -6,20 +6,16 @@ using UnityEngine.InputSystem.UI;
 
 public class ElysiumMainMenu : MonoBehaviour
 {
-    [Header("Scene Config")]
     public string gameplayScene = "IntroScene";
 
-    [Header("Direct Button References (Optional - auto-finds if left empty)")]
     public Button startButton;
     public Button quitButton;
     public Button creditsButton;
     public Button backButton;
 
-    [Header("Panels for Credits (Optional)")]
     public GameObject mainPanel;
     public GameObject creditsPanel;
 
-    [Header("Status / Error Display")]
     public Text statusLabel;
 
     void Awake()
