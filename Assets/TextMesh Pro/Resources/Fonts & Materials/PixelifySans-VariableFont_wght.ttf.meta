@@ -1,15 +1,15 @@
 fileFormatVersion: 2
-guid: f2a6d7b39b7bf45dfb5f98a854d067df
+guid: bd8d2c118d51748348d29972d242ccac
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
-  fontSize: 16
+  fontSize: 120
   forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
   fontNames:
-  - DejaVu Serif
+  - Pixelify Sans
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0
