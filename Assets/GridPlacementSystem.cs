@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Camera targetCamera;
@@ -9,12 +10,16 @@ public class GridPlacementSystem : MonoBehaviour {
     [SerializeField, Min(1)] private int gridHeight = 100;
     [SerializeField] private Vector2 gridOrigin = new Vector2(-50f, -50f);
     [SerializeField] private GameObject[] placeablePrefabs = new GameObject[0];
+    [SerializeField] private CurrencySystem currency;
+    // Prices follow the same order as Placeable Prefabs: house, tower, wall.
+    [SerializeField] private int[] constructionCosts = { 100, 250, 50 };
     [SerializeField] private Color gridColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
     [SerializeField] private Color validPlacementColor = new Color(0.2f, 1f, 0.2f, 0.9f);
     [SerializeField] private Color invalidPlacementColor = new Color(1f, 0.2f, 0.2f, 0.9f);
 
     private readonly Dictionary<Vector2Int, GameObject> cellOwners = new();
     private readonly Dictionary<GameObject, List<Vector2Int>> objectCells = new();
+    private readonly Dictionary<GameObject, int> paidCosts = new();
     private Mesh previewMesh;
     private Mesh gridMesh;
     private Material previewMaterial;
@@ -27,6 +32,8 @@ public class GridPlacementSystem : MonoBehaviour {
     private bool hoveredCellIsValid;
 
     private void Awake() {
+        if (currency == null) currency = GetComponent<CurrencySystem>();
+        if (currency == null) currency = gameObject.AddComponent<CurrencySystem>();
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
@@ -46,6 +53,8 @@ public class GridPlacementSystem : MonoBehaviour {
     private void Update() {
         UpdateSelection();
         UpdateHoveredCell();
+        currency.ShowSelection(selectedPrefabIndex >= 0 ? placeablePrefabs[selectedPrefabIndex] : null,
+            selectedPrefabIndex >= 0 ? GetConstructionCost(placeablePrefabs[selectedPrefabIndex]) : 0);
         UpdatePlacementPreview();
         HandlePlacementInput();
         HandleDeletionInput();
@@ -94,6 +103,8 @@ public class GridPlacementSystem : MonoBehaviour {
         }
 
         Vector2Int footprint = GetFootprint(prefab);
+        int cost = GetConstructionCost(prefab);
+        if (cost < 0 || !currency.CanAfford(cost)) return false;
         if (!CanPlace(cell, footprint))
         {
             return false;
@@ -104,6 +115,12 @@ public class GridPlacementSystem : MonoBehaviour {
             gridOrigin.y + (cell.y + footprint.y * 0.5f) * cellSize,
             prefab.transform.position.z);
         placedObject = Instantiate(prefab, position, prefab.transform.rotation);
+        if (!currency.TrySpend(cost))
+        {
+            Destroy(placedObject);
+            placedObject = null;
+            return false;
+        }
 
         List<Vector2Int> cells = new List<Vector2Int>(footprint.x * footprint.y);
         for (int x = 0; x < footprint.x; x++)
@@ -117,6 +134,7 @@ public class GridPlacementSystem : MonoBehaviour {
         }
 
         objectCells.Add(placedObject, cells);
+        paidCosts.Add(placedObject, cost);
         return true;
     }
 
@@ -140,6 +158,11 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
+        if (paidCosts.TryGetValue(placedObject, out int paidCost))
+        {
+            paidCosts.Remove(placedObject);
+            currency.RefundDemolition(paidCost);
+        }
         Destroy(placedObject);
     }
 
@@ -189,6 +212,13 @@ public class GridPlacementSystem : MonoBehaviour {
         return placeable != null ? placeable.Footprint : Vector2Int.one;
     }
 
+    private int GetConstructionCost(GameObject prefab) {
+        int index = System.Array.IndexOf(placeablePrefabs, prefab);
+        // Refuse unpriced prefabs instead of accidentally granting free buildings.
+        return index >= 0 && constructionCosts != null && index < constructionCosts.Length
+            ? Mathf.Max(0, constructionCosts[index]) : -1;
+    }
+
     private void UpdateSelection() {
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) {
@@ -217,7 +247,7 @@ public class GridPlacementSystem : MonoBehaviour {
     private void UpdateHoveredCell() {
         Mouse mouse = Mouse.current;
         hasHoveredCell = false;
-        if (mouse == null) {
+        if (mouse == null || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())) {
             return;
         }
 
@@ -233,7 +263,8 @@ public class GridPlacementSystem : MonoBehaviour {
             ? GetFootprint(placeablePrefabs[selectedPrefabIndex])
             : Vector2Int.one;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
-            CanPlace(hoveredCell, hoveredFootprint);
+            CanPlace(hoveredCell, hoveredFootprint) &&
+            currency.CanAfford(GetConstructionCost(placeablePrefabs[selectedPrefabIndex]));
         hasHoveredCell = true;
     }
 
