@@ -347,9 +347,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 330585545}
   cellSize: 1
-  gridWidth: 100
+  gridWidth: 200
   gridHeight: 100
-  gridOrigin: {x: -50, y: -50}
+  gridOrigin: {x: -100, y: -50}
   placeablePrefabs:
   - {fileID: 3349293597268598346, guid: d18e1fca7bb3f0f479fd6b5b7ec187c0, type: 3}
   - {fileID: 3119688903068427188, guid: aa24640b13e7b4a4ba61974751a7f4c5, type: 3}
@@ -370,9 +370,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::playerCam
   moveSpeed: 10
-  zoomSpeed: 20
+  zoomSpeed: 40
   minZoom: 3
-  maxZoom: 20
+  maxZoom: 50
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
