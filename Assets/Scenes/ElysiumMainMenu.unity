@@ -566,7 +566,6 @@ GameObject:
   - component: {fileID: 487078150}
   - component: {fileID: 487078149}
   - component: {fileID: 487078148}
-  - component: {fileID: 487078147}
   m_Layer: 0
   m_Name: Go back Button
   m_TagString: Untagged
@@ -594,18 +593,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -300}
   m_SizeDelta: {x: 540, y: 82}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &487078147
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 487078145}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElysiumButtonMotion
 --- !u!114 &487078148
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1457,7 +1444,6 @@ GameObject:
   - component: {fileID: 1652646007}
   - component: {fileID: 1652646006}
   - component: {fileID: 1652646005}
-  - component: {fileID: 1652646004}
   - component: {fileID: 1652646003}
   m_Layer: 0
   m_Name: Quit game button
@@ -1501,18 +1487,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: 1, y: -5}
   m_UseGraphicAlpha: 1
---- !u!114 &1652646004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1652646001}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElysiumButtonMotion
 --- !u!114 &1652646005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1765,7 +1739,6 @@ GameObject:
   - component: {fileID: 1994168891}
   - component: {fileID: 1994168890}
   - component: {fileID: 1994168889}
-  - component: {fileID: 1994168888}
   - component: {fileID: 1994168892}
   m_Layer: 0
   m_Name: Start game Button
@@ -1794,18 +1767,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 29.999998}
   m_SizeDelta: {x: 540, y: 82}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1994168888
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1994168886}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElysiumButtonMotion
 --- !u!114 &1994168889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1915,7 +1876,6 @@ GameObject:
   - component: {fileID: 2026754707}
   - component: {fileID: 2026754706}
   - component: {fileID: 2026754705}
-  - component: {fileID: 2026754704}
   - component: {fileID: 2026754703}
   m_Layer: 0
   m_Name: Credits Button
@@ -1959,18 +1919,6 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: 1, y: -5}
   m_UseGraphicAlpha: 1
---- !u!114 &2026754704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2026754701}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ElysiumButtonMotion
 --- !u!114 &2026754705
 MonoBehaviour:
   m_ObjectHideFlags: 0
