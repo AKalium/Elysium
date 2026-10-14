@@ -3,6 +3,13 @@ using UnityEngine;
 [RequireComponent(typeof(TimeManager), typeof(DailyEconomy))]
 public class TimeEconomyHUD : MonoBehaviour
 {
+    private Rect PanelRect => new Rect(Mathf.Max(0, Screen.width - 290), 10, 280, 220);
+
+    public bool ContainsScreenPoint(Vector2 position)
+    {
+        return isActiveAndEnabled && PanelRect.Contains(new Vector2(position.x, Screen.height - position.y));
+    }
+
     private TimeManager clock;
     private DailyEconomy economy;
     private void Awake()
@@ -13,8 +20,10 @@ public class TimeEconomyHUD : MonoBehaviour
 
     private void OnGUI()
     {
-        GUILayout.BeginArea(new Rect(Mathf.Max(0, Screen.width - 290), 10, 280, 190), GUI.skin.box);
+        GUILayout.BeginArea(PanelRect, GUI.skin.box);
         GUILayout.Label($"Day {clock.Day}  |  {clock.DisplayTime}");
+        if (GUILayout.Button($"Speed: {clock.Speed:0.#}x  (click to change)"))
+            clock.CycleSpeed();
         GUILayout.Label($"Money: ${economy.Balance}");
         GUILayout.Label($"Last midnight: +${economy.LastIncome} -${economy.LastUpkeep} = ${economy.LastNet}");
         ShowCost("1: House", BuildingCategory.Economic);

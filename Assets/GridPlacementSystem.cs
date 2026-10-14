@@ -16,6 +16,7 @@ public class GridPlacementSystem : MonoBehaviour {
 
     private readonly Dictionary<Vector2Int, GameObject> cellOwners = new();
     private readonly Dictionary<GameObject, List<Vector2Int>> objectCells = new();
+    private TimeEconomyHUD timeHUD;
     private Mesh previewMesh;
     private Mesh gridMesh;
     private Material previewMaterial;
@@ -40,6 +41,7 @@ public class GridPlacementSystem : MonoBehaviour {
             return;
         }
 
+        timeHUD = economy != null ? economy.GetComponent<TimeEconomyHUD>() : null;
         CreateGridVisual();
         CreatePlacementPreview();
     }
@@ -224,7 +226,7 @@ public class GridPlacementSystem : MonoBehaviour {
     private void UpdateHoveredCell() {
         Mouse mouse = Mouse.current;
         hasHoveredCell = false;
-        if (mouse == null) {
+        if (mouse == null || (timeHUD != null && timeHUD.ContainsScreenPoint(mouse.position.ReadValue()))) {
             return;
         }
 

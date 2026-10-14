@@ -13,6 +13,12 @@ public class TimeManager : MonoBehaviour
     public int Hour => (int)minuteOfDay / 60;
     public int Minute => (int)minuteOfDay % 60;
     public bool Paused { get; set; }
+    public float Speed => speed;
+
+    public void CycleSpeed()
+    {
+        speed = speed < 2f ? 2f : speed < 4f ? 4f : 1f;
+    }
     public event Action<int> Midnight;
     public string DisplayTime => $"{(Hour % 12 == 0 ? 12 : Hour % 12)}:{Minute:00} {(Hour < 12 ? "AM" : "PM")}";
 
