@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 
 public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Camera targetCamera;
+    [SerializeField] private DailyEconomy economy;
     [SerializeField, Min(0.01f)] private float cellSize = 1f;
     [SerializeField, Min(1)] private int gridWidth = 100;
     [SerializeField, Min(1)] private int gridHeight = 100;
@@ -99,6 +100,10 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
+        GridPlaceable building = prefab.GetComponent<GridPlaceable>();
+        if (economy != null && building != null && !economy.TryPurchase(building.Category))
+            return false;
+
         Vector3 position = new Vector3(
             gridOrigin.x + (cell.x + footprint.x * 0.5f) * cellSize,
             gridOrigin.y + (cell.y + footprint.y * 0.5f) * cellSize,
@@ -140,6 +145,8 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
+        // Exclude demolition immediately, even before Unity's deferred Destroy.
+        placedObject.SetActive(false);
         Destroy(placedObject);
     }
 
@@ -233,8 +240,13 @@ public class GridPlacementSystem : MonoBehaviour {
             ? GetFootprint(placeablePrefabs[selectedPrefabIndex])
             : Vector2Int.one;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
-            CanPlace(hoveredCell, hoveredFootprint);
+            CanPlace(hoveredCell, hoveredFootprint) && CanAffordSelected();
         hasHoveredCell = true;
+    }
+
+    private bool CanAffordSelected() {
+        GridPlaceable building = placeablePrefabs[selectedPrefabIndex].GetComponent<GridPlaceable>();
+        return economy == null || building == null || economy.CanAfford(building.Category);
     }
 
     private void HandlePlacementInput() {
