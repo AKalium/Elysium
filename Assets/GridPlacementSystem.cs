@@ -99,6 +99,21 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
+        Vector2Int rightCell = cell + Vector2Int.right * 7;
+        Vector2Int roadCheck = new Vector2Int(
+            (int)(cell.x + footprint.x * 0.5f + 1),
+            (int)(cell.y + footprint.x * 0.5f)
+        );
+        if (prefab.name == "house A (1)")
+        {
+            if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad))
+            {
+                Debug.Log($"Cell {rightCell} is occupied by {possibleRoad.name}");
+                if (possibleRoad.name != "wall(Clone)") return false;
+            }
+            else return false;
+        }
+
         Vector3 position = new Vector3(
             gridOrigin.x + (cell.x + footprint.x * 0.5f) * cellSize,
             gridOrigin.y + (cell.y + footprint.y * 0.5f) * cellSize,
