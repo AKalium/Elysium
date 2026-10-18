@@ -110,16 +110,30 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        Vector2Int rightCell = cell + Vector2Int.right * 7;
-        Vector2Int roadCheck = new Vector2Int(
-            (int)(cell.x + footprint.x * 0.5f + 1),
-            (int)(cell.y + footprint.x * 0.5f)
-        );
+        Vector2Int rightCell = cell + Vector2Int.right * 5;
+        Vector2Int leftCell = cell + Vector2Int.left;
+        Vector2Int upCell = cell + Vector2Int.up * 5;
+        Vector2Int downCell = cell + Vector2Int.down;
         if (prefab.name == "house A (1)")
         {
             if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad))
             {
                 Debug.Log($"Cell {rightCell} is occupied by {possibleRoad.name}");
+                if (possibleRoad.name != "wall(Clone)") return false;
+            }
+            else if (cellOwners.TryGetValue(leftCell, out possibleRoad))
+            {
+                Debug.Log($"Cell {leftCell} is occupied by {possibleRoad.name}");
+                if (possibleRoad.name != "wall(Clone)") return false;
+            }
+            else if (cellOwners.TryGetValue(upCell, out possibleRoad))
+            {
+                Debug.Log($"Cell {upCell} is occupied by {possibleRoad.name}");
+                if (possibleRoad.name != "wall(Clone)") return false;
+            }
+            else if (cellOwners.TryGetValue(downCell, out possibleRoad))
+            {
+                Debug.Log($"Cell {downCell} is occupied by {possibleRoad.name}");
                 if (possibleRoad.name != "wall(Clone)") return false;
             }
             else return false;
