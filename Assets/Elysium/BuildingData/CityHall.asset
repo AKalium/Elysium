@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingId: city_hall
   buildingName: CityHall
-  price: 900
+  price: 500
   category: 2
   buildingIcon: {fileID: 0}
   buildingPrefab: {fileID: 0}

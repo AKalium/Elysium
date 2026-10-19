@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8a743a2fdbb141d0aaf9c5a4dfc7ea6, type: 3}
   m_Name: Apartment
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
-  buildingId: apartment
-  buildingName: Apartment
-  price: 1200
-  category: 0
-  buildingIcon: {fileID: 0}
-  buildingPrefab: {fileID: 0}
+  buildingId: road
+  buildingName: Road
+  price: 200
+  category: 2
+  buildingIcon: {fileID: 21300000, guid: 088a1b586aeaf554e8c24916361eb89d, type: 3}
+  buildingPrefab: {fileID: 6535291910615690183, guid: 73d534af8582086489bc060847c37b44, type: 3}
