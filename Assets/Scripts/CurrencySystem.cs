@@ -55,9 +55,9 @@ public sealed class CurrencySystem : MonoBehaviour
             ? new Color(1f, 0.55f, 0.5f) : Color.white;
     }
 
-    private void RefreshBalance()
+    public void RefreshBalance()
     {
-        if (balanceLabel != null) balanceLabel.text = $"Coins: {Balance:N0}";
+        if (balanceLabel != null) balanceLabel.text = $"Coins: {Balance:N0}         Buildings: {GameState.Instance.BuildingCount}";
     }
 
     private void CreateHud()
