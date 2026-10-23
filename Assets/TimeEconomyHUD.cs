@@ -36,6 +36,6 @@ public class TimeEconomyHUD : MonoBehaviour
     private void ShowCost(string label, BuildingCategory category)
     {
         var rates = economy.GetRates(category);
-        GUILayout.Label($"{label}: ${rates.purchaseCost} | +{rates.dailyIncome}/-{rates.dailyUpkeep} daily");
+        GUILayout.Label($"{label}: +{rates.dailyIncome}/-{rates.dailyUpkeep} daily");
     }
 }

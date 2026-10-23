@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2697779711262149023
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1216159254724489616}
+  - component: {fileID: 3926120106155803534}
+  - component: {fileID: 8451469172025376231}
+  - component: {fileID: 8187217595212093768}
+  m_Layer: 0
+  m_Name: StoreSystems
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1216159254724489616
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2697779711262149023}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -514.9103, y: -495.76492, z: 861.9429}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3926120106155803534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2697779711262149023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5bd2e683d178436dbe4c510850e3ac9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TemporaryEconomy
+  startingBalance: 10000
+--- !u!114 &8451469172025376231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2697779711262149023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ecb9b9100d4a4ad0b1aac2225eca49b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingStoreUI
+  buildings:
+  - {fileID: 11400000, guid: a754c3688d28040789b1f0b4be5040ec, type: 2}
+  - {fileID: 11400000, guid: 8d77cff18aa796f41b6187d44bde1c78, type: 2}
+  - {fileID: 11400000, guid: 2b18a61f320da49aaa0030122a89fa68, type: 2}
+  - {fileID: 11400000, guid: 4ad2d9cd93da94e239f211babee22314, type: 2}
+  buildingCards:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  economy: {fileID: 3926120106155803534}
+  balanceText: {fileID: 0}
+  messageText: {fileID: 0}
+  allButton: {fileID: 0}
+  residentialButton: {fileID: 0}
+  commercialButton: {fileID: 0}
+  servicesButton: {fileID: 0}
+  storePanel: {fileID: 0}
+  closeButton: {fileID: 0}
+  placementAdapter: {fileID: 8187217595212093768}
+--- !u!114 &8187217595212093768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2697779711262149023}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 280dfdcf656de4a6ba27b4138133b5c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingStoreAdapter
+  placementSystem: {fileID: 0}
+  mappings:
+  - building: {fileID: 11400000, guid: a754c3688d28040789b1f0b4be5040ec, type: 2}
+    placementIndex: 0
+  - building: {fileID: 11400000, guid: 8d77cff18aa796f41b6187d44bde1c78, type: 2}
+    placementIndex: 2
+  - building: {fileID: 11400000, guid: 2d4e093d8b198456a83bee55b0cbca37, type: 2}
+    placementIndex: 4
+  - building: {fileID: 11400000, guid: 2b18a61f320da49aaa0030122a89fa68, type: 2}
+    placementIndex: 1
+  - building: {fileID: 11400000, guid: 4ad2d9cd93da94e239f211babee22314, type: 2}
+    placementIndex: 3

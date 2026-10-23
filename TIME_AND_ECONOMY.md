@@ -1,22 +1,34 @@
-# Sample scene time and economy
+# Time and economy integration
 
-Open Assets/Scenes/SampleScene.unity and press Play. The top-right display shows the day, clock, balance, last settlement, and building costs. Keys 1/2/3 select house/tower/wall; right-click demolishes without a refund.
+The feature branch now combines main's store, road placement, building footprints,
+and demolition refunds with the clock and daily income/upkeep system.
 
-The day starts at 8 AM. A full day takes 300 real seconds at normal speed; the first midnight is 200 seconds after starting. Income and upkeep settle once at every midnight, including every crossed day in a long simulation step. No payout happens on startup.
+CurrencySystem owns the single gameplay balance. DailyEconomy applies midnight
+settlements to it; the store's TemporaryEconomy component forwards to it in
+SampleScene. GameState and both HUDs read that same balance. The temporary wallet
+retains standalone behavior for the separate store test scene.
 
-| Building | Category | Purchase | Daily income | Daily upkeep |
-| --- | --- | ---: | ---: | ---: |
-| Wall | Neither | 10 | 0 | 2 |
-| Tower | Residential | 100 | 25 | 5 |
-| House A | Economic | 200 | 60 | 10 |
+Placement is the only purchase step. Selecting a store card does not spend money.
+Cards display the mapped placement price; unmapped entries are unavailable.
+SampleScene's current prices are house 100, tower 250, and road/wall 50. Demolition
+refunds 50% of the original price once. House placement still requires an adjacent
+road under main's existing road-placement rule.
 
-Starting balance is 1000. One of each costs 310 and earns a net 68 per midnight. Buildings active in this scene at midnight receive the full day's settlement, with no proration. Disabled/demolished buildings do not count. Upkeep can cause debt; unaffordable purchases fail without occupying cells or spending money.
+The clock starts at 8 AM. A complete day takes 300 real seconds at 1x. The clock
+button cycles 1x/2x/4x without accelerating camera controls or other game systems.
+At midnight, each active GridPlaceable in the scene contributes according to its
+category: Economic +60 income / 10 upkeep, Residential +25 / 5, Neither +0 / 2.
+The original category assignments remain: house Economic, tower Residential,
+road/wall Neither. Upkeep can create debt. Demolished/inactive buildings do not
+contribute to future settlements. No save-game persistence is implemented.
 
-Tune day duration, starting hour and speed on the scene's Time and Economy object. Set Paused from gameplay code or use Unity's time scale. Tune category rates and starting money on DailyEconomy. Assign categories on GridPlaceable prefabs; new buildings need no name-based logic. Midnight and BalanceChanged events support future systems and UI. The current HUD is a simple replaceable runtime display. Progress is session-only; saving and offline income are not implemented.
-## Verification
+The shop still contains entries without mapped placeable prefabs. Those are
+marked unavailable rather than reporting a successful selection. Completing
+those building assets is separate from this integration.
 
-With the project closed in Unity, run the installed Unity editor with `-batchmode -nographics -quit -projectPath <project-path> -executeMethod TimeEconomyVerification.Run -logFile <log-path>`. The scene verification checks purchases, invalid placement, midnight settlements, multiple days, pause, removed/inactive buildings, insufficient funds and debt. It modifies only the in-memory scene and does not save it. Success logs `TIME_ECONOMY_VERIFICATION_PASSED`.
-
-During implementation, runtime and editor scripts compiled successfully against Unity 6000.6.2f1. Clock behavior passed a standalone harness using the actual TimeManager source with minimal Unity stubs. The full scene verification could not run because the project was already open in another editor process; visual/play-mode behavior remains to be checked.
-
-Click the Speed button beside the clock to cycle 1x -> 2x -> 4x -> 1x. Full days take 300, 150, or 75 real seconds respectively. The button changes the simulation clock speed; the camera remains at its usual speed. Mouse input over the HUD does not place or demolish buildings.
+Verification: close Unity, then run the editor in batch mode with
+`-batchmode -quit -projectPath <project> -executeMethod TimeEconomyVerification.Run -logFile <log>`.
+This verifies shared balance, road-required placement, single purchase charges,
+invalid placement, refunds, building counts, midnight settlements, pause, and
+debt. Success logs `TIME_ECONOMY_VERIFICATION_PASSED`. The test never saves its
+in-memory scene changes.
