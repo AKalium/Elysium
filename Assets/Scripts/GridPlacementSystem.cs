@@ -105,14 +105,14 @@ public class GridPlacementSystem : MonoBehaviour {
             if (Placing)
             {
                 GameState.Instance.BuildingPlaced();
-                if (prefab.name == "house A (1)")
+                if (prefab.name == "apt")
                 {
-                    GameState.Instance.HousePlaced(1);
+                    GameState.Instance.HousePlaced(10);
                 }
             }
             else
             {
-                GameState.Instance.BuildingRemoved();
+                GameState.Instance.BuildingRemoved(10);
             }
             currency.RefreshBalance();
         }
@@ -133,33 +133,18 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        Vector2Int rightCell = cell + Vector2Int.right * 5;
+        Vector2Int rightCell = cell + Vector2Int.right * footprint.x;
         Vector2Int leftCell = cell + Vector2Int.left;
-        Vector2Int upCell = cell + Vector2Int.up * 5;
+        Vector2Int upCell = cell + Vector2Int.up * footprint.y;
         Vector2Int downCell = cell + Vector2Int.down;
-        if (prefab.name == "house A (1)")
+        if (prefab.name != "road")
         {
-            if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad))
-            {
-                Debug.Log($"Cell {rightCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else if (cellOwners.TryGetValue(leftCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {leftCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else if (cellOwners.TryGetValue(upCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {upCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else if (cellOwners.TryGetValue(downCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {downCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else return false;
+            bool r = false;
+            if (cellOwners.TryGetValue(leftCell, out GameObject possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(rightCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(downCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(upCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (!r) return false;
         }
 
         Vector3 position = new Vector3(

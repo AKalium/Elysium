@@ -5,7 +5,7 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public sealed class CurrencySystem : MonoBehaviour
 {
-    [SerializeField, Min(0)] private int startingBalance = 1000;
+    [SerializeField, Min(0)] private int startingBalance = 10000;
     [SerializeField, Range(0f, 1f)] private float demolitionRefundRate = 0.5f;
 
     public int Balance { get; private set; }

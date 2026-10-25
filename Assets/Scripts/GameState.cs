@@ -19,7 +19,7 @@ public class GameState : MonoBehaviour
         }
 
         Instance = this;
-        Time.timeScale = 120;
+        Time.timeScale = 1;
     }
 
     private void Update() {
@@ -32,9 +32,9 @@ public class GameState : MonoBehaviour
         MaxPopulation++; 
         ResidentialCount =+ popInc;
     }
-    public void BuildingRemoved()
+    public void BuildingRemoved(int popInc)
     {
         BuildingCount = Mathf.Max(0, BuildingCount - 1);
-        ResidentialCount--;
+        ResidentialCount -= popInc;
     }
 }
