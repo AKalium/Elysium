@@ -87,7 +87,7 @@ public class BuildingStoreUI : MonoBehaviour
 
     private void UpdateBalance(int balance)
     {
-        balanceText.text = "$" + balance.ToString("N0");
+        balanceText.text = "$" + economy.MoneyBalance.ToString("N2");
     }
 
     private void ShowMessage(string message)
@@ -127,3 +127,4 @@ public class BuildingStoreUI : MonoBehaviour
             economy.OnBalanceChanged -= UpdateBalance;
     }
 }
+

@@ -106,3 +106,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprint: {x: 1, y: 1}
+  isRoad: 1
+  requiresRoad: 0
+  populationCapacity: 0
+  incomeAmount: 0
+  incomeIntervalSeconds: 1
+

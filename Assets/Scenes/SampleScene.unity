@@ -1113,7 +1113,7 @@ MonoBehaviour:
   - {fileID: 3349293597268598346, guid: f350c779febff4c44bc0aae19132e562, type: 3}
   - {fileID: 3349293597268598346, guid: b0e9c13e912ad4640a038f061009559c, type: 3}
   currency: {fileID: 0}
-  constructionCosts: 6400000032000000f4010000c8000000i
+  constructionCosts: c800000032000000f4010000c8000000i
   gridColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.3}
   validPlacementColor: {r: 0.2, g: 1, b: 0.2, a: 0.9}
   invalidPlacementColor: {r: 1, g: 0.2, b: 0.2, a: 0.9}
@@ -1715,9 +1715,9 @@ MonoBehaviour:
   m_text: '<align=center><size=42><b>HOW TO PLAY</b></size></align>
 
 
-    <size=29><b>1, 2, 3</b>   Select a building
+    <size=29><b>1, 2, 3, 4</b>   Select building (2 = road)
 
-    <b>Left Click</b>   Place building
+    <b>Left Click</b>   Place beside a road
 
     <b>Right Click</b>   Remove building
 
@@ -4069,3 +4069,4 @@ SceneRoots:
   - {fileID: 13259805}
   - {fileID: 6596363799333538235}
   - {fileID: 2104661281}
+

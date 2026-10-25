@@ -29,7 +29,8 @@ public class BuildingStoreAdapter : MonoBehaviour
         {
             if (mapping.building == building)
             {
-                placementSystem.SelectPlaceable(mapping.placementIndex);
+                if (!placementSystem.SelectStoreBuilding(mapping.placementIndex, building.BuildingPrefab, building.Price))
+                    return false;
 
                 Debug.Log("Placement activated: " + building.BuildingName);
                 return true;
@@ -43,3 +44,4 @@ public class BuildingStoreAdapter : MonoBehaviour
         return false;
     }
 }
+

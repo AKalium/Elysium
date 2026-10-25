@@ -11,8 +11,8 @@ public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Vector2 gridOrigin = new Vector2(-50f, -50f);
     [SerializeField] private GameObject[] placeablePrefabs = new GameObject[0];
     [SerializeField] private CurrencySystem currency;
-    // Prices follow the same order as Placeable Prefabs: house, tower, wall.
-    [SerializeField] private int[] constructionCosts = { 100, 250, 50 };
+    // Matches the current SampleScene: apartment, road, mayor's office, market.
+    [SerializeField] private int[] constructionCosts = { 200, 50, 500, 200 };
     [SerializeField] private Color gridColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
     [SerializeField] private Color validPlacementColor = new Color(0.2f, 1f, 0.2f, 0.9f);
     [SerializeField] private Color invalidPlacementColor = new Color(1f, 0.2f, 0.2f, 0.9f);
@@ -35,6 +35,8 @@ public class GridPlacementSystem : MonoBehaviour {
     {
         if (currency == null) currency = GetComponent<CurrencySystem>();
         if (currency == null) currency = gameObject.AddComponent<CurrencySystem>();
+        if (GameState.Instance == null && FindAnyObjectByType<GameState>() == null)
+            gameObject.AddComponent<GameState>();
         if (targetCamera == null)
         {
             targetCamera = Camera.main;
@@ -100,23 +102,42 @@ public class GridPlacementSystem : MonoBehaviour {
             0f);
     }
 
-    public void UpdateGameState(GameObject prefab, bool Placing)
+    public CurrencySystem Currency => currency;
+
+    public bool IsPlaceableIndexValid(int index) =>
+        index >= 0 && index < placeablePrefabs.Length && placeablePrefabs[index] != null;
+
+    public bool SelectStoreBuilding(int index, GameObject prefab, int price)
+    {
+        if (!IsPlaceableIndexValid(index) || prefab == null || placeablePrefabs[index] != prefab || price < 0)
+            return false;
+        // Shop and keyboard selection now share the same price.
+        if (constructionCosts == null) constructionCosts = new int[0];
+        if (constructionCosts.Length < placeablePrefabs.Length)
         {
-            if (Placing)
-            {
-                GameState.Instance.BuildingPlaced();
-                if (prefab.name == "apt")
-                {
-                    GameState.Instance.HousePlaced(10);
-                }
-            }
-            else
-            {
-                GameState.Instance.BuildingRemoved(10);
-            }
-            currency.RefreshBalance();
+            int oldLength = constructionCosts.Length;
+            System.Array.Resize(ref constructionCosts, placeablePrefabs.Length);
+            for (int i = oldLength; i < constructionCosts.Length; i++) constructionCosts[i] = -1;
         }
-        
+        constructionCosts[index] = price;
+        SelectPlaceable(index);
+        return true;
+    }
+
+    public void UpdateGameState(GameObject prefab, bool placing)
+    {
+        if (GameState.Instance == null) return;
+        GridPlaceable settings = prefab != null ? prefab.GetComponent<GridPlaceable>() : null;
+        int capacity = settings != null ? settings.PopulationCapacity : 0;
+        if (placing)
+        {
+            GameState.Instance.BuildingPlaced();
+            if (capacity > 0) GameState.Instance.HousePlaced(capacity);
+        }
+        else GameState.Instance.BuildingRemoved(capacity);
+        currency.RefreshBalance();
+    }
+
     public bool TryPlace(GameObject prefab, Vector2Int cell, out GameObject placedObject) 
     {
         placedObject = null;
@@ -133,19 +154,7 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        Vector2Int rightCell = cell + Vector2Int.right * footprint.x;
-        Vector2Int leftCell = cell + Vector2Int.left;
-        Vector2Int upCell = cell + Vector2Int.up * footprint.y;
-        Vector2Int downCell = cell + Vector2Int.down;
-        if (prefab.name != "road")
-        {
-            bool r = false;
-            if (cellOwners.TryGetValue(leftCell, out GameObject possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(rightCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(downCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(upCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (!r) return false;
-        }
+        if (!HasRequiredRoad(prefab, cell, footprint)) return false;
 
         Vector3 position = new Vector3(
             gridOrigin.x + (cell.x + footprint.x * 0.5f) * cellSize,
@@ -170,6 +179,13 @@ public class GridPlacementSystem : MonoBehaviour {
             }
         }
 
+        GridPlaceable settings = placedObject.GetComponent<GridPlaceable>();
+        if (settings != null && settings.IncomeAmount > 0m)
+        {
+            var income = placedObject.GetComponent<BuildingIncome>();
+            if (income == null) income = placedObject.AddComponent<BuildingIncome>();
+            income.BeginProduction(currency, settings);
+        }
         UpdateGameState(prefab, true);
         objectCells.Add(placedObject, cells);
         paidCosts.Add(placedObject, cost);
@@ -197,7 +213,9 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
-        UpdateGameState(null, true);
+        var income = placedObject.GetComponent<BuildingIncome>();
+        if (income != null) income.StopProduction();
+        UpdateGameState(placedObject, false);
         if (paidCosts.TryGetValue(placedObject, out int paidCost)) 
         {
             paidCosts.Remove(placedObject);
@@ -251,6 +269,25 @@ public class GridPlacementSystem : MonoBehaviour {
         return true;
     }
 
+    private bool HasRequiredRoad(GameObject prefab, Vector2Int cell, Vector2Int size)
+    {
+        GridPlaceable settings = prefab.GetComponent<GridPlaceable>();
+        if (settings == null || !settings.RequiresRoad) return true;
+        // Check the whole perimeter, rather than a single cell on each side.
+        for (int x = 0; x < size.x; x++)
+            if (IsRoad(cell + new Vector2Int(x, -1)) || IsRoad(cell + new Vector2Int(x, size.y))) return true;
+        for (int y = 0; y < size.y; y++)
+            if (IsRoad(cell + new Vector2Int(-1, y)) || IsRoad(cell + new Vector2Int(size.x, y))) return true;
+        return false;
+    }
+
+    private bool IsRoad(Vector2Int cell)
+    {
+        if (!cellOwners.TryGetValue(cell, out GameObject owner) || owner == null) return false;
+        GridPlaceable settings = owner.GetComponent<GridPlaceable>();
+        return settings != null && settings.IsRoad;
+    }
+
     private Vector2Int GetFootprint(GameObject prefab) 
     {
         GridPlaceable placeable = prefab.GetComponent<GridPlaceable>();
@@ -262,7 +299,7 @@ public class GridPlacementSystem : MonoBehaviour {
         int index = System.Array.IndexOf(placeablePrefabs, prefab);
         // Refuse unpriced prefabs instead of accidentally granting free buildings.
         return index >= 0 && constructionCosts != null && index < constructionCosts.Length
-            ? Mathf.Max(0, constructionCosts[index]) : -1;
+            ? constructionCosts[index] : -1;
     }
 
     private void UpdateSelection() 
@@ -318,6 +355,7 @@ public class GridPlacementSystem : MonoBehaviour {
             : Vector2Int.one;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
             CanPlace(hoveredCell, hoveredFootprint) &&
+            HasRequiredRoad(placeablePrefabs[selectedPrefabIndex], hoveredCell, hoveredFootprint) &&
             currency.CanAfford(GetConstructionCost(placeablePrefabs[selectedPrefabIndex]));
         hasHoveredCell = true;
     }
@@ -445,3 +483,4 @@ public class GridPlacementSystem : MonoBehaviour {
         gridHeight = Mathf.Max(1, gridHeight);
     }
 }
+

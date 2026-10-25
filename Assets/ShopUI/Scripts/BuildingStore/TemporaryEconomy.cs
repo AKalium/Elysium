@@ -1,33 +1,50 @@
-
 using System;
 using UnityEngine;
 
+// Compatibility bridge: existing scene references keep working, but no second wallet exists.
 public class TemporaryEconomy : MonoBehaviour
 {
-    [SerializeField] private int startingBalance = 10000;
-
-    public int Balance { get; private set; }
-
+    [SerializeField] private CurrencySystem currency;
+    public int Balance { get { ResolveWallet(); return currency != null ? currency.Balance : 0; } }
+    public decimal MoneyBalance { get { ResolveWallet(); return currency != null ? currency.MoneyBalance : 0m; } }
     public event Action<int> OnBalanceChanged;
+    private bool subscribed;
 
-    private void Awake()
+    private void Start() => ResolveWallet();
+
+    private void ResolveWallet()
     {
-        Balance = startingBalance;
+        if (currency == null)
+        {
+            subscribed = false;
+            currency = FindAnyObjectByType<CurrencySystem>();
+            // The standalone shop test scene has no placement system.
+            if (currency == null) currency = gameObject.AddComponent<CurrencySystem>();
+        }
+        if (!subscribed)
+        {
+            currency.BalanceChanged += ForwardBalance;
+            subscribed = true;
+        }
     }
+
+    private void ForwardBalance(int balance) => OnBalanceChanged?.Invoke(balance);
 
     public bool CanAfford(int price)
     {
-        return price >= 0 && Balance >= price;
+        ResolveWallet();
+        return currency != null && currency.CanAfford(price);
     }
 
     public bool TrySpend(int amount)
     {
-        if (!CanAfford(amount))
-            return false;
+        ResolveWallet();
+        return currency != null && currency.TrySpend(amount);
+    }
 
-        Balance -= amount;
-        OnBalanceChanged?.Invoke(Balance);
-
-        return true;
+    private void OnDestroy()
+    {
+        if (currency != null && subscribed) currency.BalanceChanged -= ForwardBalance;
     }
 }
+
