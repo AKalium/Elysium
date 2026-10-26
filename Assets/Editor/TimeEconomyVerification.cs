@@ -98,6 +98,32 @@ public static class TimeEconomyVerification
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(60, 60), out _), "Unaffordable placement");
         wallet.ApplySettlement(-20);
         Check(wallet.Balance == -20 && economy.Balance == -20 && state.Balance == -20, "Shared debt");
+        var viewFields = new SerializedObject(clockView);
+        var speedButton = (UnityEngine.UI.Button)viewFields.FindProperty("speedButton").objectReferenceValue;
+        var speedLabel = (UnityEngine.UI.Text)viewFields.FindProperty("speedLabel").objectReferenceValue;
+        Check(speedButton && speedLabel && clockView.GetComponent<UnityEngine.UI.GraphicRaycaster>(), "Speed control wiring");
+        InvokeLifecycle(clockView, "OnEnable");
+        Check(speedLabel.text == "1×", "Initial speed label");
+        int speedDay = clock.Day;
+        speedButton.onClick.Invoke();
+        Check(clock.Speed == 2 && speedLabel.text == "2×", "Button selects 2x");
+        clock.AdvanceTime(150);
+        Check(clock.Day == speedDay + 1, "2x advances a day in 150 seconds");
+        speedButton.onClick.Invoke();
+        Check(clock.Speed == 4 && speedLabel.text == "4×", "Button selects 4x");
+        int beforeFastSettlement = wallet.Balance;
+        clock.AdvanceTime(150);
+        Check(clock.Day == speedDay + 3 && wallet.Balance == beforeFastSettlement + economy.LastNet * 2, "4x applies each midnight settlement");
+        speedButton.onClick.Invoke();
+        Check(clock.Speed == 1 && speedLabel.text == "1×", "Button cycles back to 1x");
+        InvokeLifecycle(clockView, "OnDisable");
+        InvokeLifecycle(clockView, "OnEnable");
+        speedButton.onClick.Invoke();
+        Check(clock.Speed == 2, "Re-enabling does not duplicate click listeners");
+        clock.Paused = true;
+        clock.AdvanceTime(300);
+        Check(clock.Day == speedDay + 3 && Time.timeScale == 1, "Pause works at increased speed without scaling UI time");
+        InvokeLifecycle(clockView, "OnDisable");
         Debug.Log("TIME_ECONOMY_VERIFICATION_PASSED");
     }
     private static void InvokeLifecycle(MonoBehaviour component, string method)

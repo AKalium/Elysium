@@ -22,3 +22,8 @@ Happiness and jobs remain unimplemented placeholders.
 Main now supplies apartment, market, road, and Mayor's Office sprites and prefabs
 under Assets/Sprites and Assets/Prefabs. SampleScene maps the CityHall shop entry
 to the new Mayor's Office prefab, replacing the previously missing source prefab.
+
+The clock's Speed Button cycles 1× → 2× → 4× → 1×. It scales TimeManager and
+daily settlements, while UI and camera input remain at normal speed. Edit the
+Speed Button and Speed Label children in ClockHUD.prefab to restyle the control.
+
