@@ -20,6 +20,7 @@ public class GameState : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        Time.timeScale = 1;
         currency = FindAnyObjectByType<CurrencySystem>();
     }
     private void Start() => RefreshPopulation();

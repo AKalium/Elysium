@@ -1,6 +1,6 @@
 # Web demo
 
-The demo combines `feature/time-and-daily-economy` with `origin/missing-graphics`.
+The demo combines the time and daily economy feature with the latest main assets and UI.
 It starts at the main menu, continues through Dawny's intro, then opens SampleScene.
 
 ## Build
@@ -27,6 +27,4 @@ from File Explorer will not work reliably with WebGL.
 
 Use the on-screen tutorial for placement and demolition controls. The top-center clock shows the day and time. Prices and balance are shown in the building store. Progress lasts for the current session.
 
-The merged branch includes the UI lead's shop/card prefab and scripts, but those
-are not wired into SampleScene. The demo retains the existing numbered building
-selection controls. Publishing the build to a public website is a separate step.
+The shop is connected to apartment, road, Mayor's Office, and market placement. Publishing the build to a public website is a separate step.

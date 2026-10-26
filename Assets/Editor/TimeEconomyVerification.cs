@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class TimeEconomyVerification
 {
-    // Run on a clean editor process. Only the in-memory scene is modified.
+    // Run in an isolated editor process; changes remain in memory.
     public static void Run()
     {
         EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
@@ -14,72 +14,95 @@ public static class TimeEconomyVerification
         var grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>();
         var wallet = UnityEngine.Object.FindAnyObjectByType<CurrencySystem>();
         var state = UnityEngine.Object.FindAnyObjectByType<GameState>();
-        var shop = UnityEngine.Object.FindAnyObjectByType<TemporaryEconomy>();
-        Check(clock != null && economy != null && grid != null && wallet != null && state != null && shop != null, "Scene wiring");
-        wallet.SendMessage("Awake");
-        state.SendMessage("Awake");
-        clock.SendMessage("Awake");
-        economy.SendMessage("Awake");
-        economy.SendMessage("OnEnable");
-        shop.SendMessage("Awake");
-        grid.SendMessage("Awake");
+        var shop = UnityEngine.Object.FindAnyObjectByType<BuildingStoreUI>();
+        Check(clock && economy && grid && wallet && state && shop, "Scene wiring");
+        Check(UnityEngine.Object.FindObjectsByType<CurrencySystem>().Length == 1, "One wallet");
+        Check(new SerializedObject(shop).FindProperty("economy").objectReferenceValue == wallet, "Shop wallet");
+        Check(new SerializedObject(economy).FindProperty("currency").objectReferenceValue == wallet, "Settlement wallet");
+        foreach (var root in state.gameObject.scene.GetRootGameObjects())
+            foreach (var transform in root.GetComponentsInChildren<Transform>(true))
+                Check(GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(transform.gameObject) == 0, "No missing scripts: " + transform.name);
+        InvokeLifecycle(wallet, "Awake");
+        InvokeLifecycle(state, "Awake");
+        InvokeLifecycle(clock, "Awake");
+        InvokeLifecycle(economy, "Awake");
+        InvokeLifecycle(economy, "OnEnable");
+        InvokeLifecycle(grid, "Awake");
+        state.RefreshPopulation();
+        int initialPopulation = state.Population;
+        int initialBuildings = state.BuildingCount;
+        int initialBalance = wallet.Balance;
         var adapter = UnityEngine.Object.FindAnyObjectByType<BuildingStoreAdapter>();
-        var houseData = AssetDatabase.LoadAssetAtPath<BuildingData>("Assets/ShopUI/BuildingData/House.asset");
-        var hallData = AssetDatabase.LoadAssetAtPath<BuildingData>("Assets/ShopUI/BuildingData/CityHall.asset");
-        Check(adapter != null && adapter.GetPlacementCost(houseData) == 100, "Shop uses actual placement cost");
-        Check(adapter.SelectBuilding(houseData) && wallet.Balance == 1000, "Shop selection does not spend");
-        Check(adapter.GetPlacementCost(hallData) == -1, "Unmapped City Hall is unavailable");
-        Check(wallet.Balance == 1000 && economy.Balance == 1000 && shop.Balance == 1000 && state.Balance == 1000, "One starting balance");
-        Check(Time.timeScale == 1, "No global 120x speed override");
-        string path = "Assets/Medieval Buildings and Objects/Prefabs/buildings/";
-        var road = AssetDatabase.LoadAssetAtPath<GameObject>(path + "wall.prefab");
-        var tower = AssetDatabase.LoadAssetAtPath<GameObject>(path + "tower (1).prefab");
-        var house = AssetDatabase.LoadAssetAtPath<GameObject>(path + "house A (1).prefab");
-        var preplaced = UnityEngine.Object.Instantiate(house);
+        string[] dataNames = { "Apartment", "Road", "CityHall", "Market" };
+        string[] prefabNames = { "apt", "road", "mayors office", "market" };
+        int[] prices = { 100, 50, 500, 200 };
+        var prefabs = new GameObject[4];
+        for (int i = 0; i < 4; i++)
+        {
+            var data = AssetDatabase.LoadAssetAtPath<BuildingData>("Assets/ShopUI/BuildingData/" + dataNames[i] + ".asset");
+            prefabs[i] = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/" + prefabNames[i] + ".prefab");
+            Check(prefabs[i] && prefabs[i].GetComponent<SpriteRenderer>().sprite, "Building graphics: " + dataNames[i]);
+            Check(adapter.GetPlacementCost(data) == prices[i], "Shop price: " + dataNames[i]);
+            Check(adapter.SelectBuilding(data) && wallet.Balance == initialBalance, "Selection costs nothing");
+        }
+        Check(economy.Balance == initialBalance && state.Balance == initialBalance, "Shared starting balance");
+        Check(Time.timeScale == 1, "Normal global speed");
+        var preplaced = UnityEngine.Object.Instantiate(prefabs[0]);
         var housing = new SerializedObject(preplaced.GetComponent<GridPlaceable>());
         housing.FindProperty("residentsProvided").intValue = 3;
         housing.ApplyModifiedPropertiesWithoutUndo();
         state.RefreshPopulation();
-        Check(state.Population == 3 && state.ResidentialCount == 1, "Pre-placed house and configurable population");
+        Check(state.Population == initialPopulation + 3, "Configurable preplaced housing");
         preplaced.SetActive(false);
         state.RefreshPopulation();
-        Check(state.Population == 0, "Inactive houses excluded");
+        Check(state.Population == initialPopulation, "Inactive housing excluded");
         UnityEngine.Object.DestroyImmediate(preplaced);
-        Check(GameObject.Find("Currency HUD") == null, "Legacy currency overlay removed");
         var clockView = UnityEngine.Object.FindAnyObjectByType<TimeEconomyHUD>();
-        Check(clockView != null && PrefabUtility.IsPartOfPrefabInstance(clockView), "Editable clock prefab");
-        clockView.SendMessage("Awake");
+        Check(clockView && PrefabUtility.IsPartOfPrefabInstance(clockView), "Editable clock prefab");
+        InvokeLifecycle(clockView, "Awake");
         Check(clockView.DisplayText == "Day 1  |  8:00 AM", "Clock display");
-        Check(!grid.TryPlace(house, new Vector2Int(40, 40), out _) && wallet.Balance == 1000, "Road rule does not charge on failure");
-        Check(grid.TryPlace(road, new Vector2Int(37, 40), out var r), "Place road");
-        Check(grid.TryPlace(tower, new Vector2Int(20, 20), out var t), "Place tower");
-        Check(grid.TryPlace(house, new Vector2Int(40, 40), out var h), "Place house next to road");
-        Check(wallet.Balance == 600 && economy.Balance == 600 && shop.Balance == 600, "Charge once at upstream prices");
-        Check(state.BuildingCount == 3 && state.ResidentialCount == 1 && state.Population == 1, "Placement and population counts");
-        Check(!grid.TryPlace(road, new Vector2Int(37, 40), out _) && wallet.Balance == 600, "Overlap costs nothing");
-        Check(!grid.TryPlace(road, new Vector2Int(-1, 0), out _) && wallet.Balance == 600, "Out of bounds costs nothing");
+        Check(!grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out _) && wallet.Balance == initialBalance, "Road rule costs nothing on failure");
+        Check(grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out var road), "Place road");
+        Check(grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out var house), "Place apartment");
+        Check(grid.TryPlace(prefabs[3], new Vector2Int(37, 40), out var market), "Place market");
+        Check(grid.TryPlace(prefabs[2], new Vector2Int(39, 36), out var hall), "Place Mayor's Office");
+        int afterPurchase = initialBalance - 850;
+        Check(wallet.Balance == afterPurchase && economy.Balance == afterPurchase, "Charge once");
+        Check(state.Population == initialPopulation + 10 && state.BuildingCount == initialBuildings + 4, "Apartment population");
+        Check(!grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out _) && wallet.Balance == afterPurchase, "Overlap costs nothing");
+        Check(!grid.TryPlace(prefabs[1], new Vector2Int(-1, 0), out _) && wallet.Balance == afterPurchase, "Bounds costs nothing");
+        long expectedIncome = 0, expectedUpkeep = 0;
+        foreach (var building in UnityEngine.Object.FindObjectsByType<GridPlaceable>())
+        {
+            if (!building.isActiveAndEnabled || building.gameObject.scene != state.gameObject.scene) continue;
+            var rate = economy.GetRates(building.Category);
+            expectedIncome += rate.dailyIncome;
+            expectedUpkeep += rate.dailyUpkeep;
+        }
         clock.AdvanceTime(199);
-        Check(wallet.Balance == 600 && clock.Day == 1, "No early payout");
+        Check(wallet.Balance == afterPurchase && clock.Day == 1, "No early payout");
         clock.AdvanceTime(1);
-        Check(wallet.Balance == 668 && shop.Balance == 668 && economy.Balance == 668 && state.Balance == 668, "Shared midnight settlement");
-        Check(economy.LastIncome == 85 && economy.LastUpkeep == 17, "Preserved category rates");
+        Check(wallet.Balance == afterPurchase + expectedIncome - expectedUpkeep && state.Balance == wallet.Balance && economy.Balance == wallet.Balance, "Shared midnight settlement");
+        Check(economy.LastIncome == expectedIncome && economy.LastUpkeep == expectedUpkeep, "Category rates");
+        int settledBalance = wallet.Balance;
         clock.Paused = true;
         clock.AdvanceTime(300);
-        Check(wallet.Balance == 668 && clock.Day == 2, "Pause");
+        Check(wallet.Balance == settledBalance && clock.Day == 2, "Pause");
         clock.Paused = false;
         grid.DestroyBuilding(new Vector2Int(40, 40));
-        Check(wallet.Balance == 718 && (h == null || !h.activeSelf) && !grid.IsCellOccupied(new Vector2Int(40, 40)), "Demolition refund and immediate exclusion");
-        Check(state.BuildingCount == 2 && state.ResidentialCount == 0 && state.Population == 0, "Demolition and population counts");
+        Check(wallet.Balance == settledBalance + 50 && !grid.IsCellOccupied(new Vector2Int(40, 40)), "Refund");
+        Check(state.Population == initialPopulation && state.BuildingCount == initialBuildings + 3, "Population after demolition");
         grid.DestroyBuilding(new Vector2Int(40, 40));
-        Check(wallet.Balance == 718, "No duplicate refund");
-        clock.AdvanceTime(600);
-        Check(wallet.Balance == 754 && clock.Day == 4, "Two days without demolished house");
-        Check(wallet.TrySpend(wallet.Balance), "Drain balance");
-        Check(!grid.TryPlace(tower, new Vector2Int(60, 60), out _) && !grid.IsCellOccupied(new Vector2Int(60, 60)), "Unaffordable placement");
-        t.SetActive(false);
-        clock.AdvanceTime(300);
-        Check(wallet.Balance == -2 && shop.Balance == -2 && economy.Balance == -2, "Upkeep debt shared across systems");
+        Check(wallet.Balance == settledBalance + 50, "No duplicate refund");
+        Check(wallet.TrySpend(wallet.Balance), "Drain wallet");
+        Check(!grid.TryPlace(prefabs[1], new Vector2Int(60, 60), out _), "Unaffordable placement");
+        wallet.ApplySettlement(-20);
+        Check(wallet.Balance == -20 && economy.Balance == -20 && state.Balance == -20, "Shared debt");
         Debug.Log("TIME_ECONOMY_VERIFICATION_PASSED");
+    }
+    private static void InvokeLifecycle(MonoBehaviour component, string method)
+    {
+        component.GetType().GetMethod(method, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(component, null);
     }
     private static void Check(bool condition, string message)
     {

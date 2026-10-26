@@ -13,6 +13,7 @@ public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Vector2 gridOrigin = new Vector2(-50f, -50f);
     [SerializeField] private GameObject[] placeablePrefabs = new GameObject[0];
     [SerializeField] private CurrencySystem currency;
+    [SerializeField] private BuildingStoreUI storeUI;
     // Prices follow the same order as Placeable Prefabs: house, tower, wall.
     [SerializeField] private int[] constructionCosts = { 100, 250, 50 };
     [SerializeField] private Color gridColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
@@ -119,33 +120,25 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        Vector2Int rightCell = cell + Vector2Int.right * 5;
+        Vector2Int rightCell = cell + Vector2Int.right * footprint.x;
         Vector2Int leftCell = cell + Vector2Int.left;
-        Vector2Int upCell = cell + Vector2Int.up * 5;
+        Vector2Int upCell = cell + Vector2Int.up * footprint.y;
         Vector2Int downCell = cell + Vector2Int.down;
-        if (prefab.name == "house A (1)")
+        if (prefab.name != "road")
         {
-            if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad))
+            bool r = false;
+            if (cellOwners.TryGetValue(leftCell, out GameObject possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(rightCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(downCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (cellOwners.TryGetValue(upCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
+            if (!r){
+                if (storeUI != null)
             {
-                Debug.Log($"Cell {rightCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
+            storeUI.ShowMessage("Buildings must be placed next to a road!");
             }
-            else if (cellOwners.TryGetValue(leftCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {leftCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else if (cellOwners.TryGetValue(upCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {upCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else if (cellOwners.TryGetValue(downCell, out possibleRoad))
-            {
-                Debug.Log($"Cell {downCell} is occupied by {possibleRoad.name}");
-                if (possibleRoad.name != "wall(Clone)") return false;
-            }
-            else return false;
+
+            return false;
+}
         }
 
         Vector3 position = new Vector3(

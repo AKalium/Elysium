@@ -55,8 +55,8 @@ public static class ElysiumDemoBuild
                     if (GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(child.gameObject) > 0)
                         throw new Exception("Missing script in " + path + ": " + child.name);
         }
-        string folder = "Assets/Medieval Buildings and Objects/Prefabs/buildings/";
-        foreach (string name in new[] { "wall", "tower (1)", "house A (1)" })
+        string folder = "Assets/Prefabs/";
+        foreach (string name in new[] { "apt", "market", "road", "mayors office" })
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(folder + name + ".prefab");
             if (prefab == null) throw new Exception("Missing placeable prefab: " + name);

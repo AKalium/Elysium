@@ -15,6 +15,6 @@ MonoBehaviour:
   buildingId: city_hall
   buildingName: CityHall
   price: 500
-  category: 2
-  buildingIcon: {fileID: 0}
-  buildingPrefab: {fileID: 0}
+  category: 1
+  buildingIcon: {fileID: -6287339299986118775, guid: f934e25c423a7b247bfba2941eecae22, type: 3}
+  buildingPrefab: {fileID: 3349293597268598346, guid: f350c779febff4c44bc0aae19132e562, type: 3}

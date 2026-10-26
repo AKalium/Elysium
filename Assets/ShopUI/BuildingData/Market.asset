@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a743a2fdbb141d0aaf9c5a4dfc7ea6, type: 3}
+  m_Name: Market
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingData
+  buildingId: market
+  buildingName: Market
+  price: 200
+  category: 1
+  buildingIcon: {fileID: 4098351663074733459, guid: 23358c20579b0c44db779403a2afb043, type: 3}
+  buildingPrefab: {fileID: 3349293597268598346, guid: b0e9c13e912ad4640a038f061009559c, type: 3}

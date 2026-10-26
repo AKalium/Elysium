@@ -1,35 +1,24 @@
 # Time and economy integration
 
-The feature branch now combines main's store, road placement, building footprints,
-and demolition refunds with the clock and daily income/upkeep system.
+CurrencySystem owns one gameplay balance, starting at 2000 in SampleScene.
+The shop, CurrencyHUD, GameState, and midnight DailyEconomy settlements use it.
+The obsolete TemporaryEconomy script has been removed, following main.
 
-CurrencySystem owns the single gameplay balance. DailyEconomy applies midnight
-settlements to it; the store's TemporaryEconomy component forwards to it in
-SampleScene. GameState and the shop read that same balance. The temporary wallet
-retains standalone behavior for the separate store test scene.
+Selecting a shop card is free; successful placement charges once. Scene prices
+are apartment 100, road 50, Mayor's Office 500, and market 200. Cards display
+these mapped placement prices. All non-road buildings require an adjacent road.
+Demolition refunds 50% of the original price once.
 
-Placement is the only purchase step. Selecting a store card does not spend money.
-Cards display the mapped placement price; unmapped entries are unavailable.
-SampleScene's current prices are house 100, tower 250, and road/wall 50. Demolition
-refunds 50% of the original price once. House placement still requires an adjacent
-road under main's existing road-placement rule.
+The clock starts at 8 AM; a full day takes 300 real seconds at 1x. The editable
+ClockHUD prefab sits at top center. Speed remains controllable via TimeManager.
+At midnight, active buildings contribute category income/upkeep: Residential
+25/5, Economic 60/10, Neither 0/2. Apartments are Residential, markets Economic,
+roads and Mayor's Office Neither. Upkeep can create debt. Inactive/demolished
+buildings do not contribute. No save-game persistence is implemented.
 
-The clock starts at 8 AM. A complete day takes 300 real seconds at 1x. The UI now shows only the clock; speed remains controllable through TimeManager.
-At midnight, each active GridPlaceable in the scene contributes according to its
-category: Economic +60 income / 10 upkeep, Residential +25 / 5, Neither +0 / 2.
-The original category assignments remain: house Economic, tower Residential,
-road/wall Neither. Upkeep can create debt. Demolished/inactive buildings do not
-contribute to future settlements. No save-game persistence is implemented.
-
-The shop still contains entries without mapped placeable prefabs. Those are
-marked unavailable rather than reporting a successful selection. Completing
-those building assets is separate from this integration.
-
-Verification: close Unity, then run the editor in batch mode with
-`-batchmode -quit -projectPath <project> -executeMethod TimeEconomyVerification.Run -logFile <log>`.
-This verifies shared balance, road-required placement, single purchase charges,
-invalid placement, refunds, building counts, midnight settlements, pause, and
-debt. Success logs `TIME_ECONOMY_VERIFICATION_PASSED`. The test never saves its
-in-memory scene changes.
-
-See CLOCK_AND_POPULATION.md for the editable top-center clock prefab and housing population settings.
+With Unity closed, run the editor with:
+`-batchmode -quit -projectPath <project> -executeMethod ElysiumDemoBuild.ValidateDemo -logFile <log>`.
+This checks demo scenes, missing scripts, graphics, shared balance, prices,
+road adjacency, placement, refunds, population, midnight settlement, pause,
+and debt. Success logs ELYSIUM_DEMO_VALIDATION_PASSED. In-memory test scene
+changes are never saved. See CLOCK_AND_POPULATION.md for the UI handoff.
