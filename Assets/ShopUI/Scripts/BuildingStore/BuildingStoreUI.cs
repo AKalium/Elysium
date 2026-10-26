@@ -2,6 +2,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class BuildingStoreUI : MonoBehaviour
 {
@@ -12,8 +13,9 @@ public class BuildingStoreUI : MonoBehaviour
     [SerializeField] private BuildingCardUI[] buildingCards;
 
     [Header("Economy")]
-    [SerializeField] private TemporaryEconomy economy;
+    [SerializeField] private CurrencySystem economy;
     [SerializeField] private TMP_Text balanceText;
+    [SerializeField] private GameObject messagePanel;
     [SerializeField] private TMP_Text messageText;
 
     [Header("Category Buttons")]
@@ -28,6 +30,7 @@ public class BuildingStoreUI : MonoBehaviour
     [Header("Placement Integration")]
     [SerializeField] private BuildingStoreAdapter placementAdapter;
 
+    private Coroutine messageCoroutine;
     private void Start()
     {
         if (buildings.Length != buildingCards.Length)
@@ -52,10 +55,10 @@ public class BuildingStoreUI : MonoBehaviour
 
         closeButton.onClick.AddListener(CloseStore);
 
-        economy.OnBalanceChanged += UpdateBalance;
+        economy.BalanceChanged += UpdateBalance;
         UpdateBalance(economy.Balance);
 
-        messageText.gameObject.SetActive(false);
+        messagePanel.SetActive(false);
     }
 
     
@@ -79,7 +82,7 @@ public class BuildingStoreUI : MonoBehaviour
         return;
     }
 
-    messageText.gameObject.SetActive(false);
+    messagePanel.SetActive(false);
 
     Debug.Log("Ready to place: " + building.BuildingName);
     }
@@ -90,11 +93,26 @@ public class BuildingStoreUI : MonoBehaviour
         balanceText.text = "$" + balance.ToString("N0");
     }
 
-    private void ShowMessage(string message)
+    public void ShowMessage(string message)
+{
+    if (messageCoroutine != null)
     {
-        messageText.text = message;
-        messageText.gameObject.SetActive(true);
+        StopCoroutine(messageCoroutine);
     }
+
+    messageText.text = message;
+    messagePanel.SetActive(true);
+
+    messageCoroutine = StartCoroutine(HideMessageAfterDelay());
+}
+
+private IEnumerator HideMessageAfterDelay()
+{
+    yield return new WaitForSeconds(1.5f);
+
+    messagePanel.SetActive(false);
+    messageCoroutine = null;
+}
 
     private void FilterBuildings(int category)
     {
@@ -124,6 +142,6 @@ public class BuildingStoreUI : MonoBehaviour
         }
 
         if (economy != null)
-            economy.OnBalanceChanged -= UpdateBalance;
+            economy.BalanceChanged -= UpdateBalance;
     }
 }
