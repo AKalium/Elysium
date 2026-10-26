@@ -25,9 +25,7 @@ from File Explorer will not work reliably with WebGL.
 
 ## Demo scope
 
-Use the on-screen tutorial for placement and demolition controls. The economy
-HUD tracks time, balance, and daily income/upkeep; its speed button cycles
-1x, 2x, and 4x. Progress lasts for the current session.
+Use the on-screen tutorial for placement and demolition controls. The top-center clock shows the day and time. Prices and balance are shown in the building store. Progress lasts for the current session.
 
 The merged branch includes the UI lead's shop/card prefab and scripts, but those
 are not wired into SampleScene. The demo retains the existing numbered building

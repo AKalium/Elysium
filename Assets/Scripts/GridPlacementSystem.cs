@@ -36,7 +36,7 @@ public class GridPlacementSystem : MonoBehaviour {
     private void Awake() 
     {
         if (economy == null) economy = FindAnyObjectByType<DailyEconomy>();
-        timeHUD = economy != null ? economy.GetComponent<TimeEconomyHUD>() : null;
+        timeHUD = FindAnyObjectByType<TimeEconomyHUD>();
         if (currency == null) currency = GetComponent<CurrencySystem>();
         if (currency == null) currency = FindAnyObjectByType<CurrencySystem>();
         if (currency == null) currency = gameObject.AddComponent<CurrencySystem>();
@@ -60,8 +60,6 @@ public class GridPlacementSystem : MonoBehaviour {
     {
         UpdateSelection();
         UpdateHoveredCell();
-        currency.ShowSelection(selectedPrefabIndex >= 0 ? placeablePrefabs[selectedPrefabIndex] : null,
-            selectedPrefabIndex >= 0 ? GetConstructionCost(placeablePrefabs[selectedPrefabIndex]) : 0);
         UpdatePlacementPreview();
         HandlePlacementInput();
         HandleDeletionInput();
@@ -105,25 +103,6 @@ public class GridPlacementSystem : MonoBehaviour {
             0f);
     }
 
-    public void UpdateGameState(GameObject prefab, bool Placing)
-        {
-            if (Placing)
-            {
-                if (GameState.Instance == null) return;
-                GameState.Instance.BuildingPlaced();
-                if (prefab.name == "house A (1)")
-                {
-                    GameState.Instance.HousePlaced(1);
-                }
-            }
-            else
-            {
-                if (GameState.Instance != null)
-                    GameState.Instance.BuildingRemoved(prefab != null && prefab.name.StartsWith("house A (1)"));
-            }
-            currency.RefreshBalance();
-        }
-        
     public bool TryPlace(GameObject prefab, Vector2Int cell, out GameObject placedObject) 
     {
         placedObject = null;
@@ -192,7 +171,7 @@ public class GridPlacementSystem : MonoBehaviour {
             }
         }
 
-        UpdateGameState(prefab, true);
+        GameState.Instance?.RefreshPopulation();
         objectCells.Add(placedObject, cells);
         paidCosts.Add(placedObject, cost);
         return true;
@@ -219,9 +198,10 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
-        UpdateGameState(placedObject, false);
+
         // Stop counting this building before Unity's deferred destruction.
         placedObject.SetActive(false);
+        GameState.Instance?.RefreshPopulation();
         if (paidCosts.TryGetValue(placedObject, out int paidCost)) 
         {
             paidCosts.Remove(placedObject);

@@ -5,7 +5,7 @@ and demolition refunds with the clock and daily income/upkeep system.
 
 CurrencySystem owns the single gameplay balance. DailyEconomy applies midnight
 settlements to it; the store's TemporaryEconomy component forwards to it in
-SampleScene. GameState and both HUDs read that same balance. The temporary wallet
+SampleScene. GameState and the shop read that same balance. The temporary wallet
 retains standalone behavior for the separate store test scene.
 
 Placement is the only purchase step. Selecting a store card does not spend money.
@@ -14,8 +14,7 @@ SampleScene's current prices are house 100, tower 250, and road/wall 50. Demolit
 refunds 50% of the original price once. House placement still requires an adjacent
 road under main's existing road-placement rule.
 
-The clock starts at 8 AM. A complete day takes 300 real seconds at 1x. The clock
-button cycles 1x/2x/4x without accelerating camera controls or other game systems.
+The clock starts at 8 AM. A complete day takes 300 real seconds at 1x. The UI now shows only the clock; speed remains controllable through TimeManager.
 At midnight, each active GridPlaceable in the scene contributes according to its
 category: Economic +60 income / 10 upkeep, Residential +25 / 5, Neither +0 / 2.
 The original category assignments remain: house Economic, tower Residential,
@@ -32,3 +31,5 @@ This verifies shared balance, road-required placement, single purchase charges,
 invalid placement, refunds, building counts, midnight settlements, pause, and
 debt. Success logs `TIME_ECONOMY_VERIFICATION_PASSED`. The test never saves its
 in-memory scene changes.
+
+See CLOCK_AND_POPULATION.md for the editable top-center clock prefab and housing population settings.

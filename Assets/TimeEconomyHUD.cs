@@ -1,41 +1,27 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-[RequireComponent(typeof(TimeManager), typeof(DailyEconomy))]
+/// <summary>Presentation-only clock. UI artists can edit the linked prefab and label.</summary>
 public class TimeEconomyHUD : MonoBehaviour
 {
-    private Rect PanelRect => new Rect(Mathf.Max(0, Screen.width - 290), 10, 280, 220);
+    [SerializeField] private TimeManager clock;
+    [SerializeField] private Text timeLabel;
+    [SerializeField] private RectTransform panel;
+    [SerializeField] private bool showDay = true;
 
-    public bool ContainsScreenPoint(Vector2 position)
-    {
-        return isActiveAndEnabled && PanelRect.Contains(new Vector2(position.x, Screen.height - position.y));
-    }
+    public string DisplayText => clock == null ? "" :
+        (showDay ? $"Day {clock.Day}  |  {clock.DisplayTime}" : clock.DisplayTime);
 
-    private TimeManager clock;
-    private DailyEconomy economy;
     private void Awake()
     {
-        clock = GetComponent<TimeManager>();
-        economy = GetComponent<DailyEconomy>();
+        if (clock == null) clock = FindAnyObjectByType<TimeManager>();
     }
 
-    private void OnGUI()
+    private void LateUpdate()
     {
-        GUILayout.BeginArea(PanelRect, GUI.skin.box);
-        GUILayout.Label($"Day {clock.Day}  |  {clock.DisplayTime}");
-        if (GUILayout.Button($"Speed: {clock.Speed:0.#}x  (click to change)"))
-            clock.CycleSpeed();
-        GUILayout.Label($"Money: ${economy.Balance}");
-        GUILayout.Label($"Last midnight: +${economy.LastIncome} -${economy.LastUpkeep} = ${economy.LastNet}");
-        ShowCost("1: House", BuildingCategory.Economic);
-        ShowCost("2: Tower", BuildingCategory.Residential);
-        ShowCost("3: Wall", BuildingCategory.Neither);
-        GUILayout.Label("Income and upkeep apply at 12:00 AM.");
-        GUILayout.EndArea();
+        if (timeLabel != null) timeLabel.text = DisplayText;
     }
 
-    private void ShowCost(string label, BuildingCategory category)
-    {
-        var rates = economy.GetRates(category);
-        GUILayout.Label($"{label}: +{rates.dailyIncome}/-{rates.dailyUpkeep} daily");
-    }
+    public bool ContainsScreenPoint(Vector2 position) => isActiveAndEnabled && panel != null &&
+        RectTransformUtility.RectangleContainsScreenPoint(panel, position);
 }

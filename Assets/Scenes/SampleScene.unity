@@ -3548,6 +3548,95 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6919a5762a02847dab66b82fecfb75b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuildingCardUI
+--- !u!1 &2100000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2100000001}
+  - component: {fileID: 2100000002}
+  - component: {fileID: 2100000003}
+  - component: {fileID: 2100000005}
+  m_Layer: 0
+  m_Name: Time and Economy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2100000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2100000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4401, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  secondsPerDay: 300
+  startingHour: 8
+  speed: 1
+--- !u!114 &2100000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4402, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingMoney: 1000
+  neither:
+    purchaseCost: 10
+    dailyIncome: 0
+    dailyUpkeep: 2
+  residential:
+    purchaseCost: 100
+    dailyIncome: 25
+    dailyUpkeep: 5
+  economic:
+    purchaseCost: 200
+    dailyIncome: 60
+    dailyUpkeep: 10
+  currency: {fileID: 2100000005}
+--- !u!114 &2100000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd4df98a4777984c99e95c4890dc1e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingBalance: 1000
+  demolitionRefundRate: 0.5
 --- !u!1 &2103329843
 GameObject:
   m_ObjectHideFlags: 0
@@ -3850,6 +3939,107 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2117463361}
   m_CullTransparentMesh: 1
+--- !u!1001 &3197902009522773334
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2423494133517214749, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6421426516515753785, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: m_Name
+      value: Clock HUD
+      objectReference: {fileID: 0}
+    - target: {fileID: 6949146816671982374, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
+      propertyPath: clock
+      value: 
+      objectReference: {fileID: 2100000002}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: bfeafd944ecc21944a97c44d4017f98f, type: 3}
 --- !u!1001 &6596363799333538235
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3959,105 +4149,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
---- !u!1 &2100000000
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2100000001}
-  - component: {fileID: 2100000002}
-  - component: {fileID: 2100000003}
-  - component: {fileID: 2100000004}
-  - component: {fileID: 2100000005}
-  m_Layer: 0
-  m_Name: Time and Economy
-  m_TagString: Untagged
-  m_IsActive: 1
---- !u!4 &2100000001
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100000000}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
---- !u!114 &2100000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4401, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  secondsPerDay: 300
-  startingHour: 8
-  speed: 1
-
---- !u!114 &2100000003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4402, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  currency: {fileID: 2100000005}
-  startingMoney: 1000
-  neither:
-    purchaseCost: 10
-    dailyIncome: 0
-    dailyUpkeep: 2
-  residential:
-    purchaseCost: 100
-    dailyIncome: 25
-    dailyUpkeep: 5
-  economic:
-    purchaseCost: 200
-    dailyIncome: 60
-    dailyUpkeep: 10
-
---- !u!114 &2100000004
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4403, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
---- !u!114 &2100000005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2100000000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fd4df98a4777984c99e95c4890dc1e2, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  startingBalance: 1000
-  demolitionRefundRate: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -4072,5 +4163,4 @@ SceneRoots:
   - {fileID: 6596363799333538235}
   - {fileID: 2104661281}
   - {fileID: 2100000001}
-
-
+  - {fileID: 3197902009522773334}
