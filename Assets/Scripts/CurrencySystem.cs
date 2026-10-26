@@ -15,11 +15,9 @@ public sealed class CurrencySystem : MonoBehaviour
     private GameObject hud;
 
     private void Awake()
-    {
-        Balance = Mathf.Max(0, startingBalance);
-        CreateHud();
-        RefreshBalance();
-    }
+{
+    Balance = Mathf.Max(0, startingBalance);
+}
 
     public bool CanAfford(int amount) => amount >= 0 && amount <= Balance;
 

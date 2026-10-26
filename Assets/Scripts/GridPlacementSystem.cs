@@ -11,6 +11,7 @@ public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private Vector2 gridOrigin = new Vector2(-50f, -50f);
     [SerializeField] private GameObject[] placeablePrefabs = new GameObject[0];
     [SerializeField] private CurrencySystem currency;
+    [SerializeField] private BuildingStoreUI storeUI;
     // Prices follow the same order as Placeable Prefabs: house, tower, wall.
     [SerializeField] private int[] constructionCosts = { 100, 250, 50 };
     [SerializeField] private Color gridColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
@@ -144,7 +145,14 @@ public class GridPlacementSystem : MonoBehaviour {
             if (cellOwners.TryGetValue(rightCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
             if (cellOwners.TryGetValue(downCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
             if (cellOwners.TryGetValue(upCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (!r) return false;
+            if (!r){
+                if (storeUI != null)
+            {
+            storeUI.ShowMessage("Buildings must be placed next to a road!");
+            }
+
+            return false;
+}
         }
 
         Vector3 position = new Vector3(
