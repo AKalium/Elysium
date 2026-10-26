@@ -106,3 +106,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprint: {x: 2, y: 4}
+  category: 2
+  residentsProvided: 0

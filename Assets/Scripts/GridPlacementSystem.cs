@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 
 public class GridPlacementSystem : MonoBehaviour {
+    [SerializeField] private DailyEconomy economy;
+    private TimeEconomyHUD timeHUD;
     [SerializeField] private Camera targetCamera;
     [SerializeField, Min(0.01f)] private float cellSize = 1f;
     [SerializeField, Min(1)] private int gridWidth = 100;
@@ -34,7 +36,10 @@ public class GridPlacementSystem : MonoBehaviour {
 
     private void Awake() 
     {
+        if (economy == null) economy = FindAnyObjectByType<DailyEconomy>();
+        timeHUD = FindAnyObjectByType<TimeEconomyHUD>();
         if (currency == null) currency = GetComponent<CurrencySystem>();
+        if (currency == null) currency = FindAnyObjectByType<CurrencySystem>();
         if (currency == null) currency = gameObject.AddComponent<CurrencySystem>();
         if (targetCamera == null)
         {
@@ -56,8 +61,6 @@ public class GridPlacementSystem : MonoBehaviour {
     {
         UpdateSelection();
         UpdateHoveredCell();
-        currency.ShowSelection(selectedPrefabIndex >= 0 ? placeablePrefabs[selectedPrefabIndex] : null,
-            selectedPrefabIndex >= 0 ? GetConstructionCost(placeablePrefabs[selectedPrefabIndex]) : 0);
         UpdatePlacementPreview();
         HandlePlacementInput();
         HandleDeletionInput();
@@ -101,23 +104,6 @@ public class GridPlacementSystem : MonoBehaviour {
             0f);
     }
 
-    public void UpdateGameState(GameObject prefab, bool Placing)
-        {
-            if (Placing)
-            {
-                GameState.Instance.BuildingPlaced();
-                if (prefab.name == "apt")
-                {
-                    GameState.Instance.HousePlaced(10);
-                }
-            }
-            else
-            {
-                GameState.Instance.BuildingRemoved(10);
-            }
-            currency.RefreshBalance();
-        }
-        
     public bool TryPlace(GameObject prefab, Vector2Int cell, out GameObject placedObject) 
     {
         placedObject = null;
@@ -178,7 +164,7 @@ public class GridPlacementSystem : MonoBehaviour {
             }
         }
 
-        UpdateGameState(prefab, true);
+        GameState.Instance?.RefreshPopulation();
         objectCells.Add(placedObject, cells);
         paidCosts.Add(placedObject, cost);
         return true;
@@ -205,13 +191,17 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
-        UpdateGameState(null, true);
+
+        // Stop counting this building before Unity's deferred destruction.
+        placedObject.SetActive(false);
+        GameState.Instance?.RefreshPopulation();
         if (paidCosts.TryGetValue(placedObject, out int paidCost)) 
         {
             paidCosts.Remove(placedObject);
             currency.RefundDemolition(paidCost);
         }
-        Destroy(placedObject);
+        if (Application.isPlaying) Destroy(placedObject);
+        else DestroyImmediate(placedObject);
     }
 
     private void HandleDeletionInput() 
@@ -268,8 +258,14 @@ public class GridPlacementSystem : MonoBehaviour {
     private int GetConstructionCost(GameObject prefab) 
     {
         int index = System.Array.IndexOf(placeablePrefabs, prefab);
+        return GetConstructionCost(index);
+    }
+
+    public int GetConstructionCost(int index)
+    {
         // Refuse unpriced prefabs instead of accidentally granting free buildings.
-        return index >= 0 && constructionCosts != null && index < constructionCosts.Length
+        return index >= 0 && index < placeablePrefabs.Length && placeablePrefabs[index] != null &&
+            constructionCosts != null && index < constructionCosts.Length
             ? Mathf.Max(0, constructionCosts[index]) : -1;
     }
 
@@ -307,7 +303,8 @@ public class GridPlacementSystem : MonoBehaviour {
     {
         Mouse mouse = Mouse.current;
         hasHoveredCell = false;
-        if (mouse == null || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())) 
+        if (mouse == null || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) ||
+            (timeHUD != null && timeHUD.ContainsScreenPoint(mouse.position.ReadValue())))
         {
             return;
         }

@@ -41,7 +41,8 @@ public class BuildingStoreUI : MonoBehaviour
 
         for (int i = 0; i < buildings.Length; i++)
         {
-            buildingCards[i].Setup(buildings[i]);
+            buildingCards[i].Setup(buildings[i], placementAdapter != null
+                ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
             buildingCards[i].OnBuildingSelected += HandleBuildingSelected;
         }
 
@@ -64,7 +65,13 @@ public class BuildingStoreUI : MonoBehaviour
     
     private void HandleBuildingSelected(BuildingData building)
     {
-    if (!economy.CanAfford(building.Price))
+    int cost = placementAdapter != null ? placementAdapter.GetPlacementCost(building) : -1;
+    if (cost < 0)
+    {
+        ShowMessage("This building is not available yet!");
+        return;
+    }
+    if (!economy.CanAfford(cost))
     {
         ShowMessage("Not enough money!");
         return;

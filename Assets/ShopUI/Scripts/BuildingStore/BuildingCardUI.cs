@@ -16,7 +16,7 @@ public class BuildingCardUI : MonoBehaviour
 
     public event Action<BuildingData> OnBuildingSelected;
 
-    public void Setup(BuildingData data)
+    public void Setup(BuildingData data, int? placementCost = null)
     {
         if (data == null)
         {
@@ -27,7 +27,9 @@ public class BuildingCardUI : MonoBehaviour
         buildingData = data;
 
         buildingName.text = data.BuildingName;
-        buildingPrice.text = "$" + data.Price.ToString("N0");
+        int cost = placementCost ?? data.Price;
+        buildingPrice.text = cost < 0 ? "Unavailable" : "$" + cost.ToString("N0");
+        selectButton.interactable = cost >= 0;
 
         if (data.BuildingIcon != null)
         {
