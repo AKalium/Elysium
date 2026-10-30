@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 100195219173289060}
   - component: {fileID: 2967782101220452473}
   - component: {fileID: 11400000}
+  - component: {fileID: 4955201372532174614}
   m_Layer: 0
   m_Name: apt
   m_TagString: Untagged
@@ -108,3 +109,17 @@ MonoBehaviour:
   footprint: {x: 2, y: 4}
   category: 1
   residentsProvided: 10
+--- !u!114 &4955201372532174614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3349293597268598346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a651e42d6fd2434cbe5fa5a004f2a8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
+  tier: 1
+  pollutionPerDay: 1
