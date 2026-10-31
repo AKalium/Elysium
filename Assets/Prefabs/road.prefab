@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 100195219173289060}
   - component: {fileID: 2967782101220452473}
   - component: {fileID: 11400000}
+  - component: {fileID: -8666655931007761136}
   m_Layer: 0
   m_Name: road
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 3.1, y: 3.1, z: 1}
+  m_LocalScale: {x: 3.0999997, y: 3.1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -108,3 +109,27 @@ MonoBehaviour:
   footprint: {x: 1, y: 1}
   category: 0
   residentsProvided: 0
+--- !u!114 &-8666655931007761136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3349293597268598346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8cd5d5f37a5d14582885338f55c267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteChanger
+  sprites:
+  - {fileID: -1050300053142875006, guid: 8978d3b5d3439574bb2408fa6fac873b, type: 3}
+  - {fileID: 729442802733429844, guid: 0ebeb0c087de41242bb0317e56e130ff, type: 3}
+  - {fileID: -8102809604401275426, guid: 8fbda733f3ed20a419ad9ef279e4b003, type: 3}
+  - {fileID: -3910672832476828177, guid: 630ed136bdf37c4418f66f36f78a825d, type: 3}
+  - {fileID: -153305399873845602, guid: 75f15331eee64154b8e7186490942cd9, type: 3}
+  - {fileID: -6838654137092390289, guid: 5a58ff5531227244f800480096535c3a, type: 3}
+  - {fileID: 3128191116455756881, guid: e29a62659911fcc4ab92d2a7ee1487e8, type: 3}
+  - {fileID: 3022333305324615948, guid: 5e71fc54cdb89534a9d4909acec746ca, type: 3}
+  - {fileID: 9038086175423675804, guid: afe376942dadbfb49bd91cab76441573, type: 3}
+  - {fileID: -5577582268936183832, guid: 4f9c4e66b84cf194487a854748989ff9, type: 3}
+  - {fileID: -5893435908673865163, guid: 8226881dd4b612b4f9ff7d82c84f0d71, type: 3}

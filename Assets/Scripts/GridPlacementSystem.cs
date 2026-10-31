@@ -124,6 +124,7 @@ public class GridPlacementSystem : MonoBehaviour {
         Vector2Int leftCell = cell + Vector2Int.left;
         Vector2Int upCell = cell + Vector2Int.up * footprint.y;
         Vector2Int downCell = cell + Vector2Int.down;
+
         if (prefab.name != "road")
         {
             bool r = false;
@@ -138,7 +139,7 @@ public class GridPlacementSystem : MonoBehaviour {
             }
 
             return false;
-}
+            }
         }
 
         Vector3 position = new Vector3(
@@ -167,6 +168,12 @@ public class GridPlacementSystem : MonoBehaviour {
         GameState.Instance?.RefreshPopulation();
         objectCells.Add(placedObject, cells);
         paidCosts.Add(placedObject, cost);
+
+        if (prefab.name =="road")
+        {
+            SetRoadSprite(placedObject, cell, footprint, false);    
+        }
+
         return true;
     }
 
@@ -191,8 +198,6 @@ public class GridPlacementSystem : MonoBehaviour {
             objectCells.Remove(placedObject);
         }
 
-
-        // Stop counting this building before Unity's deferred destruction.
         placedObject.SetActive(false);
         GameState.Instance?.RefreshPopulation();
         if (paidCosts.TryGetValue(placedObject, out int paidCost)) 
@@ -441,6 +446,95 @@ public class GridPlacementSystem : MonoBehaviour {
         previewMaterial.color = hoveredCellIsValid
             ? validPlacementColor
             : invalidPlacementColor;
+    }
+
+    private void SetRoadSprite(GameObject road, Vector2Int cell, Vector2Int footprint, bool cycle)
+    {
+        Vector2Int rightCell = cell + Vector2Int.right * footprint.x;
+        Vector2Int leftCell = cell + Vector2Int.left;
+        Vector2Int upCell = cell + Vector2Int.up * footprint.y;
+        Vector2Int downCell = cell + Vector2Int.down;
+        bool right = false;
+        bool left = false;
+        bool up = false;
+        bool down = false;
+
+        if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad) && possibleRoad.name == "road(Clone)")
+        {
+            right = true;
+            if (cycle == false) SetRoadSprite(possibleRoad, rightCell, footprint, true);
+        }
+        if (cellOwners.TryGetValue(leftCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        {
+            left = true;
+            if (cycle == false) SetRoadSprite(possibleRoad, leftCell, footprint, true);
+        }
+        if (cellOwners.TryGetValue(upCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        {
+            up = true;
+            if (cycle == false) SetRoadSprite(possibleRoad, upCell, footprint, true);
+        }
+        if (cellOwners.TryGetValue(downCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        {
+            down = true;
+            if (cycle == false) SetRoadSprite(possibleRoad, downCell, footprint, true);
+        }
+
+        if ((right && left && up) || (right && left && down) || (right && up && down) || (left && up && down))
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(10);
+        }
+        else if (right && up)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(2);
+        }
+        else if (right && down)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(3);
+        }
+        else if (left && up)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(4);
+        }
+        else if (left && down)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(5);
+        }
+        else if (right && left)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(0);
+        }
+        else if (up && down)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(1);
+        }
+        else if (right)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(6);
+        }
+        else if (left)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(7);
+        }
+        else if (up)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(8);
+        }
+        else if (down)
+        {
+            SpriteChanger spriteChanger = road.GetComponent<SpriteChanger>();
+            spriteChanger.ChangeSprite(9);
+        }
     }
 
     private void OnValidate() 

@@ -24,7 +24,7 @@ public class GameState : MonoBehaviour
         currency = FindAnyObjectByType<CurrencySystem>();
     }
     private void Start() => RefreshPopulation();
-    private void Update() => ElapsedSeconds += Time.deltaTime;
+    private void Update() => ElapsedSeconds += Time.deltaTime * 4;
 
     // Rebuild from map contents, including pre-placed houses and externally removed buildings.
     public void RefreshPopulation()

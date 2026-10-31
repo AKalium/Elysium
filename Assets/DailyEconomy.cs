@@ -16,7 +16,7 @@ public class DailyEconomy : MonoBehaviour
         { purchaseCost = cost; dailyIncome = income; dailyUpkeep = upkeep; }
     }
 
-    [SerializeField, Min(0)] private int startingMoney = 1000;
+    [SerializeField, Min(0)] private int startingMoney = 10000;
     [SerializeField] private BuildingRates neither = new BuildingRates(10, 0, 2);
     [SerializeField] private BuildingRates residential = new BuildingRates(100, 25, 5);
     [SerializeField] private BuildingRates economic = new BuildingRates(200, 60, 10);

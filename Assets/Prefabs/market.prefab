@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2967782101220452473}
   - component: {fileID: 11400000}
   - component: {fileID: 3613971730983793004}
+  - component: {fileID: 7867462068761241089}
   m_Layer: 0
   m_Name: market
   m_TagString: Untagged
@@ -123,3 +124,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
   tier: 1
   pollutionPerDay: 3
+--- !u!114 &7867462068761241089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3349293597268598346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a8cd5d5f37a5d14582885338f55c267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteChanger
