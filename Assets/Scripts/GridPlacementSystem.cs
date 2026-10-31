@@ -112,6 +112,8 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
+        if (prefab.name == "mayors office" && GameState.Instance.MayorsOfficePlaced) return false;
+
         Vector2Int footprint = GetFootprint(prefab);
         int cost = GetConstructionCost(prefab);
         if (cost < 0 || !currency.CanAfford(cost)) return false;
@@ -120,26 +122,13 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        Vector2Int rightCell = cell + Vector2Int.right * footprint.x;
-        Vector2Int leftCell = cell + Vector2Int.left;
-        Vector2Int upCell = cell + Vector2Int.up * footprint.y;
-        Vector2Int downCell = cell + Vector2Int.down;
-
-        if (prefab.name != "road")
+        if (prefab.name != "road" && !IsAdjacentToRoad(cell, footprint))
         {
-            bool r = false;
-            if (cellOwners.TryGetValue(leftCell, out GameObject possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(rightCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(downCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (cellOwners.TryGetValue(upCell, out possibleRoad) && (possibleRoad.name == "road(Clone)")) r = true;
-            if (!r){
-                if (storeUI != null)
+            if (storeUI != null)
             {
-            storeUI.ShowMessage("Buildings must be placed next to a road!");
+                storeUI.ShowMessage("Buildings must be placed next to a road!");
             }
-
             return false;
-            }
         }
 
         Vector3 position = new Vector3(
@@ -254,6 +243,35 @@ public class GridPlacementSystem : MonoBehaviour {
         return true;
     }
 
+    private bool IsAdjacentToRoad(Vector2Int anchor, Vector2Int footprint)
+    {
+        for (int x = 0; x < footprint.x; x++)
+        {
+            if (IsRoadAt(anchor + new Vector2Int(x, -1)) ||
+                IsRoadAt(anchor + new Vector2Int(x, footprint.y)))
+            {
+                return true;
+            }
+        }
+
+        for (int y = 0; y < footprint.y; y++)
+        {
+            if (IsRoadAt(anchor + new Vector2Int(-1, y)) ||
+                IsRoadAt(anchor + new Vector2Int(footprint.x, y)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsRoadAt(Vector2Int cell)
+    {
+        return cellOwners.TryGetValue(cell, out GameObject owner) &&
+            owner != null && owner.name == "road(Clone)";
+    }
+
     private Vector2Int GetFootprint(GameObject prefab) 
     {
         GridPlaceable placeable = prefab.GetComponent<GridPlaceable>();
@@ -328,6 +346,8 @@ public class GridPlacementSystem : MonoBehaviour {
             : Vector2Int.one;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
             CanPlace(hoveredCell, hoveredFootprint) &&
+            (placeablePrefabs[selectedPrefabIndex].name == "road" ||
+                IsAdjacentToRoad(hoveredCell, hoveredFootprint)) &&
             currency.CanAfford(GetConstructionCost(placeablePrefabs[selectedPrefabIndex]));
         hasHoveredCell = true;
     }

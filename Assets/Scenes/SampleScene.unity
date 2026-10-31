@@ -1249,7 +1249,7 @@ MonoBehaviour:
   storeUI: {fileID: 638650081}
   constructionCosts: 6400000032000000f4010000c8000000i
   gridColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.3}
-  validPlacementColor: {r: 0.2, g: 1, b: 0.2, a: 0.9}
+  validPlacementColor: {r: 0, g: 0.7490196, b: 0.000000050045408, a: 0.9}
   invalidPlacementColor: {r: 1, g: 0.2, b: 0.2, a: 0.9}
 --- !u!114 &330585550
 MonoBehaviour:
@@ -1279,7 +1279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd4df98a4777984c99e95c4890dc1e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencySystem
-  startingBalance: 2000
+  startingBalance: 10000
   demolitionRefundRate: 0.5
 --- !u!1 &410087039
 GameObject:
@@ -5141,7 +5141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4401, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  secondsPerDay: 300
+  secondsPerDay: 50
   startingHour: 8
   speed: 1
 --- !u!114 &2100000003
@@ -5156,7 +5156,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4402, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingMoney: 1000
+  startingMoney: 10000
   neither:
     purchaseCost: 10
     dailyIncome: 0

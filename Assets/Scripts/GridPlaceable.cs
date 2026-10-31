@@ -3,10 +3,8 @@ using UnityEngine;
 public class GridPlaceable : MonoBehaviour
 {
     [SerializeField] private Vector2Int footprint = Vector2Int.one;
-
     [SerializeField] private BuildingCategory category;
     public BuildingCategory Category => category;
-
     [Tooltip("Population contributed while this house is active. Use 0 for non-housing buildings.")]
     [SerializeField, Min(0)] private int residentsProvided;
     public int ResidentsProvided => Mathf.Max(0, residentsProvided);

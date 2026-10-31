@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public enum BuildingCategory { Neither, Residential, Economic }
+public enum BuildingCategory { Neither, Residential, Economic, MayorsOffice }
 
 [RequireComponent(typeof(TimeManager))]
 public class DailyEconomy : MonoBehaviour

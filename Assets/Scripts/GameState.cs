@@ -7,6 +7,7 @@ public class GameState : MonoBehaviour
     private CurrencySystem currency;
     public int Balance => currency != null ? currency.Balance : 0;
     public int BuildingCount { get; private set; }
+    public bool MayorsOfficePlaced { get; private set; }
     public int ResidentialCount { get; private set; }
     public int Population { get; private set; }
     // Population currently assumes all housing is occupied; there is no migration model yet.
@@ -33,9 +34,13 @@ public class GameState : MonoBehaviour
         int residents = 0;
         BuildingCount = 0;
         ResidentialCount = 0;
+        MayorsOfficePlaced = false;
+
         foreach (var building in FindObjectsByType<GridPlaceable>())
         {
+            GridPlaceable placeable = building.GetComponent<GridPlaceable>();
             if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
+            if (placeable.Category == BuildingCategory.MayorsOffice) MayorsOfficePlaced = true;
             BuildingCount++;
             if (building.ResidentsProvided <= 0) continue;
             ResidentialCount++;
