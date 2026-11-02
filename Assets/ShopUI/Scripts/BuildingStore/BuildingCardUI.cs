@@ -28,7 +28,11 @@ public class BuildingCardUI : MonoBehaviour
 
         buildingName.text = data.BuildingName;
         int cost = placementCost ?? data.Price;
-        buildingPrice.text = cost < 0 ? "Unavailable" : "$" + cost.ToString("N0");
+        buildingPrice.text = cost < 0 ? "Unavailable" :
+            $"${cost:N0}\n<size=75%>Income ${data.DailyIncome:N0} / Upkeep ${data.DailyUpkeep:N0}\nNet {EconomyBudgetUI.SignedMoney(data.DailyNet)} / day</size>";
+        buildingPrice.enableAutoSizing = true;
+        buildingPrice.fontSizeMin = 14;
+        buildingPrice.fontSizeMax = 18;
         selectButton.interactable = cost >= 0;
 
         if (data.BuildingIcon != null)

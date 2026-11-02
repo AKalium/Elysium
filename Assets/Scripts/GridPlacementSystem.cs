@@ -14,8 +14,6 @@ public class GridPlacementSystem : MonoBehaviour {
     [SerializeField] private GameObject[] placeablePrefabs = new GameObject[0];
     [SerializeField] private CurrencySystem currency;
     [SerializeField] private BuildingStoreUI storeUI;
-    // Prices follow the same order as Placeable Prefabs: house, tower, wall.
-    [SerializeField] private int[] constructionCosts = { 100, 250, 50 };
     [SerializeField] private Color gridColor = new Color(0.1f, 0.1f, 0.1f, 0.3f);
     [SerializeField] private Color validPlacementColor = new Color(0.2f, 1f, 0.2f, 0.9f);
     [SerializeField] private Color invalidPlacementColor = new Color(1f, 0.2f, 0.2f, 0.9f);
@@ -112,7 +110,7 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        if (prefab.name == "mayors office" && GameState.Instance.MayorsOfficePlaced) return false;
+        if (prefab.name == "mayors office" && GameState.Instance != null && GameState.Instance.MayorsOfficePlaced) return false;
 
         Vector2Int footprint = GetFootprint(prefab);
         int cost = GetConstructionCost(prefab);
@@ -287,9 +285,9 @@ public class GridPlacementSystem : MonoBehaviour {
     public int GetConstructionCost(int index)
     {
         // Refuse unpriced prefabs instead of accidentally granting free buildings.
-        return index >= 0 && index < placeablePrefabs.Length && placeablePrefabs[index] != null &&
-            constructionCosts != null && index < constructionCosts.Length
-            ? Mathf.Max(0, constructionCosts[index]) : -1;
+        if (index < 0 || index >= placeablePrefabs.Length || placeablePrefabs[index] == null) return -1;
+        var placeable = placeablePrefabs[index].GetComponent<GridPlaceable>();
+        return placeable != null && placeable.Definition != null ? placeable.Definition.Price : -1;
     }
 
     private void UpdateSelection() 

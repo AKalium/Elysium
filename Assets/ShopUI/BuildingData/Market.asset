@@ -15,6 +15,8 @@ MonoBehaviour:
   buildingId: market
   buildingName: Market
   price: 200
+  dailyIncome: 60
+  dailyUpkeep: 10
   category: 1
   buildingIcon: {fileID: 4098351663074733459, guid: 23358c20579b0c44db779403a2afb043, type: 3}
   buildingPrefab: {fileID: 3349293597268598346, guid: b0e9c13e912ad4640a038f061009559c, type: 3}
