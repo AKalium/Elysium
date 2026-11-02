@@ -49,5 +49,24 @@ public class GameState : MonoBehaviour
         Population = residents;
         if (previous != Population) PopulationChanged?.Invoke(Population);
     }
+    public int CountBuildingsOfType(string buildingTypeId)
+{
+    if (string.IsNullOrEmpty(buildingTypeId))
+        return 0;
+
+    int count = 0;
+
+    foreach (GridPlaceable building in FindObjectsByType<GridPlaceable>(
+                 FindObjectsSortMode.None))
+    {
+        if (building.gameObject.scene != gameObject.scene)
+            continue;
+
+        if (building.BuildingTypeId == buildingTypeId)
+            count++;
+    }
+
+    return count;
+}
     private void OnDestroy() { if (Instance == this) Instance = null; }
 }
