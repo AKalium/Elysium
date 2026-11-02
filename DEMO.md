@@ -28,3 +28,7 @@ from File Explorer will not work reliably with WebGL.
 Use the on-screen tutorial for placement and demolition controls. The top-center clock shows the day and time. Prices and balance are shown in the building store. Progress lasts for the current session.
 
 The shop is connected to apartment, road, Mayor's Office, and market placement. Publishing the build to a public website is a separate step.
+
+A free road starts in the map's center. Connect roads to it before placing
+buildings. Disconnected road islands cannot support buildings; severing the
+last route to the center automatically demolishes buildings that lose access.

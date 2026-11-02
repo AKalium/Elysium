@@ -23,8 +23,8 @@ public static class ClockUISetup
         var panel = new GameObject("Clock Panel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(root.transform, false);
         var rect = panel.GetComponent<RectTransform>();
-        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 1);
-        rect.anchoredPosition = new Vector2(0, -16);
+        rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.zero;
+        rect.anchoredPosition = new Vector2(20, 20);
         rect.sizeDelta = new Vector2(390, 52);
         panel.GetComponent<Image>().color = new Color32(229, 211, 166, 255);
         panel.GetComponent<Image>().sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd");

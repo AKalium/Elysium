@@ -1,33 +1,24 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum BuildingCategory { Neither, Residential, Economic, MayorsOffice }
 
 [RequireComponent(typeof(TimeManager))]
+[DefaultExecutionOrder(-100)]
 public class DailyEconomy : MonoBehaviour
 {
-    [Serializable]
-    public struct BuildingRates
-    {
-        [Min(0)] public int purchaseCost;
-        [Min(0)] public int dailyIncome;
-        [Min(0)] public int dailyUpkeep;
-        public BuildingRates(int cost, int income, int upkeep)
-        { purchaseCost = cost; dailyIncome = income; dailyUpkeep = upkeep; }
-    }
-
     [SerializeField, Min(0)] private int startingMoney = 10000;
-    [SerializeField] private BuildingRates neither = new BuildingRates(10, 0, 2);
-    [SerializeField] private BuildingRates residential = new BuildingRates(100, 25, 5);
-    [SerializeField] private BuildingRates economic = new BuildingRates(200, 60, 10);
-    private TimeManager clock;
     [SerializeField] private CurrencySystem currency;
+    private TimeManager clock;
     private long standaloneBalance;
     public long Balance => currency != null ? currency.Balance : standaloneBalance;
-    public long LastIncome { get; private set; }
-    public long LastUpkeep { get; private set; }
+    public long LastIncome => LastReport?.Income ?? 0;
+    public long LastUpkeep => LastReport?.Upkeep ?? 0;
     public long LastNet => LastIncome - LastUpkeep;
+    public BudgetReport LastReport { get; private set; }
     public event Action<long> BalanceChanged;
+    public event Action<BudgetReport> DaySettled;
 
     private void Awake()
     {
@@ -47,45 +38,43 @@ public class DailyEconomy : MonoBehaviour
     }
     private void NotifyBalance(int value) => BalanceChanged?.Invoke(value);
 
-    public BuildingRates GetRates(BuildingCategory category)
+    // Both forecasts and payouts use the exact same active-building snapshot.
+    public BudgetReport Forecast()
     {
-        switch (category)
+        var counts = new Dictionary<BuildingData, int>();
+        foreach (var building in FindObjectsByType<GridPlaceable>())
         {
-            case BuildingCategory.Residential: return residential;
-            case BuildingCategory.Economic: return economic;
-            default: return neither;
+            if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
+            var data = building.Definition;
+            if (data == null) continue;
+            counts.TryGetValue(data, out int count);
+            counts[data] = count + 1;
         }
-    }
-
-    public bool CanAfford(BuildingCategory category) => Balance >= GetRates(category).purchaseCost;
-    public bool TryPurchase(BuildingCategory category)
-    {
-        if (!CanAfford(category)) return false;
-        if (currency != null) return currency.TrySpend(GetRates(category).purchaseCost);
-        standaloneBalance -= GetRates(category).purchaseCost;
-        BalanceChanged?.Invoke(Balance);
-        return true;
+        var lines = new List<BudgetReport.Line>();
+        long net = 0;
+        foreach (var entry in counts)
+        {
+            long income = (long)entry.Key.DailyIncome * entry.Value;
+            long upkeep = (long)entry.Key.DailyUpkeep * entry.Value;
+            lines.Add(new BudgetReport.Line(entry.Key.BuildingName, entry.Value, income, upkeep));
+            net += income - upkeep;
+        }
+        lines.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+        return new BudgetReport(clock.Day + 1, Balance, BudgetReport.ClampBalance(Balance, net), lines);
     }
 
     private void SettleDay(int day)
     {
-        LastIncome = 0;
-        LastUpkeep = 0;
-        // One scan per day includes pre-placed and newly constructed buildings,
-        // excludes prefab assets, and avoids a global registry across scenes.
-        foreach (GridPlaceable building in FindObjectsByType<GridPlaceable>())
-        {
-            if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
-            BuildingRates rates = GetRates(building.Category);
-            LastIncome += rates.dailyIncome;
-            LastUpkeep += rates.dailyUpkeep;
-        }
-        // Upkeep may create debt; do not silently discard costs at zero balance.
-        if (currency != null) currency.ApplySettlement(LastNet);
+        var forecast = Forecast();
+        long opening = Balance;
+        if (currency != null) currency.ApplySettlement(forecast.Net);
         else
         {
-            standaloneBalance += LastNet;
+            standaloneBalance = BudgetReport.ClampBalance(standaloneBalance, forecast.Net);
             BalanceChanged?.Invoke(Balance);
         }
+        // Publish only after the shared wallet has received the settlement.
+        LastReport = new BudgetReport(day, opening, Balance, forecast.Lines);
+        DaySettled?.Invoke(LastReport);
     }
 }

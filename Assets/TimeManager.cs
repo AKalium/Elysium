@@ -37,6 +37,9 @@ public class TimeManager : MonoBehaviour
             minuteOfDay = 0;
             Day++;
             Midnight?.Invoke(Day);
+            // A daily report may pause during the event. Stop at midnight even
+            // when a long frame would otherwise advance through several days.
+            if (Paused) return;
         }
         minuteOfDay += minutes;
     }

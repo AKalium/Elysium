@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingId: apartment
   buildingName: Apartment
-  price: 200
+  price: 100
+  dailyIncome: 25
+  dailyUpkeep: 5
   category: 0
   buildingIcon: {fileID: 7081727814881962400, guid: 10f011596b193414cbc093efd28d52c7, type: 3}
   buildingPrefab: {fileID: 3349293597268598346, guid: 29659939608b63b49a36a1dd46312889, type: 3}

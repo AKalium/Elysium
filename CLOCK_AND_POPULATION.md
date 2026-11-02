@@ -1,7 +1,7 @@
 # Clock and population handoff
 
 `Assets/UI/ClockHUD.prefab` is a linked instance in SampleScene. Double-click it
-to edit the top-center panel, font, colors, spacing, or add other UI elements.
+to edit the lower-left panel, font, colors, spacing, or add other UI elements.
 TimeEconomyHUD formats TimeManager's time into the assigned Text label. Turn off
 Show Day for time alone. The UI lead's shop and currency display remain connected.
 
@@ -16,7 +16,7 @@ there is no migration simulation yet.
 Shop categories are Residential, Commercial, and Services. Daily economy categories
 are Neither, Residential, and Economic. Apartments are Residential for daily
 settlements; markets are Economic; roads and the Mayor's Office are Neither.
-Per-building purchase prices exist; daily income/upkeep still use category rates.
+Purchase prices and daily income/upkeep now share each building's BuildingData definition.
 Happiness and jobs remain unimplemented placeholders.
 
 Main now supplies apartment, market, road, and Mayor's Office sprites and prefabs

@@ -28,10 +28,12 @@ public static class TimeEconomyVerification
         InvokeLifecycle(economy, "Awake");
         InvokeLifecycle(economy, "OnEnable");
         InvokeLifecycle(grid, "Awake");
+        RoadNetworkTestSupport.Connect(grid, new Vector2Int(39, 41));
         state.RefreshPopulation();
         int initialPopulation = state.Population;
         int initialBuildings = state.BuildingCount;
         int initialBalance = wallet.Balance;
+        double dayLength = new SerializedObject(clock).FindProperty("secondsPerDay").floatValue;
         var adapter = UnityEngine.Object.FindAnyObjectByType<BuildingStoreAdapter>();
         string[] dataNames = { "Apartment", "Road", "CityHall", "Market" };
         string[] prefabNames = { "apt", "road", "mayors office", "market" };
@@ -42,6 +44,7 @@ public static class TimeEconomyVerification
             var data = AssetDatabase.LoadAssetAtPath<BuildingData>("Assets/ShopUI/BuildingData/" + dataNames[i] + ".asset");
             prefabs[i] = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/" + prefabNames[i] + ".prefab");
             Check(prefabs[i] && prefabs[i].GetComponent<SpriteRenderer>().sprite, "Building graphics: " + dataNames[i]);
+            Check(prefabs[i].GetComponent<GridPlaceable>().Definition == data, "Shared building definition: " + dataNames[i]);
             Check(adapter.GetPlacementCost(data) == prices[i], "Shop price: " + dataNames[i]);
             Check(adapter.SelectBuilding(data) && wallet.Balance == initialBalance, "Selection costs nothing");
         }
@@ -61,11 +64,11 @@ public static class TimeEconomyVerification
         Check(clockView && PrefabUtility.IsPartOfPrefabInstance(clockView), "Editable clock prefab");
         InvokeLifecycle(clockView, "Awake");
         Check(clockView.DisplayText == "Day 1  |  8:00 AM", "Clock display");
-        Check(!grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out _) && wallet.Balance == initialBalance, "Road rule costs nothing on failure");
+        Check(!grid.TryPlace(prefabs[0], new Vector2Int(160, 80), out _) && wallet.Balance == initialBalance, "Road rule costs nothing on failure");
         Check(grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out var road), "Place road");
         Check(grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out var house), "Place apartment");
         Check(grid.TryPlace(prefabs[3], new Vector2Int(37, 40), out var market), "Place market");
-        Check(grid.TryPlace(prefabs[2], new Vector2Int(39, 36), out var hall), "Place Mayor's Office");
+        Check(grid.TryPlace(prefabs[2], new Vector2Int(39, 38), out var hall), "Place Mayor's Office");
         int afterPurchase = initialBalance - 850;
         Check(wallet.Balance == afterPurchase && economy.Balance == afterPurchase, "Charge once");
         Check(state.Population == initialPopulation + 10 && state.BuildingCount == initialBuildings + 4, "Apartment population");
@@ -75,18 +78,18 @@ public static class TimeEconomyVerification
         foreach (var building in UnityEngine.Object.FindObjectsByType<GridPlaceable>())
         {
             if (!building.isActiveAndEnabled || building.gameObject.scene != state.gameObject.scene) continue;
-            var rate = economy.GetRates(building.Category);
-            expectedIncome += rate.dailyIncome;
-            expectedUpkeep += rate.dailyUpkeep;
+            var rate = building.Definition;
+            expectedIncome += rate.DailyIncome;
+            expectedUpkeep += rate.DailyUpkeep;
         }
-        clock.AdvanceTime(199);
+        clock.AdvanceTime(dayLength * 2d / 3d - 1d);
         Check(wallet.Balance == afterPurchase && clock.Day == 1, "No early payout");
-        clock.AdvanceTime(1);
+        clock.AdvanceTime(1.001);
         Check(wallet.Balance == afterPurchase + expectedIncome - expectedUpkeep && state.Balance == wallet.Balance && economy.Balance == wallet.Balance, "Shared midnight settlement");
-        Check(economy.LastIncome == expectedIncome && economy.LastUpkeep == expectedUpkeep, "Category rates");
+        Check(economy.LastIncome == expectedIncome && economy.LastUpkeep == expectedUpkeep, "Per-building rates");
         int settledBalance = wallet.Balance;
         clock.Paused = true;
-        clock.AdvanceTime(300);
+        clock.AdvanceTime(dayLength);
         Check(wallet.Balance == settledBalance && clock.Day == 2, "Pause");
         clock.Paused = false;
         grid.DestroyBuilding(new Vector2Int(40, 40));
@@ -107,12 +110,12 @@ public static class TimeEconomyVerification
         int speedDay = clock.Day;
         speedButton.onClick.Invoke();
         Check(clock.Speed == 2 && speedLabel.text == "2×", "Button selects 2x");
-        clock.AdvanceTime(150);
-        Check(clock.Day == speedDay + 1, "2x advances a day in 150 seconds");
+        clock.AdvanceTime(dayLength / 2d);
+        Check(clock.Day == speedDay + 1, "2x advances a day in half the configured duration");
         speedButton.onClick.Invoke();
         Check(clock.Speed == 4 && speedLabel.text == "4×", "Button selects 4x");
         int beforeFastSettlement = wallet.Balance;
-        clock.AdvanceTime(150);
+        clock.AdvanceTime(dayLength / 2d);
         Check(clock.Day == speedDay + 3 && wallet.Balance == beforeFastSettlement + economy.LastNet * 2, "4x applies each midnight settlement");
         speedButton.onClick.Invoke();
         Check(clock.Speed == 1 && speedLabel.text == "1×", "Button cycles back to 1x");
@@ -121,7 +124,7 @@ public static class TimeEconomyVerification
         speedButton.onClick.Invoke();
         Check(clock.Speed == 2, "Re-enabling does not duplicate click listeners");
         clock.Paused = true;
-        clock.AdvanceTime(300);
+        clock.AdvanceTime(dayLength);
         Check(clock.Day == speedDay + 3 && Time.timeScale == 1, "Pause works at increased speed without scaling UI time");
         InvokeLifecycle(clockView, "OnDisable");
         Debug.Log("TIME_ECONOMY_VERIFICATION_PASSED");
