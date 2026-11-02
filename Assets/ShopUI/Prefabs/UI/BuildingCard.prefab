@@ -445,6 +445,9 @@ MonoBehaviour:
   buildingName: {fileID: 3085869450565128439}
   buildingPrice: {fileID: 8844835141326801719}
   selectButton: {fileID: 5399470423896760817}
+  cardBackground: {fileID: 6786800143805368657}
+  normalColor: {r: 1, g: 0.9372549, b: 0.77254903, a: 1}
+  selectedColor: {r: 0.8509804, g: 0.43529412, b: 0.5262317, a: 1}
 --- !u!1 &6919089297222416920
 GameObject:
   m_ObjectHideFlags: 0

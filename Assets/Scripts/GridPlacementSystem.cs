@@ -29,6 +29,15 @@ public class GridPlacementSystem : MonoBehaviour {
     private Material previewMaterial;
     private Material gridMaterial;
     private MeshRenderer previewRenderer;
+    private GameObject ghostPreview;
+private SpriteRenderer ghostRenderer;
+private int ghostPrefabIndex = -1;
+
+[SerializeField] private Color validGhostColor =
+    new Color(0.4f, 1f, 0.4f, 0.5f);
+
+[SerializeField] private Color invalidGhostColor =
+    new Color(1f, 0.3f, 0.3f, 0.5f);
     private int selectedPrefabIndex = -1;
     private Vector2Int hoveredCell;
     private Vector2Int hoveredFootprint = Vector2Int.one;
@@ -95,19 +104,18 @@ public class GridPlacementSystem : MonoBehaviour {
 
         CreateGridVisual();
         CreatePlacementPreview();
-        roadVisuals = GetComponent<RoadNetworkVisuals>();
-        if (roadVisuals == null) roadVisuals = gameObject.AddComponent<RoadNetworkVisuals>();
-        roadVisuals.Initialize(this);
+        CreateGhostPreview();
     }
 
-    private void Update() 
-    {
-        UpdateSelection();
-        UpdateHoveredCell();
-        UpdatePlacementPreview();
-        HandlePlacementInput();
-        HandleDeletionInput();
-    }
+    private void Update()
+{
+    UpdateSelection();
+    UpdateHoveredCell();
+    UpdatePlacementPreview();
+    UpdateGhostPreview();
+    HandlePlacementInput();
+    HandleDeletionInput();
+}
 
     private void OnDestroy() 
     {
@@ -158,7 +166,15 @@ public class GridPlacementSystem : MonoBehaviour {
             return false;
         }
 
-        if (prefab.name == "mayors office" && GameState.Instance != null && GameState.Instance.MayorsOfficePlaced) return false;
+        if (HasReachedBuildingLimit(prefab))
+    {
+    if (storeUI != null)
+    {
+        storeUI.ShowMessage("This building has reached its placement limit!");
+    }
+
+    return false;
+    }
 
         Vector2Int footprint = GetFootprint(prefab);
         int cost = GetConstructionCost(prefab);
@@ -166,9 +182,14 @@ public class GridPlacementSystem : MonoBehaviour {
         if (startingRoad) cost = 0;
         else if (!currency.CanAfford(cost)) return false;
         if (!CanPlace(cell, footprint))
-        {
-            return false;
-        }
+    {
+    if (storeUI != null)
+    {
+        storeUI.ShowMessage("Can't place building here!");
+    }
+
+    return false;
+}
 
         if (prefab.name != "road" && !HasCentralRoadAccess(cell, footprint))
         {
@@ -331,7 +352,27 @@ public class GridPlacementSystem : MonoBehaviour {
         }
         selectedPrefabIndex = index;
     }
+private bool HasReachedBuildingLimit(GameObject prefab)
+{
+    if (prefab == null || GameState.Instance == null)
+        return false;
 
+    GridPlaceable placeable = prefab.GetComponent<GridPlaceable>();
+
+    if (placeable == null || placeable.MaxAllowed == 0)
+        return false;
+
+    if (string.IsNullOrEmpty(placeable.BuildingTypeId))
+    {
+        Debug.LogWarning("Limited building is missing a Building Type ID.", prefab);
+        return true;
+    }
+
+    int existing = GameState.Instance.CountBuildingsOfType(
+        placeable.BuildingTypeId);
+
+    return existing >= placeable.MaxAllowed;
+}
     private bool CanPlace(Vector2Int anchor, Vector2Int footprint) 
     {
         if (anchor.x < 0 || anchor.y < 0 ||
@@ -564,80 +605,28 @@ public class GridPlacementSystem : MonoBehaviour {
             ? GetFootprint(placeablePrefabs[selectedPrefabIndex])
             : Vector2Int.one;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
-            CanPlace(hoveredCell, hoveredFootprint) &&
-            (placeablePrefabs[selectedPrefabIndex].name == "road" ||
-                HasCentralRoadAccess(hoveredCell, hoveredFootprint)) &&
-            currency.CanAfford(GetConstructionCost(placeablePrefabs[selectedPrefabIndex]));
-        hasHoveredCell = true;
+    CanPlace(hoveredCell, hoveredFootprint) &&
+    !HasReachedBuildingLimit(placeablePrefabs[selectedPrefabIndex]) &&
+    (placeablePrefabs[selectedPrefabIndex].name == "road" ||
+        IsAdjacentToRoad(hoveredCell, hoveredFootprint)) &&
+        currency.CanAfford(GetConstructionCost(placeablePrefabs[selectedPrefabIndex]));
+
+hasHoveredCell = true;
+}
+
+
+    private void HandlePlacementInput()
+{
+    Mouse mouse = Mouse.current;
+
+    if (mouse == null || !mouse.leftButton.wasPressedThisFrame ||
+        !hasHoveredCell || selectedPrefabIndex < 0)
+    {
+        return;
     }
 
-    private void HandlePlacementInput() 
-    {
-        Mouse mouse = Mouse.current;
-        if (mouse == null) { ResetRoadStroke(); return; }
-        if (mouse.rightButton.isPressed || mouse.rightButton.wasPressedThisFrame) { ResetRoadStroke(); return; }
-        if (Keyboard.current != null && (Keyboard.current.leftShiftKey.isPressed || Keyboard.current.rightShiftKey.isPressed))
-        { ResetRoadStroke(); return; }
-        ProcessPlacementInput(hoveredCell, hasHoveredCell,
-            mouse.leftButton.wasPressedThisFrame, mouse.leftButton.isPressed);
-    }
-
-    private void ProcessPlacementInput(Vector2Int cell, bool pointerOnMap, bool pressed, bool held)
-    {
-        if ((!held && !pressed) || !pointerOnMap || Time.timeScale == 0f || selectedPrefabIndex < 0 ||
-            cell.x < 0 || cell.y < 0 || cell.x >= gridWidth || cell.y >= gridHeight)
-        {
-            ResetRoadStroke();
-            return;
-        }
-        var prefab = placeablePrefabs[selectedPrefabIndex];
-        if (prefab.name != "road")
-        {
-            ResetRoadStroke();
-            if (pressed) TryPlace(prefab, cell, out _);
-            return;
-        }
-        if (pressed)
-        {
-            ResetRoadStroke();
-            roadStrokeActive = true;
-            lastRoadCell = cell;
-            PaintRoadCell(prefab, cell);
-        }
-        else if (roadStrokeActive)
-        {
-            // Fill skipped cells between frames. Step one axis at a time so
-            // even diagonal strokes produce connected roads rather than gaps.
-            TraceStroke(lastRoadCell, cell, next => PaintRoadCell(prefab, next));
-            lastRoadCell = cell;
-        }
-    }
-
-    private static void TraceStroke(Vector2Int from, Vector2Int to, System.Action<Vector2Int> visit)
-    {
-        var current = from;
-        int dx = Mathf.Abs(to.x - from.x), dy = Mathf.Abs(to.y - from.y);
-        int sx = to.x > from.x ? 1 : -1, sy = to.y > from.y ? 1 : -1;
-        int ix = 0, iy = 0;
-        while (ix < dx || iy < dy)
-        {
-            if (ix < dx && (iy >= dy || (1 + 2 * ix) * dy <= (1 + 2 * iy) * dx))
-            { current.x += sx; ix++; }
-            else { current.y += sy; iy++; }
-            visit(current);
-        }
-    }
-
-    private void PaintRoadCell(GameObject prefab, Vector2Int cell)
-    {
-        if (roadStrokeVisited.Add(cell)) TryPlace(prefab, cell, out _);
-    }
-
-    private void ResetRoadStroke()
-    {
-        roadStrokeActive = false;
-        roadStrokeVisited.Clear();
-    }
+    TryPlace(placeablePrefabs[selectedPrefabIndex], hoveredCell, out _);
+}
 
     private void CreateGridVisual() 
     {
@@ -688,6 +677,76 @@ public class GridPlacementSystem : MonoBehaviour {
         meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         meshRenderer.receiveShadows = false;
     }
+
+    private void CreateGhostPreview()
+{
+    ghostPreview = new GameObject("Building Ghost Preview");
+    ghostRenderer = ghostPreview.AddComponent<SpriteRenderer>();
+
+    // Keep the preview visible above regular buildings.
+    ghostRenderer.sortingOrder = 100;
+
+    // The ghost is initially hidden.
+    ghostPreview.SetActive(false);
+}
+
+private void UpdateGhostPreview()
+{
+    if (ghostPreview == null)
+        return;
+
+    bool showGhost = hasHoveredCell && selectedPrefabIndex >= 0;
+
+    if (!showGhost)
+    {
+        ghostPreview.SetActive(false);
+        return;
+    }
+
+    GameObject prefab = placeablePrefabs[selectedPrefabIndex];
+
+    if (prefab == null)
+    {
+        ghostPreview.SetActive(false);
+        return;
+    }
+
+    // Update the sprite when the selected building changes.
+    if (ghostPrefabIndex != selectedPrefabIndex)
+    {
+        SpriteRenderer prefabRenderer = prefab.GetComponent<SpriteRenderer>();
+
+        if (prefabRenderer == null)
+        {
+            ghostPreview.SetActive(false);
+            return;
+        }
+
+        ghostRenderer.sprite = prefabRenderer.sprite;
+        ghostRenderer.flipX = prefabRenderer.flipX;
+        ghostRenderer.flipY = prefabRenderer.flipY;
+
+        ghostPreview.transform.localScale = prefab.transform.localScale;
+        ghostPreview.transform.rotation = prefab.transform.rotation;
+
+        ghostPrefabIndex = selectedPrefabIndex;
+    }
+
+    // Match the position used when actually placing the building.
+    Vector2Int footprint = GetFootprint(prefab);
+
+    ghostPreview.transform.position = new Vector3(
+        gridOrigin.x + (hoveredCell.x + footprint.x * 0.5f) * cellSize,
+        gridOrigin.y + (hoveredCell.y + footprint.y * 0.5f) * cellSize,
+        prefab.transform.position.z
+    );
+
+    ghostRenderer.color = hoveredCellIsValid
+        ? validGhostColor
+        : invalidGhostColor;
+
+    ghostPreview.SetActive(true);
+}
 
     private void CreatePlacementPreview() 
     {
