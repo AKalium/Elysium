@@ -107,6 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprint: {x: 4, y: 2}
+  definition: {fileID: 11400000, guid: 4ad2d9cd93da94e239f211babee22314, type: 2}
   category: 3
   residentsProvided: 0
 --- !u!114 &8713448422844792761

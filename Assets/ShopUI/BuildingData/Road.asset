@@ -15,6 +15,8 @@ MonoBehaviour:
   buildingId: road
   buildingName: Road
   price: 50
+  dailyIncome: 0
+  dailyUpkeep: 2
   category: 2
   buildingIcon: {fileID: -1050300053142875006, guid: 8978d3b5d3439574bb2408fa6fac873b, type: 3}
   buildingPrefab: {fileID: 3349293597268598346, guid: 8925253eca05f404b91ad20082e94e7f, type: 3}

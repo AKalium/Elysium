@@ -16,7 +16,7 @@ there is no migration simulation yet.
 Shop categories are Residential, Commercial, and Services. Daily economy categories
 are Neither, Residential, and Economic. Apartments are Residential for daily
 settlements; markets are Economic; roads and the Mayor's Office are Neither.
-Per-building purchase prices exist; daily income/upkeep still use category rates.
+Purchase prices and daily income/upkeep now share each building's BuildingData definition.
 Happiness and jobs remain unimplemented placeholders.
 
 Main now supplies apartment, market, road, and Mayor's Office sprites and prefabs
