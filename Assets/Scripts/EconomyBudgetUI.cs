@@ -3,7 +3,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Editable prefab view; settlement snapshots are queued without pausing the clock.</summary>
+/// <summary>Editable prefab view; daily reports pause simulation until dismissed.</summary>
 public sealed class EconomyBudgetUI : MonoBehaviour
 {
     [SerializeField] private DailyEconomy economy;
@@ -13,20 +13,39 @@ public sealed class EconomyBudgetUI : MonoBehaviour
     [SerializeField] private Text reportHeading;
     [SerializeField] private Text reportText;
     [SerializeField] private Button budgetButton;
+    [SerializeField] private Button closeBudgetButton;
     [SerializeField] private Button closeReportButton;
     [SerializeField] private ScrollRect reportScroll;
     private readonly Queue<BudgetReport> pending = new Queue<BudgetReport>();
     private float nextRefresh;
+    private TimeManager pausedClock;
+    private bool ownsPause;
+    private bool previousClockPaused;
+    private float previousTimeScale;
     public bool IsReportOpen => reportPanel != null && reportPanel.activeSelf;
     public int PendingReports => pending.Count;
     public string ReportText => reportText != null ? reportText.text : "";
     public string BudgetText => budgetText != null ? budgetText.text : "";
+
+    public bool ContainsScreenPoint(Vector2 position)
+    {
+        if (!isActiveAndEnabled) return false;
+        var canvas = GetComponent<Canvas>();
+        var camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+        return Contains(reportPanel, position, camera) || Contains(budgetPanel, position, camera) ||
+            (budgetButton != null && Contains(budgetButton.gameObject, position, camera));
+    }
+
+    private static bool Contains(GameObject target, Vector2 position, Camera camera) =>
+        target != null && target.activeInHierarchy && target.transform is RectTransform rect &&
+        RectTransformUtility.RectangleContainsScreenPoint(rect, position, camera);
 
     private void OnEnable()
     {
         if (economy == null) economy = FindAnyObjectByType<DailyEconomy>();
         if (economy != null) economy.DaySettled += ShowReport;
         if (budgetButton != null) budgetButton.onClick.AddListener(ToggleBudget);
+        if (closeBudgetButton != null) closeBudgetButton.onClick.AddListener(CloseBudget);
         if (closeReportButton != null) closeReportButton.onClick.AddListener(DismissReport);
         RefreshBudget();
     }
@@ -34,7 +53,11 @@ public sealed class EconomyBudgetUI : MonoBehaviour
     {
         if (economy != null) economy.DaySettled -= ShowReport;
         if (budgetButton != null) budgetButton.onClick.RemoveListener(ToggleBudget);
+        if (closeBudgetButton != null) closeBudgetButton.onClick.RemoveListener(CloseBudget);
         if (closeReportButton != null) closeReportButton.onClick.RemoveListener(DismissReport);
+        pending.Clear();
+        if (reportPanel != null) reportPanel.SetActive(false);
+        RestoreSimulation();
     }
     private void LateUpdate()
     {
@@ -47,6 +70,7 @@ public sealed class EconomyBudgetUI : MonoBehaviour
         budgetPanel.SetActive(!budgetPanel.activeSelf);
         RefreshBudget();
     }
+    public void CloseBudget() => budgetPanel.SetActive(false);
     public static string SignedMoney(long value) => value < 0 ? $"-${-value:N0}" : $"+${value:N0}";
     private static string Money(long value) => value < 0 ? $"-${-value:N0}" : $"${value:N0}";
 
@@ -80,6 +104,7 @@ public sealed class EconomyBudgetUI : MonoBehaviour
     }
     private void RenderReport(BudgetReport report)
     {
+        PauseSimulation();
         reportHeading.text = $"DAY {report.Day} · DAILY BUDGET";
         var text = new StringBuilder();
         text.AppendLine($"<size=28><b>{(report.Net >= 0 ? "Net earned" : "Net loss")}  {SignedMoney(report.Net)}</b></size>");
@@ -93,7 +118,7 @@ public sealed class EconomyBudgetUI : MonoBehaviour
             text.AppendLine($"\n<b>{line.Name} × {line.Count}</b>   {SignedMoney(line.Net)} net");
             text.AppendLine($"Income {Money(line.Income)}    Upkeep {Money(line.Upkeep)}");
         }
-        text.AppendLine("\n<size=14>Settled at midnight for the buildings active at that time.\nCity time continues while this report is open.</size>");
+        text.AppendLine("\n<size=14>Settled at midnight for the buildings active at that time.\nGame paused. Select Continue to return to the city.</size>");
         reportText.text = text.ToString();
         reportPanel.SetActive(true);
         Canvas.ForceUpdateCanvases();
@@ -110,6 +135,31 @@ public sealed class EconomyBudgetUI : MonoBehaviour
     public void DismissReport()
     {
         if (pending.Count > 0) RenderReport(pending.Dequeue());
-        else if (reportPanel != null) reportPanel.SetActive(false);
+        else
+        {
+            if (reportPanel != null) reportPanel.SetActive(false);
+            RestoreSimulation();
+        }
+    }
+
+    private void PauseSimulation()
+    {
+        // Queued reports share one pause; never overwrite the original state.
+        if (ownsPause) return;
+        pausedClock = economy != null ? economy.GetComponent<TimeManager>() : FindAnyObjectByType<TimeManager>();
+        previousClockPaused = pausedClock != null && pausedClock.Paused;
+        previousTimeScale = Time.timeScale;
+        ownsPause = true;
+        if (pausedClock != null) pausedClock.Paused = true;
+        Time.timeScale = 0f;
+    }
+
+    private void RestoreSimulation()
+    {
+        if (!ownsPause) return;
+        if (pausedClock != null) pausedClock.Paused = previousClockPaused;
+        Time.timeScale = previousTimeScale;
+        pausedClock = null;
+        ownsPause = false;
     }
 }

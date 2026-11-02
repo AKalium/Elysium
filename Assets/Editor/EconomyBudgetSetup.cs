@@ -26,10 +26,17 @@ public static class EconomyBudgetSetup
         scaler.referenceResolution = new Vector2(1280, 720);
         scaler.matchWidthOrHeight = 0.5f;
         var view = root.AddComponent<EconomyBudgetUI>();
-        var toggle = Button(root.transform, "Budget Button", "CITY BUDGET", new Vector2(1, 1), new Vector2(-20, -75), new Vector2(180, 40));
-        var panel = Box(root.transform, "Budget Panel", new Vector2(1, 1), new Vector2(-20, -125), new Vector2(340, 340), Ink);
+        var toggle = Button(root.transform, "Budget Button", "CITY BUDGET", new Vector2(0, 1), new Vector2(20, -130), new Vector2(180, 40));
+        var panel = Box(root.transform, "Budget Panel", new Vector2(1, 1), new Vector2(-20, -125), new Vector2(340, 390), Ink);
+        var header = Box(panel, "Drag Header", new Vector2(0, 1), Vector2.zero, new Vector2(340, 40), new Color32(39, 57, 71, 255));
+        header.gameObject.AddComponent<DraggableBudgetPanel>().SetPanel(panel);
+        var title = Label(header, "Window Title", 15, Paper);
+        title.text = "CITY BUDGET  |  drag to move";
+        Stretch(title.rectTransform, 12, 42, 0, 0);
+        title.alignment = TextAnchor.MiddleLeft;
+        var closeBudget = Button(header, "Close Budget Button", "X", new Vector2(1, 1), new Vector2(-5, -5), new Vector2(30, 30));
         var budget = Label(panel, "Budget Text", 17, Paper);
-        Stretch(budget.rectTransform, 18, 18, 18, 18);
+        Stretch(budget.rectTransform, 18, 18, 18, 52);
         var overlay = Box(root.transform, "Daily Report Overlay", Vector2.zero, Vector2.zero, Vector2.zero, new Color(0, 0, 0, 0.65f));
         Stretch(overlay, 0, 0, 0, 0);
         var report = Box(overlay, "Report Card", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(640, 560), Ink);
@@ -63,6 +70,7 @@ public static class EconomyBudgetSetup
         Set(so, "budgetPanel", panel.gameObject); Set(so, "budgetText", budget);
         Set(so, "reportPanel", overlay.gameObject); Set(so, "reportHeading", heading);
         Set(so, "reportText", body); Set(so, "budgetButton", toggle);
+        Set(so, "closeBudgetButton", closeBudget);
         Set(so, "closeReportButton", close); Set(so, "reportScroll", scroll);
         so.ApplyModifiedPropertiesWithoutUndo();
         if (!AssetDatabase.IsValidFolder("Assets/UI")) AssetDatabase.CreateFolder("Assets", "UI");

@@ -41,9 +41,9 @@ public sealed class CurrencySystem : MonoBehaviour
         BalanceChanged?.Invoke(Balance);
     }
 
-    public void RefundDemolition(int paidCost)
-    {
-        AddFunds((int)Math.Floor(Math.Max(0, paidCost) * (double)Mathf.Clamp01(demolitionRefundRate)));
-    }
+    public int CalculateDemolitionRefund(int paidCost) =>
+        (int)Math.Floor(Math.Max(0, paidCost) * (double)Mathf.Clamp01(demolitionRefundRate));
+
+    public void RefundDemolition(int paidCost) => AddFunds(CalculateDemolitionRefund(paidCost));
 
 }

@@ -28,6 +28,7 @@ public static class TimeEconomyVerification
         InvokeLifecycle(economy, "Awake");
         InvokeLifecycle(economy, "OnEnable");
         InvokeLifecycle(grid, "Awake");
+        RoadNetworkTestSupport.Connect(grid, new Vector2Int(39, 41));
         state.RefreshPopulation();
         int initialPopulation = state.Population;
         int initialBuildings = state.BuildingCount;
@@ -63,7 +64,7 @@ public static class TimeEconomyVerification
         Check(clockView && PrefabUtility.IsPartOfPrefabInstance(clockView), "Editable clock prefab");
         InvokeLifecycle(clockView, "Awake");
         Check(clockView.DisplayText == "Day 1  |  8:00 AM", "Clock display");
-        Check(!grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out _) && wallet.Balance == initialBalance, "Road rule costs nothing on failure");
+        Check(!grid.TryPlace(prefabs[0], new Vector2Int(160, 80), out _) && wallet.Balance == initialBalance, "Road rule costs nothing on failure");
         Check(grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out var road), "Place road");
         Check(grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out var house), "Place apartment");
         Check(grid.TryPlace(prefabs[3], new Vector2Int(37, 40), out var market), "Place market");

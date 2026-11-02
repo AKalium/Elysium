@@ -1,7 +1,7 @@
 # Clock and population handoff
 
 `Assets/UI/ClockHUD.prefab` is a linked instance in SampleScene. Double-click it
-to edit the top-center panel, font, colors, spacing, or add other UI elements.
+to edit the lower-left panel, font, colors, spacing, or add other UI elements.
 TimeEconomyHUD formats TimeManager's time into the assigned Text label. Turn off
 Show Day for time alone. The UI lead's shop and currency display remain connected.
 

@@ -19,6 +19,7 @@ public static class EconomyBudgetVerification
         Check(view && PrefabUtility.IsPartOfPrefabInstance(view), "Linked budget prefab");
         Invoke(wallet, "Awake"); Invoke(state, "Awake"); Invoke(clock, "Awake");
         Invoke(economy, "Awake"); Invoke(economy, "OnEnable"); Invoke(grid, "Awake");
+        RoadNetworkTestSupport.Connect(grid, new Vector2Int(39, 41));
         Invoke(view, "OnEnable");
         double dayLength = new SerializedObject(clock).FindProperty("secondsPerDay").floatValue;
         Check(!view.IsReportOpen && view.BudgetText.Contains("No daily settlement yet"), "No fictitious day-one earnings");
@@ -60,6 +61,7 @@ public static class EconomyBudgetVerification
             var reportScroll = (UnityEngine.UI.ScrollRect)new SerializedObject(view).FindProperty("reportScroll").objectReferenceValue;
             Check(reportScroll.content.anchoredPosition == Vector2.zero, "Report opens at earnings summary");
             Check(snapshot.Day == 2 && snapshot.Net == forecast.Net, "Day and net earnings");
+            Check(clock.Paused && Time.timeScale == 0f, "Report pauses simulation");
             original.Update(); original.FindProperty("price").intValue = 999;
             original.ApplyModifiedPropertiesWithoutUndo();
             grid.DestroyBuilding(new Vector2Int(40, 40));
@@ -71,11 +73,25 @@ public static class EconomyBudgetVerification
             Check(afterDemolition.Income == forecast.Income - 37 && afterDemolition.Upkeep == forecast.Upkeep - 11, "Demolished building excluded");
             Check(snapshot.Income == forecast.Income, "Settled snapshot remains unchanged");
             clock.AdvanceTime(dayLength * 2d);
-            Check(events == 3 && view.PendingReports == 2, "Each new day queues a report");
-            Check(wallet.Balance == afterRefund + afterDemolition.Net * 2, "Multiple-day payout totals");
-            view.DismissReport(); Check(view.IsReportOpen && view.PendingReports == 1, "Next report is shown");
-            view.DismissReport(); view.DismissReport(); Check(!view.IsReportOpen, "Continue dismisses final report");
+            Check(events == 1 && clock.Day == 2 && wallet.Balance == afterRefund, "Open report prevents further days and payouts");
+            view.DismissReport();
+            Check(!clock.Paused && Time.timeScale == 1f, "Continue restores simulation");
+            clock.AdvanceTime(dayLength * 3d);
+            Check(events == 2 && clock.Day == 3 && clock.Hour == 0 && clock.Minute == 0,
+                "Long frame stops at the first new-day popup");
+            Check(wallet.Balance == afterRefund + afterDemolition.Net, "Only one new payout before pause");
+            view.ShowReport(snapshot);
+            Check(view.PendingReports == 1, "External reports still queue");
+            view.DismissReport(); Check(view.IsReportOpen && clock.Paused && Time.timeScale == 0f, "Queued report retains pause");
+            view.DismissReport(); Check(!view.IsReportOpen && !clock.Paused && Time.timeScale == 1f, "Final report restores simulation");
+            clock.Paused = true;
+            Time.timeScale = 0.5f;
+            view.ShowReport(snapshot); view.DismissReport();
+            Check(clock.Paused && Time.timeScale == 0.5f, "Pre-existing pause and global speed are preserved");
+            clock.Paused = false; Time.timeScale = 1f;
+            view.ShowReport(snapshot);
             Invoke(view, "OnDisable"); Invoke(view, "OnEnable");
+            Check(!view.IsReportOpen && !clock.Paused && Time.timeScale == 1f, "Disabling UI releases pause and closes report");
             clock.AdvanceTime(dayLength);
             Check(view.IsReportOpen && view.PendingReports == 0, "Re-enable does not duplicate reports");
             view.DismissReport();
