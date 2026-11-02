@@ -108,6 +108,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   footprint: {x: 4, y: 2}
   category: 3
+  maxAllowed: 1
+  buildingTypeId: mayors_office
   residentsProvided: 0
 --- !u!114 &8713448422844792761
 MonoBehaviour:

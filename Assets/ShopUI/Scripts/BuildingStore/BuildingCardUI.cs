@@ -13,6 +13,18 @@ public class BuildingCardUI : MonoBehaviour
     [SerializeField] private Button selectButton;
 
     private BuildingData buildingData;
+    [SerializeField] private Image cardBackground;
+
+[SerializeField] private Color normalColor = Color.white;
+[SerializeField] private Color selectedColor = new Color(0.85f, 0.65f, 0.45f, 1f);
+
+public void SetSelected(bool selected)
+{
+    if (cardBackground != null)
+    {
+        cardBackground.color = selected ? selectedColor : normalColor;
+    }
+}
 
     public event Action<BuildingData> OnBuildingSelected;
 

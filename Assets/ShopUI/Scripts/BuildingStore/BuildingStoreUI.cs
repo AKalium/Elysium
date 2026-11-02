@@ -27,10 +27,12 @@ public class BuildingStoreUI : MonoBehaviour
     [Header("Store")]
     [SerializeField] private GameObject storePanel;
     [SerializeField] private Button closeButton;
+    [SerializeField] private Button openStoreButton;
     [Header("Placement Integration")]
     [SerializeField] private BuildingStoreAdapter placementAdapter;
 
     private Coroutine messageCoroutine;
+    private BuildingCardUI selectedCard;
     private void Start()
     {
         if (buildings.Length != buildingCards.Length)
@@ -55,6 +57,8 @@ public class BuildingStoreUI : MonoBehaviour
             () => FilterBuildings((int)BuildingData.BuildingCategory.Services));
 
         closeButton.onClick.AddListener(CloseStore);
+        openStoreButton.onClick.AddListener(OpenStore);
+        openStoreButton.gameObject.SetActive(!storePanel.activeSelf);
 
         economy.BalanceChanged += UpdateBalance;
         UpdateBalance(economy.Balance);
@@ -91,10 +95,28 @@ public class BuildingStoreUI : MonoBehaviour
 
     messagePanel.SetActive(false);
 
+    HighlightSelectedCard(building);
+
     Debug.Log("Ready to place: " + building.BuildingName);
     }
 
+    private void HighlightSelectedCard(BuildingData building)
+{
+    if (selectedCard != null)
+        selectedCard.SetSelected(false);
 
+    selectedCard = null;
+
+    for (int i = 0; i < buildings.Length; i++)
+    {
+        if (buildings[i] == building)
+        {
+            selectedCard = buildingCards[i];
+            selectedCard.SetSelected(true);
+            break;
+        }
+    }
+}
     private void UpdateBalance(int balance)
     {
         balanceText.text = "$" + balance.ToString("N0");
@@ -133,9 +155,16 @@ private IEnumerator HideMessageAfterDelay()
     }
 
     private void CloseStore()
-    {
-        storePanel.SetActive(false);
-    }
+{
+    storePanel.SetActive(false);
+    openStoreButton.gameObject.SetActive(true);
+}
+
+    private void OpenStore()
+{
+    storePanel.SetActive(true);
+    openStoreButton.gameObject.SetActive(false);
+}
 
     private void OnDestroy()
     {
