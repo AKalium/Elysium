@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b174ecc5795d46e5a242cd9f36cb4f20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridPlaceable
-  footprint: {x: 2, y: 4}
+  footprint: {x: 2, y: 2}
   category: 0
   maxAllowed: 0
   buildingTypeId: 5
