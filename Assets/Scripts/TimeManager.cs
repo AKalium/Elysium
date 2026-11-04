@@ -41,7 +41,7 @@ public class TimeManager : MonoBehaviour
             var budget = FindAnyObjectByType<EconomyBudgetUI>();
             if (!editingText)
             {
-                if (keyboard.dKey.wasPressedThisFrame) CycleSpeed();
+                //if (keyboard.dKey.wasPressedThisFrame) CycleSpeed();
                 if (keyboard.spaceKey.wasPressedThisFrame && (budget == null || !budget.IsReportOpen))
                     ToggleKeyboardPause();
             }

@@ -752,12 +752,13 @@ private bool HasReachedBuildingLimit(GameObject prefab)
     private void UpdateSelection() 
     {
         Keyboard keyboard = Keyboard.current;
+        Mouse mouse = Mouse.current;
         if (keyboard == null) 
         {
             return;
         }
 
-        if (keyboard.escapeKey.wasPressedThisFrame) 
+        if (keyboard.escapeKey.wasPressedThisFrame || mouse.rightButton.isPressed) 
         {
             SelectPlaceable(-1);
             return;

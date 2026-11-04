@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Camera))]
-public class playerCam : MonoBehaviour
+public class PlayerCam : MonoBehaviour
 {
     [SerializeField, Min(0f)] private float moveSpeed = 10f;
     [SerializeField, Min(0f)] private float zoomSpeed = 20f;
@@ -48,7 +48,8 @@ public class playerCam : MonoBehaviour
         moveAction.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/w")
             .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a");
+            .With("Left", "<Keyboard>/a")
+            .With("Right", "<Keyboard>/d");
         moveAction.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/upArrow")
             .With("Down", "<Keyboard>/downArrow")

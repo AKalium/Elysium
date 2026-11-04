@@ -56,25 +56,31 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.6.2f1\Editor\Data\BCLExtensions\TargetingPacks\netstandard2.1\analyzers\dotnet\roslyn4.0\cs\System.Text.Json.SourceGeneration.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\playerCam.cs" />
     <Compile Include="Assets\ElysiumMenu\TutorialUI.cs" />
     <Compile Include="Assets\Scripts\GridPlacementSystem.cs" />
     <Compile Include="Assets\ShopUI\Scripts\BuildingStore\BuildingStoreUI.cs" />
     <Compile Include="Assets\ShopUI\Scripts\BuildingStore\BuildingData.cs" />
     <Compile Include="Assets\ShopUI\BuildingData\BuildingStoreAdapter.cs" />
+    <Compile Include="Assets\Scripts\DailyEconomy.cs" />
     <Compile Include="Assets\Scripts\BuildingPollution.cs" />
     <Compile Include="Assets\Scripts\CurrencyHUD.cs" />
-    <Compile Include="Assets\TimeManager.cs" />
+    <Compile Include="Assets\Scripts\TimeEconomyHUD.cs" />
+    <Compile Include="Assets\Scripts\ApartmentStatsUI.cs" />
     <Compile Include="Assets\ElysiumMenu\ElysiumMainMenu.cs" />
+    <Compile Include="Assets\Scripts\DemolitionPlan.cs" />
+    <Compile Include="Assets\Scripts\RoadNetworkVisuals.cs" />
     <Compile Include="Assets\Scripts\PollutionSystem.cs" />
     <Compile Include="Assets\Scripts\GridPlaceable.cs" />
     <Compile Include="Assets\Scripts\CurrencySystem.cs" />
-    <Compile Include="Assets\DailyEconomy.cs" />
-    <Compile Include="Assets\TimeEconomyHUD.cs" />
+    <Compile Include="Assets\Scripts\DraggableBudgetPanel.cs" />
     <Compile Include="Assets\Intro\IntroDialogue.cs" />
+    <Compile Include="Assets\Scripts\PlayerCam.cs" />
     <Compile Include="Assets\Scripts\PollutionHUD.cs" />
     <Compile Include="Assets\ShopUI\Scripts\BuildingStore\BuildingCardUI.cs" />
+    <Compile Include="Assets\Scripts\TimeManager.cs" />
     <Compile Include="Assets\Scripts\SpriteChanger.cs" />
+    <Compile Include="Assets\Scripts\EconomyBudgetUI.cs" />
+    <Compile Include="Assets\Scripts\BudgetReport.cs" />
     <Compile Include="Assets\Scripts\GameState.cs" />
   </ItemGroup>
   <ItemGroup>
