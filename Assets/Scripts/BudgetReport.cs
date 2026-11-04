@@ -9,23 +9,25 @@ public sealed class BudgetReport
         public string Name { get; }
         public int Count { get; }
         public long Income { get; }
-        public long Upkeep { get; }
-        public long Net => Income - Upkeep;
-        public Line(string name, int count, long income, long upkeep)
+        public double Upkeep { get; }
+        public double Net => Income - Upkeep;
+        public Line(string name, int count, long income, double upkeep)
         { Name = name; Count = count; Income = income; Upkeep = upkeep; }
     }
 
+    public string PopulationSummary { get; }
     public int Day { get; }
     public long Income { get; }
-    public long Upkeep { get; }
-    public long Net => Income - Upkeep;
-    public long OpeningBalance { get; }
-    public long ClosingBalance { get; }
+    public double Upkeep { get; }
+    public double Net => Income - Upkeep;
+    public double OpeningBalance { get; }
+    public double ClosingBalance { get; }
     public IReadOnlyList<Line> Lines { get; }
 
-    public BudgetReport(int day, long openingBalance, long closingBalance, IEnumerable<Line> lines)
+    public BudgetReport(int day, double openingBalance, double closingBalance, IEnumerable<Line> lines, string populationSummary = null)
     {
         Day = day;
+        PopulationSummary = populationSummary;
         OpeningBalance = openingBalance;
         ClosingBalance = closingBalance;
         var copy = new List<Line>(lines);
@@ -33,6 +35,6 @@ public sealed class BudgetReport
         foreach (var line in copy) { Income += line.Income; Upkeep += line.Upkeep; }
     }
 
-    public static long ClampBalance(long balance, long net) =>
-        Math.Max(int.MinValue, Math.Min(int.MaxValue, balance + net));
+    public static long ClampBalance(long balance, double net) =>
+        (long)Math.Max(int.MinValue, Math.Min(int.MaxValue, balance + net));
 }

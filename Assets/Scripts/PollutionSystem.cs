@@ -39,7 +39,8 @@ public class PollutionSystem : MonoBehaviour
             if (building.gameObject.scene != gameObject.scene)
                 continue;
 
-            dailyTotal += building.PollutionPerDay;
+            // Midnight supplies the new day; emissions belong to the day just completed.
+            dailyTotal += building.GetPollutionForDay(day - 1) - building.PollutionRemovalPerDay;
         }
 
         LastDailyPollution = dailyTotal;

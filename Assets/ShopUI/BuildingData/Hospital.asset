@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingId: hospital
   buildingName: Hospital
-  price: 2000
+  price: 1000
+  dailyIncome: 0
+  dailyUpkeep: 35
+  jobsProvided: 3
   category: 2
-  buildingIcon: {fileID: 0}
-  buildingPrefab: {fileID: 0}
+  buildingIcon: {fileID: 21300000, guid: 42ac0b4fe29e6412e9dde3d633527ef1, type: 3}
+  buildingPrefab: {fileID: 3349293597268598346, guid: 8af0a79952c6441e9c5cd0e0dc412ab6, type: 3}

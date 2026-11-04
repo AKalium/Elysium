@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingId: apartment
   buildingName: Apartment
   price: 100
-  dailyIncome: 25
+  dailyIncome: 0
   dailyUpkeep: 5
   category: 0
   buildingIcon: {fileID: 7081727814881962400, guid: 10f011596b193414cbc093efd28d52c7, type: 3}
