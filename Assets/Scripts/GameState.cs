@@ -10,8 +10,7 @@ public class GameState : MonoBehaviour
     public bool MayorsOfficePlaced { get; private set; }
     public int ResidentialCount { get; private set; }
     public int Population { get; private set; }
-    // Population currently assumes all housing is occupied; there is no migration model yet.
-    public int MaxPopulation => Population;
+    public int MaxPopulation { get; private set; }
     public event Action<int> PopulationChanged;
     public int Happiness { get; private set; }
     public int Pollution { get; private set; }
@@ -34,6 +33,7 @@ public class GameState : MonoBehaviour
         int residents = 0;
         BuildingCount = 0;
         ResidentialCount = 0;
+        MaxPopulation = 0;
         MayorsOfficePlaced = false;
 
         foreach (var building in FindObjectsByType<GridPlaceable>())
@@ -42,7 +42,8 @@ public class GameState : MonoBehaviour
             if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
             if (placeable.Category == BuildingCategory.MayorsOffice) MayorsOfficePlaced = true;
             BuildingCount++;
-            if (building.ResidentsProvided <= 0) continue;
+            if (building.HousingCapacity <= 0) continue;
+            MaxPopulation += building.HousingCapacity;
             ResidentialCount++;
             residents += building.ResidentsProvided;
         }

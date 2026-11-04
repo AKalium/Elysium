@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingId: factory
   buildingName: Factory
-  price: 1000
+  price: 320
+  jobsProvided: 8
   category: 1
   buildingIcon: {fileID: 21300000, guid: 9678e71fcddf14f40b545d6ed2c21762, type: 3}
   buildingPrefab: {fileID: 1261606515460752716, guid: e65fcc28c4712498c9c3a50ea1eb58e6, type: 3}

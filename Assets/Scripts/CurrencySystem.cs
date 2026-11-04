@@ -5,15 +5,19 @@ using UnityEngine;
 [DefaultExecutionOrder(-200)]
 public sealed class CurrencySystem : MonoBehaviour
 {
-    [SerializeField, Min(0)] private int startingBalance = 10000;
+    [SerializeField, Min(0)] private int startingBalance = 1300;
     [SerializeField, Range(0f, 1f)] private float demolitionRefundRate = 0.5f;
 
     public int Balance { get; private set; }
+    private double fractionalBalance;
+    public double ExactBalance => Balance + fractionalBalance;
     public event Action<int> BalanceChanged;
 
     private void Awake()
     {
-        Balance = Mathf.Max(0, startingBalance);
+        // Apply the new-game rule even when an open scene retains an older serialized value.
+        startingBalance = 1300;
+        Balance = startingBalance;
     }
 
     public bool CanAfford(int amount) => amount >= 0 && amount <= Balance;
@@ -34,9 +38,11 @@ public sealed class CurrencySystem : MonoBehaviour
     }
 
     // Daily upkeep may create debt; purchases still require sufficient funds.
-    public void ApplySettlement(long amount)
+    public void ApplySettlement(double amount)
     {
-        Balance = (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)Balance + amount));
+        double exact = Math.Max(int.MinValue, Math.Min(int.MaxValue, ExactBalance + amount));
+        Balance = (int)Math.Floor(exact);
+        fractionalBalance = exact - Balance;
 
         BalanceChanged?.Invoke(Balance);
     }

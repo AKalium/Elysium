@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a743a2fdbb141d0aaf9c5a4dfc7ea6, type: 3}
+  m_Name: Park
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingData
+  buildingId: park
+  buildingName: Park
+  price: 250
+  dailyIncome: 0
+  dailyUpkeep: 5
+  jobsProvided: 0
+  category: 2
+  buildingIcon: {fileID: 21300000, guid: 1471ba770c2d40bb9ca6c9efbf394bc9, type: 3}
+  buildingPrefab: {fileID: 3349293597268598346, guid: 7ac81efff0b14726a27c178a3994d040, type: 3}

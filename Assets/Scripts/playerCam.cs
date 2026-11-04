@@ -11,6 +11,33 @@ public class playerCam : MonoBehaviour
 
     private InputAction moveAction;
     private Camera controlledCamera;
+    private GridPlacementSystem grid;
+    private bool dragging;
+    private Vector2 previousPointer;
+
+    private void LateUpdate()
+    {
+        if (grid == null) grid = FindAnyObjectByType<GridPlacementSystem>();
+        var mouse = Mouse.current;
+        if (grid == null || mouse == null || grid.HasBuildingSelection ||
+            !grid.HasMapHover || !mouse.leftButton.isPressed)
+        {
+            dragging = false;
+            return;
+        }
+        Vector2 pointer = mouse.position.ReadValue();
+        if (mouse.leftButton.wasPressedThisFrame)
+        {
+            dragging = true;
+            previousPointer = pointer;
+        }
+        if (!dragging) return;
+        Vector3 previousWorld = controlledCamera.ScreenToWorldPoint(previousPointer);
+        Vector3 currentWorld = controlledCamera.ScreenToWorldPoint(pointer);
+        transform.position += previousWorld - currentWorld;
+        previousPointer = pointer;
+    }
+
 
     private void Awake()
     {
@@ -21,8 +48,7 @@ public class playerCam : MonoBehaviour
         moveAction.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/w")
             .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
+            .With("Left", "<Keyboard>/a");
         moveAction.AddCompositeBinding("2DVector")
             .With("Up", "<Keyboard>/upArrow")
             .With("Down", "<Keyboard>/downArrow")
@@ -49,7 +75,7 @@ public class playerCam : MonoBehaviour
         }
 
         Vector3 movement = transform.right * input.x + transform.up * input.y;
-        transform.position += movement * moveSpeed * Time.deltaTime;
+        transform.position += movement * moveSpeed * Time.unscaledDeltaTime;
 
         if (Mouse.current != null)
         {

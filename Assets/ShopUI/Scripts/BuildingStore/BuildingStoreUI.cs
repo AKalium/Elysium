@@ -35,6 +35,15 @@ public class BuildingStoreUI : MonoBehaviour
     private BuildingCardUI selectedCard;
     private void Start()
     {
+        if (buildingCards.Length > 0 && buildingCards.Length < buildings.Length)
+        {
+            int existingCount = buildingCards.Length;
+            BuildingCardUI template = buildingCards[existingCount - 1];
+            System.Array.Resize(ref buildingCards, buildings.Length);
+            for (int i = existingCount; i < buildingCards.Length; i++)
+                buildingCards[i] = Instantiate(template, template.transform.parent);
+        }
+
         if (buildings.Length != buildingCards.Length)
         {
             Debug.LogError("Building count must match card count.");
@@ -69,13 +78,18 @@ public class BuildingStoreUI : MonoBehaviour
     
     private void HandleBuildingSelected(BuildingData building)
     {
+    if (placementAdapter != null && !placementAdapter.HasRequiredMayorsOffice(building))
+    {
+        ShowMessage("Build a Mayor's Office before constructing service buildings.");
+        return;
+    }
     int cost = placementAdapter != null ? placementAdapter.GetPlacementCost(building) : -1;
     if (cost < 0)
     {
         ShowMessage("This building is not available yet!");
         return;
     }
-    if (!economy.CanAfford(cost))
+    if (cost > 0 && !economy.CanAfford(cost))
     {
         ShowMessage("Not enough money!");
         return;
@@ -119,7 +133,7 @@ public class BuildingStoreUI : MonoBehaviour
 }
     private void UpdateBalance(int balance)
     {
-        balanceText.text = "$" + balance.ToString("N0");
+        balanceText.text = "$" + economy.ExactBalance.ToString("N2");
     }
 
     public void ShowMessage(string message)
@@ -162,6 +176,9 @@ private IEnumerator HideMessageAfterDelay()
 
     private void OpenStore()
 {
+    for (int i = 0; i < buildings.Length && i < buildingCards.Length; i++)
+        buildingCards[i].Setup(buildings[i], placementAdapter != null
+            ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
     storePanel.SetActive(true);
     openStoreButton.gameObject.SetActive(false);
 }

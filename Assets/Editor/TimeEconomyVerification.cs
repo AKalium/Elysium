@@ -74,7 +74,8 @@ public static class TimeEconomyVerification
         Check(state.Population == initialPopulation + 10 && state.BuildingCount == initialBuildings + 4, "Apartment population");
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out _) && wallet.Balance == afterPurchase, "Overlap costs nothing");
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(-1, 0), out _) && wallet.Balance == afterPurchase, "Bounds costs nothing");
-        long expectedIncome = 0, expectedUpkeep = 0;
+        long expectedIncome = 0;
+        double expectedUpkeep = 0;
         foreach (var building in UnityEngine.Object.FindObjectsByType<GridPlaceable>())
         {
             if (!building.isActiveAndEnabled || building.gameObject.scene != state.gameObject.scene) continue;

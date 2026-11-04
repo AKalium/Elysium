@@ -28,12 +28,13 @@ public static class EconomyBudgetVerification
         var road = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/road.prefab");
         var adapter = UnityEngine.Object.FindAnyObjectByType<BuildingStoreAdapter>();
         var original = new SerializedObject(apartment);
-        int price = apartment.Price, income = apartment.DailyIncome, upkeep = apartment.DailyUpkeep;
+        int price = apartment.Price, income = apartment.DailyIncome;
+        float upkeep = apartment.DailyUpkeep;
         try
         {
             original.FindProperty("price").intValue = 123;
             original.FindProperty("dailyIncome").intValue = 37;
-            original.FindProperty("dailyUpkeep").intValue = 11;
+            original.FindProperty("dailyUpkeep").floatValue = 11;
             original.ApplyModifiedPropertiesWithoutUndo();
             Check(adapter.GetPlacementCost(apartment) == 123, "Shop uses edited definition price");
             var card = UnityEngine.Object.FindObjectsByType<BuildingCardUI>(FindObjectsInactive.Include)[0];
@@ -104,7 +105,7 @@ public static class EconomyBudgetVerification
         {
             original.Update(); original.FindProperty("price").intValue = price;
             original.FindProperty("dailyIncome").intValue = income;
-            original.FindProperty("dailyUpkeep").intValue = upkeep;
+            original.FindProperty("dailyUpkeep").floatValue = upkeep;
             original.ApplyModifiedPropertiesWithoutUndo();
             Invoke(view, "OnDisable"); Invoke(economy, "OnDisable");
         }

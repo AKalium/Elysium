@@ -26,6 +26,9 @@ public class BuildingStoreAdapter : MonoBehaviour
         return -1;
     }
 
+    public bool HasRequiredMayorsOffice(BuildingData building) =>
+        placementSystem != null && placementSystem.HasRequiredMayorsOffice(building);
+
     public bool SelectBuilding(BuildingData building)
     {
         if (placementSystem == null || building == null || GetPlacementCost(building) < 0)

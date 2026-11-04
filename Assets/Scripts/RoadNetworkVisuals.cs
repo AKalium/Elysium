@@ -9,7 +9,7 @@ public sealed class RoadNetworkVisuals : MonoBehaviour
 {
     [SerializeField] private Color connectedColor = new Color32(134, 224, 199, 255);
     [SerializeField] private Color disconnectedColor = new Color32(255, 158, 79, 255);
-    [SerializeField] private Color centralColor = new Color32(255, 211, 86, 255);
+    [SerializeField] private Color centralColor = new Color32(255, 55, 55, 255);
     [SerializeField] private Color demolitionColor = new Color32(255, 102, 112, 255);
     private GridPlacementSystem grid;
     private GameObject worldRoot, uiRoot;
@@ -127,7 +127,7 @@ public sealed class RoadNetworkVisuals : MonoBehaviour
         ApplyMesh(statusMesh, vertices, colors, indices, MeshTopology.Lines);
         bool rootExists = grid.IsRoadConnected(grid.CentralRoadCell);
         centralRect.sizeDelta = new Vector2(rootExists ? 160 : 240, 36);
-        centralLabel.text = rootExists ? "CENTRAL ROAD" : "CENTER: REBUILD ROAD HERE";
+        centralLabel.text = rootExists ? "CENTRAL ROAD (0, 0)" : "CENTER (0, 0): REBUILD ROAD HERE";
         centralLabel.color = centralColor;
         legend.text = $"<b>ROAD ACCESS</b>  <color=#{ColorUtility.ToHtmlStringRGB(connectedColor)}>Connected</color> | " +
             $"<color=#{ColorUtility.ToHtmlStringRGB(disconnectedColor)}>X Disconnected</color> | <color=#{ColorUtility.ToHtmlStringRGB(centralColor)}>Diamond: center</color>\n" +

@@ -12,7 +12,8 @@ public class TimeEconomyHUD : MonoBehaviour
     [SerializeField] private Text speedLabel;
 
     public string DisplayText => clock == null ? "" :
-        (showDay ? $"Day {clock.Day}  |  {clock.DisplayTime}" : clock.DisplayTime);
+        (showDay ? $"Day {clock.Day}  |  {clock.DisplayTime}" : clock.DisplayTime) +
+        (clock.Paused || Time.timeScale == 0f ? "  |  PAUSED" : "");
 
     private void Awake()
     {
