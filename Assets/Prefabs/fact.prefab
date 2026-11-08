@@ -107,8 +107,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridPlaceable
   footprint: {x: 2, y: 2}
-  category: 0
   definition: {fileID: 11400000, guid: 41cb892d7690d46d79630ab4fd452479, type: 2}
+  category: 0
   maxAllowed: 0
   buildingTypeId: 5
   residentsProvided: 0
@@ -126,4 +126,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
   tier: 2
   pollutionPerDay: 16
-  pollutionRemovalPerDay: 0
