@@ -69,6 +69,7 @@ public class PlayerCam : MonoBehaviour
 
     private void Update()
     {
+        if (DisasterSystem.IsCutsceneOpen) return;
         Vector2 input = moveAction.ReadValue<Vector2>();
         if (input.sqrMagnitude > 1f)
         {

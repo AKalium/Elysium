@@ -65,7 +65,7 @@ public class ApartmentStatsUI : MonoBehaviour
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building == null || !building.isActiveAndEnabled) continue;
+            if (building == null || !building.isActiveAndEnabled || !building.IsOperational) continue;
             string id = building.Definition != null ? building.Definition.BuildingId : building.BuildingTypeId;
             for (int i = 0; i < services.Length; i++)
             {
@@ -98,7 +98,7 @@ public class ApartmentStatsUI : MonoBehaviour
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building == null || !building.isActiveAndEnabled || building.Definition == null) continue;
+            if (building == null || !building.isActiveAndEnabled || !building.IsOperational || building.Definition == null) continue;
             for (int i = 0; i < services.Length; i++)
                 if (building.Definition.BuildingId == services[i]) penalties[i] = 7;
         }
@@ -114,7 +114,7 @@ public class ApartmentStatsUI : MonoBehaviour
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building == null || !building.isActiveAndEnabled) continue;
+            if (building == null || !building.isActiveAndEnabled || !building.IsOperational) continue;
             if (building.ResidentsProvided > 0) homes.Add(building);
             if (building.Definition != null && building.Definition.JobsProvided > 0) employers.Add(building);
         }
@@ -166,7 +166,7 @@ public class ApartmentStatsUI : MonoBehaviour
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building != null && building.Definition != null &&
+            if (building != null && building.IsOperational && building.Definition != null &&
                 building.Definition.BuildingId == "park" &&
                 Vector2.Distance(home.transform.position, building.transform.position) <= 8 * grid.CellSize)
                 bonus += 5;
@@ -188,6 +188,7 @@ public class ApartmentStatsUI : MonoBehaviour
 
     private void OnGUI()
     {
+        if (DisasterSystem.IsCutsceneOpen) return;
         if (selected == null || !selected.isActiveAndEnabled) return;
         CalculateHappiness(grid, selected, out var covered, out int residents, out int workforce,
             out int working, out int unemployment, out int pollution, out int happiness);
