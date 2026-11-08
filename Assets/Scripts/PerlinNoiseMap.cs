@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*IMPORTANT POSITIONS FOR MOVING THE NOISEMAP ACROSS GRID
+* BOTTOM LEFT OF PLANE : VECTOR3(5,0,5)
+* BOTTOM LEFT OF GRID : VECTOR3(2.05, 0 1.55) 
+*/
 public class PerlinNoiseMap : MonoBehaviour
 {
     //TILE VARIABLES
@@ -13,21 +17,22 @@ public class PerlinNoiseMap : MonoBehaviour
     public GameObject sand;                                         // id - 3
 
     //MAP VARIABLES
-    int mapWidth = 100;
-    int mapHeight = 100;
+    int mapWidth = 198;
+    int mapHeight = 98;
 
     List<List<int>> noiseGrid = new List<List<int>>();              // stores values related to the perlin
     List<List<GameObject>> tileGrid = new List<List<GameObject>>(); // list of all game objects on screen
     
     //PERLIN VARIABLES
-    float magnification = 7.0f;                                      // 'resolution' of the terrain
+    float magnification = 20.0f;                                      // 'resolution' of the terrain - use range [4 , 24] when editing
     int xOffset = 0;                                                 // offsets used to move terrain image
     int yOffset = 0;
 
+/*FUNCTIONS*******************************************************************************************************/
     void Start()
     {
         CreateTileset();
-        CreateTileGroups();                                 //Groups generated [child] tiles based on parent tile
+        CreateTileGroups();                                          //Groups generated [child] tiles based on parent tile
         GenerateMap(); 
     }
 
@@ -51,12 +56,12 @@ public class PerlinNoiseMap : MonoBehaviour
         {
             GameObject tileGroup = new GameObject(pair.Value.name);
             tileGroup.transform.parent = gameObject.transform;
-            tileGroup.transform.localPosition = new Vector3(0,0,0);
+            tileGroup.transform.localPosition = new Vector3(1.95f, 0f, 0.95f);                     //use to change map position
             tileGroups.Add(pair.Key, tileGroup);
         }
 
     }
-
+    //Tile Generation loop
     void GenerateMap()
     {
         for(int x = 0; x < mapWidth; x++)
@@ -93,7 +98,7 @@ public class PerlinNoiseMap : MonoBehaviour
 
     }
 
-    //literally creates tile to add into map
+    //Instantiates the tiles to add onto the plane
     void CreateTile(int tileID, int x, int y)
     {
         GameObject tilePrefab = tileset[tileID];
