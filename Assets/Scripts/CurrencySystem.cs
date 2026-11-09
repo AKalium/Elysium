@@ -14,11 +14,9 @@ public sealed class CurrencySystem : MonoBehaviour
     public event Action<int> BalanceChanged;
 
     private void Awake()
-    {
-        // Apply the new-game rule even when an open scene retains an older serialized value.
-        startingBalance = 1300;
-        Balance = startingBalance;
-    }
+{
+    Balance = startingBalance;
+}
 
     public bool CanAfford(int amount) => amount >= 0 && amount <= Balance;
 
