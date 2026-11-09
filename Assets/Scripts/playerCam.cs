@@ -8,6 +8,8 @@ public class PlayerCam : MonoBehaviour
     [SerializeField, Min(0f)] private float zoomSpeed = 20f;
     [SerializeField, Min(0.1f)] private float minZoom = 3f;
     [SerializeField, Min(0.1f)] private float maxZoom = 20f;
+    [SerializeField] private Vector2 mapMin;
+    [SerializeField] private Vector2 mapMax;
 
     private InputAction moveAction;
     private Camera controlledCamera;
@@ -36,6 +38,7 @@ public class PlayerCam : MonoBehaviour
         Vector3 currentWorld = controlledCamera.ScreenToWorldPoint(pointer);
         transform.position += previousWorld - currentWorld;
         previousPointer = pointer;
+        ClampCameraPosition();
     }
 
 
@@ -90,5 +93,25 @@ public class PlayerCam : MonoBehaviour
                     maxZoom);
             }
         }
+
+        ClampCameraPosition();
+    }
+
+    private void ClampCameraPosition()
+    {
+        float halfHeight = controlledCamera.orthographicSize;
+        float halfWidth = halfHeight * controlledCamera.aspect;
+
+        float minX = mapMin.x + halfWidth;
+        float maxX = mapMax.x - halfWidth;
+        float minY = mapMin.y + halfHeight;
+        float maxY = mapMax.y - halfHeight;
+
+        Vector3 position = transform.position;
+        position.x = minX > maxX ? (mapMin.x + mapMax.x) * 0.5f
+            : Mathf.Clamp(position.x, minX, maxX);
+        position.y = minY > maxY ? (mapMin.y + mapMax.y) * 0.5f
+            : Mathf.Clamp(position.y, minY, maxY);
+        transform.position = position;
     }
 }
