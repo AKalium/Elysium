@@ -33,6 +33,22 @@ public sealed class IntroDialogue : MonoBehaviour
     private bool isLoading;
     private bool hasStarted;
 
+    // Configure an inactive instance before showing it; the intro prefab remains unchanged.
+    public void ConfigureConversation(string line, Texture2D idle, Texture2D talking, Rect portraitUV)
+    {
+        nextScene = "";
+        dialogueLines = new[] { line };
+        idleTexture = idle;
+        talkingTexture = talking;
+        portrait.uvRect = portraitUV;
+        var rect = portrait.rectTransform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = new Vector2(-330, 80);
+        float aspect = idle.width * portraitUV.width / (idle.height * portraitUV.height);
+        rect.sizeDelta = new Vector2(620 * aspect, 620);
+    }
+
     private void Start()
     {
         hasStarted = true;

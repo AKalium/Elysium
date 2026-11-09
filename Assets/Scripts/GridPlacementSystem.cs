@@ -134,6 +134,7 @@ private int ghostPrefabIndex = -1;
 
     private void Update()
 {
+    if (DisasterSystem.IsCutsceneOpen) return;
     UpdateSelection();
     UpdateHoveredCell();
     GetComponent<ApartmentStatsUI>().ProcessSelectionInput();

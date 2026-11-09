@@ -35,6 +35,8 @@ public class PollutionSystem : MonoBehaviour
         {
             if (!building.isActiveAndEnabled)
                 continue;
+            var placeable = building.GetComponentInParent<GridPlaceable>();
+            if (placeable != null && !placeable.IsOperational) continue;
 
             if (building.gameObject.scene != gameObject.scene)
                 continue;

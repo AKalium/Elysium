@@ -47,7 +47,7 @@ public class DailyEconomy : MonoBehaviour
         var grid = FindAnyObjectByType<GridPlacementSystem>();
         foreach (var building in FindObjectsByType<GridPlaceable>())
         {
-            if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
+            if (!building.isActiveAndEnabled || !building.IsOperational || building.gameObject.scene != gameObject.scene) continue;
             var data = building.Definition;
             if (data == null) continue;
             counts.TryGetValue(data, out int count);

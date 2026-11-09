@@ -18,13 +18,14 @@ public int MaxAllowed => maxAllowed;
 public string BuildingTypeId => buildingTypeId;
     [Tooltip("Population contributed while this house is active. Use 0 for non-housing buildings.")]
     [SerializeField, Min(0)] private int residentsProvided;
-    public int ResidentsProvided => Mathf.Max(0, residentsProvided);
+    public bool IsOperational => !TryGetComponent<DisasterDamage>(out var damage) || !damage.IsDamaged;
+    public int ResidentsProvided => IsOperational ? Mathf.Max(0, residentsProvided) : 0;
 
     public bool IsApartment => Definition != null && Definition.BuildingId == "apartment";
 
     public bool IsFoundingApartment { get; private set; }
     public int BaseHappiness => IsFoundingApartment ? 100 : 60;
-    public int HousingCapacity => Definition != null && Definition.BuildingId == "apartment"
+    public int HousingCapacity => !IsOperational ? 0 : Definition != null && Definition.BuildingId == "apartment"
         ? Mathf.Max(10, ResidentsProvided) : ResidentsProvided;
 
     public void InitializeFoundingApartment()
@@ -37,7 +38,7 @@ public string BuildingTypeId => buildingTypeId;
 
     public bool TryAddResident()
     {
-        if (!IsApartment || ResidentsProvided >= HousingCapacity) return false;
+        if (!IsOperational || !IsApartment || ResidentsProvided >= HousingCapacity) return false;
         residentsProvided++;
         return true;
     }

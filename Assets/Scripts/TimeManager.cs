@@ -32,6 +32,7 @@ public class TimeManager : MonoBehaviour
     private void Awake() => minuteOfDay = startingHour * 60;
     private void Update()
     {
+        if (DisasterSystem.IsCutsceneOpen) return;
         var keyboard = Keyboard.current;
         if (keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame))
         {
