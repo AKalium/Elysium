@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a743a2fdbb141d0aaf9c5a4dfc7ea6, type: 3}
+  m_Name: RecyclingCenter
+  m_EditorClassIdentifier: Assembly-CSharp::BuildingData
+  buildingId: recycling_center
+  buildingName: Recycling Center
+  price: 650
+  jobsProvided: 5
+  dailyIncome: 0
+  dailyUpkeep: 10
+  category: 2
+  buildingIcon: {fileID: 21300000, guid: 80e324fae68d14a00bd73f3bf20fb803, type: 3}
+  buildingPrefab: {fileID: 4033760354808998238, guid: c2063f92893ee4d628476d63d6207b60, type: 3}
