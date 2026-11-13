@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.InputSystem;
 
 public class ElysiumMainMenu : MonoBehaviour
 {
@@ -17,6 +18,8 @@ public class ElysiumMainMenu : MonoBehaviour
     public GameObject creditsPanel;
 
     public Text statusLabel;
+    private CitySaveMenu loadMenu;
+    private Button loadButton;
 
     void Awake()
     {
@@ -33,7 +36,7 @@ public class ElysiumMainMenu : MonoBehaviour
 
         if (quitButton == null)
         {
-            var obj = GameObject.Find("Quit game Button");
+            var obj = GameObject.Find("Quit game button");
             if (obj != null) quitButton = obj.GetComponent<Button>();
         }
 
@@ -75,6 +78,45 @@ public class ElysiumMainMenu : MonoBehaviour
             backButton.onClick.RemoveAllListeners();
             backButton.onClick.AddListener(ShowMainMenu);
         }
+
+        if (mainPanel == null || startButton == null) return;
+        loadMenu = new CitySaveMenu(mainPanel.transform.parent, startButton, ShowMainMenu, load: LoadCity);
+        loadButton = CitySaveMenu.AddButton(startButton, mainPanel.transform, "Load Game", -70);
+        loadButton.onClick.AddListener(() => ShowLoadMenu());
+        if (creditsButton != null)
+            ((RectTransform)creditsButton.transform).anchoredPosition = new Vector2(0, -170);
+        if (quitButton != null)
+            ((RectTransform)quitButton.transform).anchoredPosition = new Vector2(0, -270);
+
+        if (CitySaveSlots.LoadError != null)
+        {
+            ShowLoadMenu(CitySaveSlots.LoadError);
+            CitySaveSlots.LoadError = null;
+        }
+    }
+
+    private void Update()
+    {
+        if (loadMenu != null && loadMenu.IsOpen && Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+            ShowMainMenu();
+    }
+
+    private void ShowLoadMenu(string message = "")
+    {
+        mainPanel.SetActive(false);
+        loadMenu.ShowSlots(message);
+    }
+
+    private void LoadCity(int slot, CitySave save)
+    {
+        if (!Application.CanStreamedLevelBeLoaded(CitySaveSlots.GameplayScene))
+        {
+            loadMenu.ShowSlots($"Could not load Slot {slot}.");
+            return;
+        }
+
+        CitySaveSlots.PendingLoad = save;
+        SceneManager.LoadScene(CitySaveSlots.GameplayScene);
     }
 
     public void StartGame()
@@ -99,8 +141,11 @@ public class ElysiumMainMenu : MonoBehaviour
 
     public void ShowMainMenu()
     {
+        bool returningFromLoad = loadMenu != null && loadMenu.IsOpen;
+        loadMenu?.Hide();
         if (creditsPanel != null) creditsPanel.SetActive(false);
         if (mainPanel != null) mainPanel.SetActive(true);
+        if (returningFromLoad) EventSystem.current?.SetSelectedGameObject(loadButton.gameObject);
     }
 
     public void QuitGame()

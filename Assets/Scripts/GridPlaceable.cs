@@ -21,6 +21,14 @@ public string BuildingTypeId => buildingTypeId;
     public bool IsOperational => !TryGetComponent<DisasterDamage>(out var damage) || !damage.IsDamaged;
     public int ResidentsProvided => IsOperational ? Mathf.Max(0, residentsProvided) : 0;
 
+    internal int SavedResidents => residentsProvided;
+
+    internal void RestoreResidents(int residents, bool foundingApartment)
+    {
+        residentsProvided = residents;
+        IsFoundingApartment = foundingApartment;
+    }
+
     public bool IsApartment => Definition != null && Definition.BuildingId == "apartment";
 
     public bool IsFoundingApartment { get; private set; }

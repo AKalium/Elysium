@@ -21,6 +21,16 @@ public class TimeManager : MonoBehaviour
     public int Minute => (int)minuteOfDay % 60;
     public bool Paused { get; set; }
     public float Speed => speed;
+    internal double MinuteOfDay => minuteOfDay;
+    internal bool KeyboardPaused => keyboardPaused;
+
+    internal void RestoreClock(CitySave save)
+    {
+        Day = save.day;
+        minuteOfDay = save.minuteOfDay;
+        speed = save.clockSpeed;
+        if (save.keyboardPaused) ToggleKeyboardPause();
+    }
 
     public void CycleSpeed()
     {
@@ -32,7 +42,7 @@ public class TimeManager : MonoBehaviour
     private void Awake() => minuteOfDay = startingHour * 60;
     private void Update()
     {
-        if (DisasterSystem.IsCutsceneOpen) return;
+        if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput) return;
         var keyboard = Keyboard.current;
         if (keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame))
         {

@@ -7,6 +7,7 @@ public class ApartmentStatsUI : MonoBehaviour
 {
     private GridPlacementSystem grid;
     private GridPlaceable selected;
+    internal bool HasSelection => selected != null;
     private Rect panel;
     private Vector2 scroll;
     [System.NonSerialized] private GUIStyle bodyStyle;

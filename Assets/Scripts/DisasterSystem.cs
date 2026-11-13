@@ -34,6 +34,18 @@ public sealed class DisasterSystem : MonoBehaviour
     public string LastSummary { get; private set; }
     private float summaryUntil;
 
+    internal void CaptureSchedule(CitySave save)
+    {
+        save.lastDisasterDay = lastDisasterDay;
+        save.pendingDisasterRoll = pendingDailyRoll;
+    }
+
+    internal void RestoreSchedule(CitySave save)
+    {
+        lastDisasterDay = save.lastDisasterDay;
+        pendingDailyRoll = save.pendingDisasterRoll;
+    }
+
     private void Awake()
     {
         if (clock == null) clock = FindAnyObjectByType<TimeManager>();

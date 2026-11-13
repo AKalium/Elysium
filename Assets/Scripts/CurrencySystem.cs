@@ -39,6 +39,11 @@ public sealed class CurrencySystem : MonoBehaviour
     public void ApplySettlement(double amount)
     {
         double exact = Math.Max(int.MinValue, Math.Min(int.MaxValue, ExactBalance + amount));
+        RestoreBalance(exact);
+    }
+
+    internal void RestoreBalance(double exact)
+    {
         Balance = (int)Math.Floor(exact);
         fractionalBalance = exact - Balance;
 

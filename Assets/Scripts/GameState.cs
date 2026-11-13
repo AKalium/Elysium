@@ -27,8 +27,11 @@ public class GameState : MonoBehaviour
     private void Update() => ElapsedSeconds += Time.deltaTime * 4;
 
     // Rebuild from map contents, including pre-placed houses and externally removed buildings.
+    internal bool RestoringMap { get; set; }
+
     public void RefreshPopulation()
     {
+        if (RestoringMap) return;
         int previous = Population;
         int residents = 0;
         BuildingCount = 0;

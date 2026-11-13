@@ -21,7 +21,7 @@ public class PlayerCam : MonoBehaviour
     {
         if (grid == null) grid = FindAnyObjectByType<GridPlacementSystem>();
         var mouse = Mouse.current;
-        if (grid == null || mouse == null || grid.HasBuildingSelection ||
+        if (CityPauseMenu.BlocksGameplayInput || grid == null || mouse == null || grid.HasBuildingSelection ||
             !grid.HasMapHover || !mouse.leftButton.isPressed)
         {
             dragging = false;
@@ -72,7 +72,7 @@ public class PlayerCam : MonoBehaviour
 
     private void Update()
     {
-        if (DisasterSystem.IsCutsceneOpen) return;
+        if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput) return;
         Vector2 input = moveAction.ReadValue<Vector2>();
         if (input.sqrMagnitude > 1f)
         {
