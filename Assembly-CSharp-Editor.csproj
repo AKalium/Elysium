@@ -61,11 +61,13 @@
     <Compile Include="Assets\Editor\ElysiumDemoBuild.cs" />
     <Compile Include="Assets\ElysiumMenu\Editor\ElysiumMenuSetup.cs" />
     <Compile Include="Assets\Editor\EconomyBudgetSetup.cs" />
+    <Compile Include="Assets\Editor\DisasterSetup.cs" />
     <Compile Include="Assets\Editor\ClockUISetup.cs" />
     <Compile Include="Assets\Editor\CentralRoadVerification.cs" />
     <Compile Include="Assets\Editor\RoadNetworkTestSupport.cs" />
     <Compile Include="Assets\Editor\RoadFeedbackVerification.cs" />
     <Compile Include="Assets\Editor\RoadDemolitionVerification.cs" />
+    <Compile Include="Assets\Editor\DisasterVerificationRunner.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

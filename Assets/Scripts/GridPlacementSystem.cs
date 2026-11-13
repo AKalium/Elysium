@@ -75,6 +75,10 @@ private int ghostPrefabIndex = -1;
     public Vector2Int ToCityCoordinates(Vector2Int cell) => cell - CentralRoadCell;
     public Vector2Int FromCityCoordinates(Vector2Int coordinates) => coordinates + CentralRoadCell;
 
+    //AUDIO
+    private AudioSource _Speaker;
+    [SerializeField] private AudioClip _Clip;
+
     public Vector2Int GetBuildingCoordinates(GameObject building)
     {
         return objectCells.TryGetValue(building, out var cells) && cells.Count > 0
@@ -108,6 +112,15 @@ private int ghostPrefabIndex = -1;
 
     private void Awake() 
     {
+        //initialize audio
+        _Speaker = GetComponent<AudioSource>();
+
+        if(_Speaker == null)
+            Debug.Log("Jinkies");
+        else
+            _Speaker.clip = _Clip;
+        
+        //rest of the code
         if (GetComponent<ApartmentStatsUI>() == null) gameObject.AddComponent<ApartmentStatsUI>();
         if (economy == null) economy = FindAnyObjectByType<DailyEconomy>();
         timeHUD = FindAnyObjectByType<TimeEconomyHUD>();

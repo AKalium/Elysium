@@ -18,8 +18,21 @@ public class ElysiumMainMenu : MonoBehaviour
 
     public Text statusLabel;
 
+    //AUDIO
+    [SerializeField] private AudioClip _Clip;                          //think of this as the "tape" to play on the speaker
+    private AudioSource _Speaker;                                      //Like a speaker, plays the audio that is put into it
+
     void Awake()
     {
+        //initialize audio
+        _Speaker = GetComponent<AudioSource>();                        //finds attached audio source and fills it with the info
+        
+        if(_Speaker == null)
+            Debug.Log("Audio source is null");
+        else
+            _Speaker.clip = _Clip;
+
+        //event system code
         if (EventSystem.current == null)
         {
             var es = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
@@ -87,24 +100,38 @@ public class ElysiumMainMenu : MonoBehaviour
             Debug.LogError("Scene '" + gameplayScene + "' is not in the active Build Settings (File > Build Settings).");
             return;
         }
+        //play audio
+        _Speaker.Play();
 
         SceneManager.LoadScene(gameplayScene);
     }
 
     public void ShowCredits()
     {
+        //play audio
+        _Speaker.Play();
+
+        //do function
         if (mainPanel != null) mainPanel.SetActive(false);
         if (creditsPanel != null) creditsPanel.SetActive(true);
     }
 
     public void ShowMainMenu()
     {
+        //play audio
+        _Speaker.Play();
+        
+        //do function
         if (creditsPanel != null) creditsPanel.SetActive(false);
         if (mainPanel != null) mainPanel.SetActive(true);
     }
 
     public void QuitGame()
     {
+        //play audio
+        _Speaker.Play();
+        
+        //do function
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
