@@ -33,6 +33,10 @@ public sealed class IntroDialogue : MonoBehaviour
     private bool isLoading;
     private bool hasStarted;
 
+    //AUDIO
+    [SerializeField] private AudioClip _Clip;
+    private AudioSource _Speaker;
+
     // Configure an inactive instance before showing it; the intro prefab remains unchanged.
     public void ConfigureConversation(string line, Texture2D idle, Texture2D talking, Rect portraitUV)
     {
@@ -51,6 +55,15 @@ public sealed class IntroDialogue : MonoBehaviour
 
     private void Start()
     {
+        //initialize audio
+        _Speaker = GetComponent<AudioSource>();
+
+        if(_Speaker == null)
+            Debug.Log("No audio source found");
+        else
+            _Speaker.clip = _Clip;
+
+        //start
         hasStarted = true;
         BeginDialogue();
     }
@@ -102,6 +115,9 @@ public sealed class IntroDialogue : MonoBehaviour
 
     public void Continue()
     {
+        //play audio
+        _Speaker.Play();
+        //do function
         if (isLoading) return;
         if (isTyping)
         {

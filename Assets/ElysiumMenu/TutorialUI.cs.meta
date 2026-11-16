@@ -1,2 +1,13 @@
 fileFormatVersion: 2
 guid: 43e66088a681b4062b2e9668f0d46d18
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - tutorialPanel: {instanceID: 0}
+  - _Clip: {fileID: 8300000, guid: 27f4d407d8f8ce44db8902c707d4c6c9, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
