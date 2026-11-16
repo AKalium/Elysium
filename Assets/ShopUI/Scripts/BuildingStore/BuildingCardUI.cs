@@ -46,9 +46,7 @@ public void SetSelected(bool selected)
         buildingName.text = data.BuildingName;
         int cost = placementCost ?? data.Price;
         buildingPrice.text = cost < 0 ? "Unavailable" :
-            $"${cost:N0}\n<size=75%>Income ${data.DailyIncome:N0} / Upkeep ${data.DailyUpkeep:N2}\nNet {EconomyBudgetUI.SignedMoney(data.DailyNet)} / day</size>";
-        if (cost >= 0 && data.BuildingId == "apartment")
-            buildingPrice.text = $"${cost:N0}\n<size=75%>Residents: workers $6 / others $1 daily\nUpkeep ${data.DailyUpkeep:N2} / day</size>";
+            $"${cost:N0}\n<size=75%>Upkeep ${data.DailyUpkeep:#,0.#} / day{(data.BuildingId == "factory" ? " after 10 days" : "")}</size>";
         buildingPrice.enableAutoSizing = true;
         buildingPrice.fontSizeMin = 14;
         buildingPrice.fontSizeMax = 18;

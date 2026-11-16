@@ -35,6 +35,30 @@ public class BuildingStoreUI : MonoBehaviour
     private BuildingCardUI selectedCard;
     private void Start()
     {
+        if (placementAdapter == null) placementAdapter = FindAnyObjectByType<BuildingStoreAdapter>();
+        RegisterResourceBuilding("Bridge");
+        RegisterResourceBuilding("StoneBridge");
+        RegisterResourceBuilding("WaterPark");
+        RegisterResourceBuilding("SolarFactory");
+        InitializeCards();
+    }
+
+    private void RegisterResourceBuilding(string resource)
+    {
+        var bridge = Resources.Load<BuildingData>(resource);
+        if (bridge != null && placementAdapter != null)
+        {
+            placementAdapter.RegisterBuilding(bridge);
+            if (System.Array.IndexOf(buildings, bridge) < 0)
+            {
+                System.Array.Resize(ref buildings, buildings.Length + 1);
+                buildings[buildings.Length - 1] = bridge;
+            }
+        }
+    }
+
+    private void InitializeCards()
+    {
         if (buildingCards.Length > 0 && buildingCards.Length < buildings.Length)
         {
             int existingCount = buildingCards.Length;
@@ -80,7 +104,7 @@ public class BuildingStoreUI : MonoBehaviour
     {
     if (placementAdapter != null && !placementAdapter.HasRequiredMayorsOffice(building))
     {
-        ShowMessage("Build a Mayor's Office before constructing service buildings.");
+        ShowMessage(GridPlacementSystem.OfficeRequirementMessage(building));
         return;
     }
     int cost = placementAdapter != null ? placementAdapter.GetPlacementCost(building) : -1;

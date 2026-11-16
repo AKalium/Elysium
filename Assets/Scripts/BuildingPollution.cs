@@ -26,7 +26,13 @@ public class BuildingPollution : MonoBehaviour
         var building = GetComponent<GridPlaceable>();
         bool factory = building != null && building.Definition != null &&
             building.Definition.BuildingId == "factory";
-        return factory && day >= 1 && day <= 30 ? 8 : PollutionPerDay;
+        return factory ? FactoryPollutionForDay(day) : PollutionPerDay;
+    }
+
+    public static int FactoryPollutionForDay(int day)
+    {
+        if (day < 15) return 8;
+        return 9 + Mathf.Min(9, (day - 15) / 3);
     }
 
 }

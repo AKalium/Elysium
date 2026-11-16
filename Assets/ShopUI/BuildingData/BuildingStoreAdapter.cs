@@ -26,6 +26,22 @@ public class BuildingStoreAdapter : MonoBehaviour
         return -1;
     }
 
+    public void RegisterBuilding(BuildingData building)
+    {
+        if (placementSystem == null) placementSystem = FindAnyObjectByType<GridPlacementSystem>();
+        if (placementSystem == null) return;
+        int index = placementSystem.RegisterBuilding(building);
+        if (mappings == null) mappings = new BuildingMapping[0];
+        foreach (var mapping in mappings)
+        {
+            if (mapping == null || mapping.building != building) continue;
+            mapping.placementIndex = index;
+            return;
+        }
+        System.Array.Resize(ref mappings, mappings.Length + 1);
+        mappings[mappings.Length - 1] = new BuildingMapping { building = building, placementIndex = index };
+    }
+
     public bool HasRequiredMayorsOffice(BuildingData building) =>
         placementSystem != null && placementSystem.HasRequiredMayorsOffice(building);
 

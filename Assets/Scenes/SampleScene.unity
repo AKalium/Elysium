@@ -1464,6 +1464,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   economy: {fileID: 2100000003}
   targetCamera: {fileID: 330585545}
+  terrain: {fileID: 777582763}
   cellSize: 1
   gridWidth: 200
   gridHeight: 100
@@ -1480,6 +1481,7 @@ MonoBehaviour:
   - {fileID: 3349293597268598346, guid: b444f25ec2b74ea69b3358b29a92caaa, type: 3}
   - {fileID: 3349293597268598346, guid: 7ac81efff0b14726a27c178a3994d040, type: 3}
   - {fileID: 4033760354808998238, guid: c2063f92893ee4d628476d63d6207b60, type: 3}
+  - {fileID: 3349293597268598346, guid: 3edb9ee536e64867800fa42bf6ec8664, type: 3}
   currency: {fileID: 330585551}
   storeUI: {fileID: 638650081}
   gridColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.3}
@@ -1515,7 +1517,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd4df98a4777984c99e95c4890dc1e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencySystem
-  startingBalance: 5000
   demolitionRefundRate: 0.5
 --- !u!114 &330585552
 MonoBehaviour:
@@ -3115,6 +3116,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUI
   tutorialPanel: {fileID: 1426745517}
+  _Clip: {fileID: 8300000, guid: 27f4d407d8f8ce44db8902c707d4c6c9, type: 3}
 --- !u!1 &905584135
 GameObject:
   m_ObjectHideFlags: 0
@@ -7001,7 +7003,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a318bd88c2ac4d94bb992fa543de4402, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingMoney: 1300
   currency: {fileID: 330585551}
 --- !u!114 &2100000004
 MonoBehaviour:
@@ -7798,17 +7799,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: StoreSystems
       objectReference: {fileID: 0}
-    - target: {fileID: 3926120106155803534, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
-      propertyPath: startingBalance
-      value: 1300
-      objectReference: {fileID: 0}
     - target: {fileID: 8187217595212093768, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: placementSystem
       value: 
       objectReference: {fileID: 330585549}
     - target: {fileID: 8187217595212093768, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: mappings.Array.size
-      value: 11
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8187217595212093768, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: mappings.Array.data[0].building
@@ -7890,6 +7887,14 @@ PrefabInstance:
       propertyPath: mappings.Array.data[10].placementIndex
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 8187217595212093768, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
+      propertyPath: mappings.Array.data[11].building
+      value: 
+      objectReference: {fileID: 11400000, guid: 9d6fc0b64bc5484589bc6921cfb0263e, type: 2}
+    - target: {fileID: 8187217595212093768, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
+      propertyPath: mappings.Array.data[11].placementIndex
+      value: 11
+      objectReference: {fileID: 0}
     - target: {fileID: 8451469172025376231, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: economy
       value: 
@@ -7936,7 +7941,7 @@ PrefabInstance:
       objectReference: {fileID: 71260109}
     - target: {fileID: 8451469172025376231, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: buildings.Array.size
-      value: 11
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 8451469172025376231, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: 'buildings.Array.data[0]'
@@ -7982,6 +7987,10 @@ PrefabInstance:
       propertyPath: 'buildings.Array.data[10]'
       value: 
       objectReference: {fileID: 11400000, guid: afba923556e1146e1918fc6906419c91, type: 2}
+    - target: {fileID: 8451469172025376231, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
+      propertyPath: 'buildings.Array.data[11]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9d6fc0b64bc5484589bc6921cfb0263e, type: 2}
     - target: {fileID: 8451469172025376231, guid: 1a07f847692d335448d887917d0ddff5, type: 3}
       propertyPath: 'buildingCards.Array.data[0]'
       value: 
