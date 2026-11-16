@@ -1,10 +1,11 @@
-
+using UnityEngine.EventSystems;
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuildingCardUI : MonoBehaviour
+public class BuildingCardUI : MonoBehaviour,
+    IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI References")]
     [SerializeField] private Image buildingIcon;
@@ -158,6 +159,20 @@ public void SetSelected(bool selected)
     private void OnDisable()
     {
         selectButton.onClick.RemoveListener(HandleSelection);
+    }
+
+    public event Action<BuildingCardUI, BuildingData> OnCardHovered;
+    public event Action<BuildingCardUI> OnCardUnhovered;
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (buildingData != null)
+            OnCardHovered?.Invoke(this, buildingData);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        OnCardUnhovered?.Invoke(this);
     }
 
     private void HandleSelection()

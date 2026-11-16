@@ -18,12 +18,13 @@ public class CurrencyHUD : MonoBehaviour
     {
         var bar = new GameObject(name, typeof(RectTransform), typeof(Image));
         var rect = bar.GetComponent<RectTransform>();
-        rect.SetParent(coinsText.transform, false);
-        rect.anchorMin = rect.anchorMax = new Vector2(1, 0.5f);
+        rect.SetParent(coinsText.canvas.rootCanvas.transform, false);
+
+        rect.anchorMin = rect.anchorMax = new Vector2(0, 0.5f);
         rect.pivot = new Vector2(0, 0.5f);
-        rect.anchoredPosition = new Vector2(16, y);
-        rect.sizeDelta = new Vector2(340, 24);
-        bar.GetComponent<Image>().color = new Color32(22, 34, 47, 255);
+        rect.anchoredPosition = new Vector2(20, y+190);
+        rect.sizeDelta = new Vector2(290, 24);
+        bar.GetComponent<Image>().color = new Color32(232, 213, 174, 255);
         var fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
         var fillRect = fillObject.GetComponent<RectTransform>();
         fillRect.SetParent(rect, false);
@@ -41,7 +42,7 @@ public class CurrencyHUD : MonoBehaviour
         label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
         label.font = coinsText.font;
         label.fontSize = 16;
-        label.color = Color.white;
+        label.color = new Color32(129, 56, 74, 255);
         label.alignment = TextAlignmentOptions.Center;
         label.raycastTarget = false;
     }
@@ -72,8 +73,13 @@ public class CurrencyHUD : MonoBehaviour
     private void Start()
     {
         grid = FindAnyObjectByType<GridPlacementSystem>();
-        CreateRateBar("Employment", 15, new Color32(36, 105, 146, 255), out employmentFill, out employmentText);
-        CreateRateBar("Occupancy", -15, new Color32(45, 115, 74, 255), out occupancyFill, out occupancyText);
+        CreateRateBar("Employment", 15,
+        new Color32(181, 157, 129, 255),
+        out employmentFill, out employmentText);
+
+        CreateRateBar("Occupancy", -15,
+            new Color32(170, 190, 150, 255),
+            out occupancyFill, out occupancyText);
         currency.BalanceChanged += UpdateCoins;
         UpdateCoins(currency.Balance);
     }

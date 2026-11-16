@@ -11,6 +11,8 @@ public class BuildingStoreUI : MonoBehaviour
 
     [Header("Card References")]
     [SerializeField] private BuildingCardUI[] buildingCards;
+    [Header("Building Tooltip")]
+    [SerializeField] private BuildingTooltipUI buildingTooltip;
 
     [Header("Economy")]
     [SerializeField] private CurrencySystem economy;
@@ -26,6 +28,7 @@ public class BuildingStoreUI : MonoBehaviour
 
     [Header("Store")]
     [SerializeField] private GameObject storePanel;
+    [SerializeField] private GameObject cityBudgetButton;
     [SerializeField] private Button closeButton;
     [SerializeField] private Button openStoreButton;
     [Header("Placement Integration")]
@@ -79,6 +82,8 @@ public class BuildingStoreUI : MonoBehaviour
             buildingCards[i].Setup(buildings[i], placementAdapter != null
                 ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
             buildingCards[i].OnBuildingSelected += HandleBuildingSelected;
+            buildingCards[i].OnCardHovered += HandleCardHovered;
+            buildingCards[i].OnCardUnhovered += HandleCardUnhovered;
         }
 
         allButton.onClick.AddListener(() => FilterBuildings(-1));
@@ -97,6 +102,29 @@ public class BuildingStoreUI : MonoBehaviour
         UpdateBalance(economy.Balance);
 
         messagePanel.SetActive(false);
+    }
+
+    private void HandleCardHovered(BuildingCardUI card, BuildingData data)
+    {
+        if (buildingTooltip == null) return;
+
+        int cost = placementAdapter != null
+            ? placementAdapter.GetPlacementCost(data)
+            : data.Price;
+
+        buildingTooltip.Show(data, cost);
+
+        Canvas.ForceUpdateCanvases();
+
+        buildingTooltip.PositionBeside(
+            card.GetComponent<RectTransform>()
+        );
+    }
+
+    private void HandleCardUnhovered(BuildingCardUI card)
+    {
+        if (buildingTooltip != null)
+            buildingTooltip.Hide();
     }
 
     
@@ -196,6 +224,9 @@ private IEnumerator HideMessageAfterDelay()
 {
     storePanel.SetActive(false);
     openStoreButton.gameObject.SetActive(true);
+
+    if (cityBudgetButton != null)
+        cityBudgetButton.SetActive(true);
 }
 
     private void OpenStore()
@@ -203,8 +234,12 @@ private IEnumerator HideMessageAfterDelay()
     for (int i = 0; i < buildings.Length && i < buildingCards.Length; i++)
         buildingCards[i].Setup(buildings[i], placementAdapter != null
             ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
+
     storePanel.SetActive(true);
     openStoreButton.gameObject.SetActive(false);
+
+    if (cityBudgetButton != null)
+        cityBudgetButton.SetActive(false);
 }
 
     private void OnDestroy()
@@ -214,7 +249,11 @@ private IEnumerator HideMessageAfterDelay()
             foreach (BuildingCardUI card in buildingCards)
             {
                 if (card != null)
+                {
                     card.OnBuildingSelected -= HandleBuildingSelected;
+                    card.OnCardHovered -= HandleCardHovered;
+                    card.OnCardUnhovered -= HandleCardUnhovered;
+                }
             }
         }
 
