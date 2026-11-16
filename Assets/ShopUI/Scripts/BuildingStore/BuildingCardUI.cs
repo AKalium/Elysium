@@ -1,10 +1,11 @@
-
+using UnityEngine.EventSystems;
 using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuildingCardUI : MonoBehaviour
+public class BuildingCardUI : MonoBehaviour,
+    IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI References")]
     [SerializeField] private Image buildingIcon;
@@ -45,13 +46,12 @@ public void SetSelected(bool selected)
 
         buildingName.text = data.BuildingName;
         int cost = placementCost ?? data.Price;
-        buildingPrice.text = cost < 0 ? "Unavailable" :
-            $"${cost:N0}\n<size=75%>Income ${data.DailyIncome:N0} / Upkeep ${data.DailyUpkeep:N2}\nNet {EconomyBudgetUI.SignedMoney(data.DailyNet)} / day</size>";
-        if (cost >= 0 && data.BuildingId == "apartment")
-            buildingPrice.text = $"${cost:N0}\n<size=75%>Residents: workers $6 / others $1 daily\nUpkeep ${data.DailyUpkeep:N2} / day</size>";
-        buildingPrice.enableAutoSizing = true;
-        buildingPrice.fontSizeMin = 14;
-        buildingPrice.fontSizeMax = 18;
+        buildingPrice.text = cost < 0
+            ? "Unavailable"
+            : $"${cost:N0}";
+
+        buildingPrice.enableAutoSizing = false;
+        buildingPrice.fontSize = 20;
         selectButton.interactable = cost >= 0;
 
         if (data.BuildingIcon != null)
@@ -160,6 +160,20 @@ public void SetSelected(bool selected)
     private void OnDisable()
     {
         selectButton.onClick.RemoveListener(HandleSelection);
+    }
+
+    public event Action<BuildingCardUI, BuildingData> OnCardHovered;
+    public event Action<BuildingCardUI> OnCardUnhovered;
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (buildingData != null)
+            OnCardHovered?.Invoke(this, buildingData);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        OnCardUnhovered?.Invoke(this);
     }
 
     private void HandleSelection()

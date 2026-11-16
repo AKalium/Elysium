@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Camera))]
 public class PlayerCam : MonoBehaviour
@@ -84,13 +85,20 @@ public class PlayerCam : MonoBehaviour
 
         if (Mouse.current != null)
         {
-            float scroll = Mouse.current.scroll.ReadValue().y;
-            if (scroll != 0f)
+            bool overUI = EventSystem.current != null &&
+                        EventSystem.current.IsPointerOverGameObject();
+
+            if (!overUI)
             {
-                controlledCamera.orthographicSize = Mathf.Clamp(
-                    controlledCamera.orthographicSize - scroll * zoomSpeed * 0.01f,
-                    minZoom,
-                    maxZoom);
+                float scroll = Mouse.current.scroll.ReadValue().y;
+
+                if (scroll != 0f)
+                {
+                    controlledCamera.orthographicSize = Mathf.Clamp(
+                        controlledCamera.orthographicSize - scroll * zoomSpeed * 0.01f,
+                        minZoom,
+                        maxZoom);
+                }
             }
         }
 
