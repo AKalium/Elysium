@@ -175,16 +175,18 @@ public class ApartmentStatsUI : MonoBehaviour
     }
 
     private static void SetWhiteText(GUIStyle style)
-    {
-        style.normal.textColor = Color.white;
-        style.hover.textColor = Color.white;
-        style.active.textColor = Color.white;
-        style.focused.textColor = Color.white;
-        style.onNormal.textColor = Color.white;
-        style.onHover.textColor = Color.white;
-        style.onActive.textColor = Color.white;
-        style.onFocused.textColor = Color.white;
-    }
+{
+    Color brown = new Color32(55, 42, 32, 255);
+
+    style.normal.textColor = brown;
+    style.hover.textColor = brown;
+    style.active.textColor = brown;
+    style.focused.textColor = brown;
+    style.onNormal.textColor = brown;
+    style.onHover.textColor = brown;
+    style.onActive.textColor = brown;
+    style.onFocused.textColor = brown;
+}
 
     private void OnGUI()
     {
@@ -218,8 +220,8 @@ public class ApartmentStatsUI : MonoBehaviour
         }
         Color previousColor = GUI.color;
         Color previousContentColor = GUI.contentColor;
-        GUI.contentColor = Color.white;
-        GUI.color = new Color(0.07f, 0.10f, 0.15f, 1);
+        GUI.contentColor = new Color32(55, 42, 32, 255);
+        GUI.color = new Color32(232, 213, 174, 255);
         GUI.DrawTexture(panel, Texture2D.whiteTexture);
         GUI.color = Color.white;
         GUILayout.BeginArea(new Rect(panel.x + 22, panel.y + 18, panel.width - 44, panel.height - 36));
