@@ -6,9 +6,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>Scene-local disaster scheduling and a reusable in-scene Dawny conversation.</summary>
+/// <summary>Schedules disasters and population milestones that use the in-scene Dawny cutscene.</summary>
 public sealed class DisasterSystem : MonoBehaviour
 {
+    private static readonly int[] PopulationMilestones = { 25, 50, 100 };
+
     [SerializeField] private TimeManager clock;
     [SerializeField] private PollutionSystem pollution;
     [SerializeField] private GridPlacementSystem grid;
@@ -30,20 +32,27 @@ public sealed class DisasterSystem : MonoBehaviour
     private float previousTimeScale;
     private GameObject overlay;
     private IntroDialogue conversation;
+    private int milestonesReached;
+    private int milestonesShown;
     public static bool IsCutsceneOpen { get; private set; }
     public string LastSummary { get; private set; }
     private float summaryUntil;
 
     internal void CaptureSchedule(CitySave save)
     {
+        RecordPopulationMilestones();
         save.lastDisasterDay = lastDisasterDay;
         save.pendingDisasterRoll = pendingDailyRoll;
+        save.populationMilestonesReached = milestonesReached;
+        save.populationMilestonesShown = milestonesShown;
     }
 
     internal void RestoreSchedule(CitySave save)
     {
         lastDisasterDay = save.lastDisasterDay;
         pendingDailyRoll = save.pendingDisasterRoll;
+        milestonesReached = Mathf.Clamp(save.populationMilestonesReached, 0, PopulationMilestones.Length);
+        milestonesShown = Mathf.Clamp(save.populationMilestonesShown, 0, milestonesReached);
     }
 
     private void Awake()
@@ -53,6 +62,7 @@ public sealed class DisasterSystem : MonoBehaviour
         if (grid == null) grid = FindAnyObjectByType<GridPlacementSystem>();
     }
     private void OnEnable() { if (clock != null) clock.Midnight += QueueDailyRoll; }
+
     private void OnDisable()
     {
         if (clock != null) clock.Midnight -= QueueDailyRoll;
@@ -63,6 +73,13 @@ public sealed class DisasterSystem : MonoBehaviour
     }
     private void QueueDailyRoll(int day) => pendingDailyRoll = true;
 
+    private void RecordPopulationMilestones()
+    {
+        int population = GameState.Instance != null ? GameState.Instance.Population : 0;
+        while (milestonesReached < PopulationMilestones.Length && population >= PopulationMilestones[milestonesReached])
+            milestonesReached++;
+    }
+
     private bool AnotherScreenOpen()
     {
         if (IsCutsceneOpen || clock == null || clock.Paused || Time.timeScale == 0) return true;
@@ -72,6 +89,8 @@ public sealed class DisasterSystem : MonoBehaviour
 
     private void Update()
     {
+        // Count after placement has initialized the apartment's residents.
+        RecordPopulationMilestones();
         if (AnotherScreenOpen()) return;
         var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         bool typing = selected != null && (selected.GetComponent<InputField>() != null || selected.GetComponent<TMP_InputField>() != null);
@@ -81,6 +100,14 @@ public sealed class DisasterSystem : MonoBehaviour
             if (keyboard.kKey.wasPressedThisFrame) { Trigger(DisasterKind.Fire); return; }
             if (keyboard.lKey.wasPressedThisFrame) { Trigger(DisasterKind.Flood); return; }
         }
+        if (milestonesShown < milestonesReached && dialoguePrefab != null &&
+            FindAnyObjectByType<TutorialUI>()?.IsOpen != true)
+        {
+            int residents = PopulationMilestones[milestonesShown];
+            StartCoroutine(PlayDawnyCutscene($"You reached {residents} residents!", onFinished: () => milestonesShown++));
+            return;
+        }
+
         if (!pendingDailyRoll) return;
         pendingDailyRoll = false;
         if (clock.Day - lastDisasterDay <= cooldownDays || pollution == null) return;
@@ -124,11 +151,26 @@ public sealed class DisasterSystem : MonoBehaviour
         }
         lastDisasterDay = clock.Day;
         pendingDailyRoll = false;
-        StartCoroutine(PlayDisaster(kind, candidates));
+        int count = DamageCount(kind, candidates.Count);
+        string line = $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {count} building{(count == 1 ? " is" : "s are")} damaged and can no longer be used. You can sell them to clear space for rebuilding.";
+        StartCoroutine(PlayDawnyCutscene(line, () => ApplyDisaster(kind, candidates, count),
+            () => summaryUntil = Time.unscaledTime + 8));
         return true;
     }
 
-    private IEnumerator PlayDisaster(DisasterKind kind, List<GridPlaceable> candidates)
+    private void ApplyDisaster(DisasterKind kind, List<GridPlaceable> candidates, int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            int pick = Random.Range(i, candidates.Count);
+            (candidates[i], candidates[pick]) = (candidates[pick], candidates[i]);
+            var damage = candidates[i].GetComponent<DisasterDamage>() ?? candidates[i].gameObject.AddComponent<DisasterDamage>();
+            damage.Apply(kind);
+        }
+        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {count} building{(count == 1 ? "" : "s")} damaged. Sell damaged buildings to clear their space.";
+    }
+
+    private IEnumerator PlayDawnyCutscene(string line, System.Action onBlack = null, System.Action onFinished = null)
     {
         previousPaused = clock.Paused;
         previousTimeScale = Time.timeScale;
@@ -136,7 +178,7 @@ public sealed class DisasterSystem : MonoBehaviour
         IsCutsceneOpen = true;
         clock.Paused = true;
         Time.timeScale = 0;
-        overlay = new GameObject("Disaster Fade", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+        overlay = new GameObject("Dawny Cutscene Fade", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
         var canvas = overlay.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 30000;
@@ -148,22 +190,13 @@ public sealed class DisasterSystem : MonoBehaviour
         var image = shade.GetComponent<Image>();
         yield return Fade(image, 0, 1);
 
-        int count = DamageCount(kind, candidates.Count);
-        for (int i = 0; i < count; i++)
-        {
-            int pick = Random.Range(i, candidates.Count);
-            (candidates[i], candidates[pick]) = (candidates[pick], candidates[i]);
-            var damage = candidates[i].GetComponent<DisasterDamage>() ?? candidates[i].gameObject.AddComponent<DisasterDamage>();
-            damage.Apply(kind);
-        }
-        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {count} building{(count == 1 ? "" : "s")} damaged. Sell damaged buildings to clear their space.";
+        onBlack?.Invoke();
         // Instantiate inactive so configuration happens before the dialogue starts.
-        var holder = new GameObject("Disaster Conversation Holder");
+        var holder = new GameObject("Dawny Conversation Holder");
         holder.SetActive(false);
         conversation = Instantiate(dialoguePrefab, holder.transform);
         int total = pollution != null ? pollution.TotalPollution : 0;
         int form = total > 50 ? 2 : total > 25 ? 1 : 0;
-        string line = $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {count} building{(count == 1 ? " is" : "s are")} damaged and can no longer be used. You can sell them to clear space for rebuilding.";
         conversation.ConfigureConversation(line, idleForms[form], talkingForms[form], portraitUVs[form]);
         foreach (var uiCanvas in conversation.GetComponentsInChildren<Canvas>(true)) uiCanvas.sortingOrder = 30001;
         conversation.transform.SetParent(null, false);
@@ -174,7 +207,7 @@ public sealed class DisasterSystem : MonoBehaviour
         yield return Fade(image, 1, 0);
         Destroy(overlay);
         ReleasePause();
-        summaryUntil = Time.unscaledTime + 8;
+        onFinished?.Invoke();
     }
 
     private IEnumerator Fade(Image image, float from, float to)

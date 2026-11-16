@@ -46,6 +46,7 @@ public class PlayerCam : MonoBehaviour
     {
         controlledCamera = GetComponent<Camera>();
         controlledCamera.orthographic = true;
+        grid = GetComponent<GridPlacementSystem>();
 
         moveAction = new InputAction("Move", InputActionType.Value, expectedControlType: "Vector2");
         moveAction.AddCompositeBinding("2DVector")
@@ -99,18 +100,29 @@ public class PlayerCam : MonoBehaviour
 
     private void ClampCameraPosition()
     {
+        Rect bounds;
+        if (mapMax.x > mapMin.x && mapMax.y > mapMin.y)
+        {
+            bounds = Rect.MinMaxRect(mapMin.x, mapMin.y, mapMax.x, mapMax.y);
+        }
+        else
+        {
+            if (grid == null) return;
+            bounds = grid.WorldBounds;
+        }
+
         float halfHeight = controlledCamera.orthographicSize;
         float halfWidth = halfHeight * controlledCamera.aspect;
 
-        float minX = mapMin.x + halfWidth;
-        float maxX = mapMax.x - halfWidth;
-        float minY = mapMin.y + halfHeight;
-        float maxY = mapMax.y - halfHeight;
+        float minX = bounds.xMin + halfWidth;
+        float maxX = bounds.xMax - halfWidth;
+        float minY = bounds.yMin + halfHeight;
+        float maxY = bounds.yMax - halfHeight;
 
         Vector3 position = transform.position;
-        position.x = minX > maxX ? (mapMin.x + mapMax.x) * 0.5f
+        position.x = minX > maxX ? bounds.center.x
             : Mathf.Clamp(position.x, minX, maxX);
-        position.y = minY > maxY ? (mapMin.y + mapMax.y) * 0.5f
+        position.y = minY > maxY ? bounds.center.y
             : Mathf.Clamp(position.y, minY, maxY);
         transform.position = position;
     }

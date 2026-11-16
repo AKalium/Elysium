@@ -27,6 +27,8 @@ internal sealed class CitySave
     public int lastDailyPollution;
     public int lastDisasterDay;
     public bool pendingDisasterRoll;
+    public int populationMilestonesReached;
+    public int populationMilestonesShown;
     public bool hasPreviousDayStats;
     public float previousHappiness;
     public float previousEmployment;

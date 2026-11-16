@@ -71,6 +71,7 @@ private int ghostPrefabIndex = -1;
     public int MapVersion { get; private set; }
     public float CellSize => cellSize;
     public Camera PlacementCamera => targetCamera;
+    internal Rect WorldBounds => new Rect(gridOrigin, new Vector2(gridWidth, gridHeight) * cellSize);
     public bool HasMapHover => hasHoveredCell;
     public Vector2Int HoveredCell => hoveredCell;
     public Vector2Int ToCityCoordinates(Vector2Int cell) => cell - CentralRoadCell;
@@ -555,7 +556,7 @@ private int ghostPrefabIndex = -1;
         int departed = unhappyDepartures + unemployedDepartures;
         long closing = population + arrived - departed;
         var summary = new System.Text.StringBuilder();
-        summary.AppendLine($"Population at midnight: {population} Ã¢â€ â€™ {closing} ({(arrived - departed).ToString("+0;-0;0")})");
+        summary.AppendLine($"Population at midnight: {population} to {closing} ({(arrived - departed).ToString("+0;-0;0")})");
         summary.AppendLine($"Arrivals: +{arrived}");
         summary.AppendLine($"  Happiness above 50: +{happinessArrivals}");
         summary.AppendLine($"  Net income incentive: +{earningsArrivals}");
