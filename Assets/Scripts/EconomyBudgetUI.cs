@@ -112,14 +112,16 @@ public sealed class EconomyBudgetUI : MonoBehaviour
     }
     private static string GetStartingDayReminder(int day)
     {
+        if (day >= 15 && day <= 42 && (day - 15) % 3 == 0)
+            return $"Each factory now produces {BuildingPollution.FactoryPollutionForDay(day)} pollution per day. Factory emissions rise by 1 every 3 days from day 15, reaching a maximum of 18 on day 42. Today's rate is added at the end of day {day}.";
         switch (day)
         {
+            case 31:
+                return "The first-30-day service grace period has ended. Missing-service happiness penalties now apply at their full values.";
             case 3:
                 return "Starting today, apartments with at least 5 residents and happiness below 30 lose 2 residents at the end of each day. The first check is at the end of day 3.";
             case 6:
                 return "Starting today, apartments with at least 5 residents and no employed residents lose 2 residents at the end of each day. The first check is at the end of day 6. This stacks with the low-happiness penalty: qualifying for both removes 4 residents.";
-            case 31:
-                return "The introductory factory pollution rate has ended. Each factory now produces 16 pollution per day, up from 8. The higher emissions are first added at the end of day 31.";
             default:
                 return null;
         }

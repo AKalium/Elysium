@@ -17,6 +17,8 @@ public class TimeManager : MonoBehaviour
 
 
     public int Day { get; private set; } = 1;
+    private bool settlingDay;
+    public int SimulationDay => settlingDay ? Day - 1 : Day;
     public int Hour => (int)minuteOfDay / 60;
     public int Minute => (int)minuteOfDay % 60;
     public bool Paused { get; set; }
@@ -24,7 +26,7 @@ public class TimeManager : MonoBehaviour
 
     public void CycleSpeed()
     {
-        speed = speed < 2f ? 2f : speed < 4f ? 4f : 1f;
+        speed = speed < 2f ? 2f : speed < 4f ? 4f : speed < 8f ? 8f : 1f;
     }
     public event Action<int> Midnight;
     public string DisplayTime => $"{(Hour % 12 == 0 ? 12 : Hour % 12)}:{Minute:00} {(Hour < 12 ? "AM" : "PM")}";
@@ -86,11 +88,16 @@ public class TimeManager : MonoBehaviour
             var grid = FindAnyObjectByType<GridPlacementSystem>();
             if (grid != null && grid.gameObject.scene == gameObject.scene) grid.CapturePreviousDayStats();
             Day++;
-            Midnight?.Invoke(Day);
             var economy = GetComponent<DailyEconomy>();
             string populationSummary = null;
-            if (grid != null && grid.gameObject.scene == gameObject.scene)
-                populationSummary = grid.UpdateDailyPopulation(Day - 1, economy?.LastNet ?? 0);
+            settlingDay = true;
+            try
+            {
+                Midnight?.Invoke(Day);
+                if (grid != null && grid.gameObject.scene == gameObject.scene)
+                    populationSummary = grid.UpdateDailyPopulation(Day - 1, economy?.LastNet ?? 0);
+            }
+            finally { settlingDay = false; }
             economy?.CompleteDayReport(populationSummary);
             // A daily report may pause during the event. Stop at midnight even
             // when a long frame would otherwise advance through several days.

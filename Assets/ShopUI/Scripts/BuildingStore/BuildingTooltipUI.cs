@@ -14,7 +14,7 @@ public class BuildingTooltipUI : MonoBehaviour
         BuildingPollution pollution = data.BuildingPrefab != null
             ? data.BuildingPrefab.GetComponent<BuildingPollution>()
             : null;
-        
+
         TimeManager clock = FindAnyObjectByType<TimeManager>();
 
         int currentDay = clock != null ? clock.Day : 1;
@@ -30,15 +30,7 @@ public class BuildingTooltipUI : MonoBehaviour
         int netPollution = pollutionGenerated - pollutionRemoved;
 
 
-        string income = data.BuildingId == "apartment"
-        ? "Depends on residents"
-        : data.BuildingId == "factory" || data.BuildingId == "market"
-            ? "Depends on workers"
-            : data.DailyIncome > 0
-                ? $"${data.DailyIncome:N0}/day"
-                : "No direct income";
-
-            string pollutionInfo = netPollution > 0
+        string pollutionInfo = netPollution > 0
             ? $"+{netPollution}/day"
             : netPollution < 0
                 ? $"{netPollution}/day"
@@ -48,11 +40,11 @@ public class BuildingTooltipUI : MonoBehaviour
                 $"<color=#8A705A>BUILDING INFORMATION</color>\n\n" +
                 $"Construction:  <b>${cost:N0}</b>\n" +
                 $"Jobs provided:  <b>{data.JobsProvided}</b>\n" +
-                $"Daily upkeep:  <b>${data.DailyUpkeep:N2}</b>\n" +
-                $"Income:  <b>{income}</b>\n\n" +
+                $"Daily upkeep:  <b>${data.DailyUpkeep:#,0.#}</b>\n" +
+                (data.BuildingId == "factory" ? "Begins after 10 days\n\n" : "\n") +
                 $"<color=#8A705A>ENVIRONMENT</color>\n" +
                 $"Pollution:  <b>{pollutionInfo}</b>";
-            
+
 
         gameObject.SetActive(true);
     }

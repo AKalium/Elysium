@@ -38,6 +38,7 @@ public class BuildingData : ScriptableObject
     public float DailyUpkeep => Mathf.Max(0, dailyUpkeep);
     public double DailyNet => DailyIncome - DailyUpkeep;
     public BuildingCategory Category => category;
-    public Sprite BuildingIcon => buildingIcon;
+    public Sprite BuildingIcon => buildingId == "stone_bridge"
+        ? SpriteChanger.StoneConnectionSprite(3) : buildingIcon;
     public GameObject BuildingPrefab => buildingPrefab;
 }

@@ -46,12 +46,11 @@ public void SetSelected(bool selected)
 
         buildingName.text = data.BuildingName;
         int cost = placementCost ?? data.Price;
-        buildingPrice.text = cost < 0
-            ? "Unavailable"
-            : $"${cost:N0}";
-
-        buildingPrice.enableAutoSizing = false;
-        buildingPrice.fontSize = 20;
+        buildingPrice.text = cost < 0 ? "Unavailable" :
+            $"${cost:N0}\n<size=75%>Upkeep ${data.DailyUpkeep:#,0.#} / day{(data.BuildingId == "factory" ? " after 10 days" : "")}</size>";
+        buildingPrice.enableAutoSizing = true;
+        buildingPrice.fontSizeMin = 14;
+        buildingPrice.fontSizeMax = 18;
         selectButton.interactable = cost >= 0;
 
         if (data.BuildingIcon != null)

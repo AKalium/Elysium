@@ -142,7 +142,7 @@ public static class DisasterVerificationRunner
         foreach (var source in UnityEngine.Object.FindObjectsByType<BuildingPollution>())
         {
             var building = source.GetComponent<GridPlaceable>();
-            if (building == null || building.IsOperational) expectedPollution += source.GetPollutionForDay(1) - source.PollutionRemovalPerDay;
+            if (building == null || ApartmentStatsUI.IsServiceActive(grid, building)) expectedPollution += source.GetPollutionForDay(1) - source.PollutionRemovalPerDay;
         }
         var pollution = UnityEngine.Object.FindAnyObjectByType<PollutionSystem>();
         typeof(PollutionSystem).GetMethod("AddDailyPollution", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)

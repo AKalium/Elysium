@@ -131,7 +131,8 @@ public sealed class RoadNetworkVisuals : MonoBehaviour
         centralLabel.color = centralColor;
         legend.text = $"<b>ROAD ACCESS</b>  <color=#{ColorUtility.ToHtmlStringRGB(connectedColor)}>Connected</color> | " +
             $"<color=#{ColorUtility.ToHtmlStringRGB(disconnectedColor)}>X Disconnected</color> | <color=#{ColorUtility.ToHtmlStringRGB(centralColor)}>Diamond: center</color>\n" +
-            "Hold Shift: demolition preview  |  Right-drag: demolish roads" +
+            "Gray buildings: temporarily unavailable; rebuild damaged bridges\n" +
+            "Left-click wood bridge: upgrade $100 | Hold Shift: demolition preview | Right-drag: demolish" +
             (rootExists ? "" : "\n<color=#FFD356>Central road missing: rebuild at the gold marker.</color>");
         shownVersion = grid.MapVersion;
         ClearPreview();

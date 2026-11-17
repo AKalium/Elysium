@@ -12,10 +12,13 @@ public sealed class DisasterDamage : MonoBehaviour
 
     public void Apply(DisasterKind kind)
     {
+        if (kind == DisasterKind.Flood && GetComponent<GridPlaceable>()?.IsStoneBridge == true) return;
         if (isDamaged) return;
         isDamaged = true;
         disaster = kind;
         ApplyTint();
+        if (GetComponent<GridPlaceable>()?.IsRoad == true)
+            FindAnyObjectByType<GridPlacementSystem>()?.RefreshDisasterRoadAccess();
         GameState.Instance?.RefreshPopulation();
     }
 

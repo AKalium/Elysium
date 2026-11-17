@@ -8,6 +8,10 @@ using UnityEngine;
 */
 public class PerlinNoiseMap : MonoBehaviour
 {
+    public const int TerrainSortingOrder = -10;
+    private const int WaterTile = 1;
+    private const int DirtTile = 2;
+    private static readonly Vector3 TileGroupOffset = new Vector3(1.95f, 0f, 0.95f);
     //TILE VARIABLES
     Dictionary<int, GameObject> tileset;                            //gives script access to prefabs
     Dictionary<int, GameObject> tileGroups;                         //for organization- groups tiles by category
@@ -25,8 +29,37 @@ public class PerlinNoiseMap : MonoBehaviour
     
     //PERLIN VARIABLES
     float magnification = 20.0f;                                      // 'resolution' of the terrain - use range [4 , 24] when editing
-    int xOffset = 0;                                                 // offsets used to move terrain image
-    int yOffset = 0;
+    private float xOffset;
+    private float yOffset;
+    private bool seedInitialized;
+    public int Seed { get; private set; }
+
+    private void Awake() => InitializeSeed();
+
+    private void InitializeSeed()
+    {
+        if (seedInitialized) return;
+
+        Seed = System.BitConverter.ToInt32(System.Guid.NewGuid().ToByteArray(), 0);
+        var random = new System.Random(Seed);
+        xOffset = (float)(random.NextDouble() * 10000.0);
+        yOffset = (float)(random.NextDouble() * 10000.0);
+        seedInitialized = true;
+    }
+
+    public bool IsWaterAt(Vector2 worldPosition)
+    {
+        Vector2Int tile = WorldToTerrainTile(worldPosition);
+        return tile.x >= 0 && tile.y >= 0 && tile.x < mapWidth && tile.y < mapHeight &&
+            GetIdFromPerlin(tile.x, tile.y) == WaterTile;
+    }
+
+    private Vector2Int WorldToTerrainTile(Vector2 worldPosition)
+    {
+        Vector2 firstTileCenter = transform.TransformPoint(TileGroupOffset);
+        Vector2 offset = worldPosition - firstTileCenter;
+        return Vector2Int.FloorToInt(offset + Vector2.one * 0.5f);
+    }
 
 /*FUNCTIONS*******************************************************************************************************/
     void Start()
@@ -41,8 +74,8 @@ public class PerlinNoiseMap : MonoBehaviour
     {
         tileset = new Dictionary<int, GameObject>();
         tileset.Add(0, grass);
-        tileset.Add(1, water);
-        tileset.Add(2, dirt);
+        tileset.Add(WaterTile, water);
+        tileset.Add(DirtTile, dirt);
         tileset.Add(3, sand);
     }
 
@@ -56,7 +89,7 @@ public class PerlinNoiseMap : MonoBehaviour
         {
             GameObject tileGroup = new GameObject(pair.Value.name);
             tileGroup.transform.parent = gameObject.transform;
-            tileGroup.transform.localPosition = new Vector3(1.95f, 0f, 0.95f);                     //use to change map position
+            tileGroup.transform.localPosition = TileGroupOffset;
             tileGroups.Add(pair.Key, tileGroup);
         }
 
@@ -71,7 +104,7 @@ public class PerlinNoiseMap : MonoBehaviour
 
             for(int y = 0; y < mapHeight; y++)
             {
-                int tileID = GetIdFromPerlin(x,y);
+                int tileID = GetIdFromPerlin(x, y);
                 noiseGrid[x].Add(tileID);
                 CreateTile(tileID, x, y);       
             }
@@ -84,17 +117,16 @@ public class PerlinNoiseMap : MonoBehaviour
     //!currently using hardcoded numbers! 
     int GetIdFromPerlin(int x, int y)
     {
+        // Placement may query terrain before this component's Awake runs.
+        InitializeSeed();
         float rawPerlin = Mathf.PerlinNoise(
             (x - xOffset) / magnification, 
             (y - yOffset) / magnification
         );                                                                  //generate noise
 
         float clamp = Mathf.Clamp(rawPerlin, 0.0f, 1.0f);                    //normalize values
-        float scale = clamp * tileset.Count;                                //match number of textures
-
-        if(scale == 4) scale--;                                             //make range [0, numTiles)
-        
-        return Mathf.FloorToInt(scale);                                     //outputs int from range [0, numTiles)
+        const int terrainTypeCount = 4;
+        return Mathf.Min(Mathf.FloorToInt(clamp * terrainTypeCount), terrainTypeCount - 1);
 
     }
 
@@ -104,6 +136,13 @@ public class PerlinNoiseMap : MonoBehaviour
         GameObject tilePrefab = tileset[tileID];
         GameObject tileGp = tileGroups[tileID];
         GameObject tile = Instantiate(tilePrefab, tileGp.transform);
+        // Terrain must sit beneath infrastructure (-1) and buildings (0).
+        // Apply at generation too so scene prefab overrides cannot hide bridges.
+        foreach (var renderer in tile.GetComponentsInChildren<SpriteRenderer>(true))
+        {
+            renderer.sortingLayerID = 0;
+            renderer.sortingOrder = TerrainSortingOrder;
+        }
 
         tile.name = string.Format("tileX{0}:Y{1}", x , y);
         tile.transform.localPosition = new Vector3(x , y , 0);

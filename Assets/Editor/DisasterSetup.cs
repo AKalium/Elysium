@@ -75,7 +75,7 @@ public static class DisasterSetup
             building.InitializeFoundingApartment();
             var sprite = go.AddComponent<SpriteRenderer>();
             var damage = go.AddComponent<DisasterDamage>();
-            Require(building.ResidentsProvided == 10, "Initial residents");
+            Require(building.ResidentsProvided == 8, "Initial residents");
             damage.Apply(DisasterKind.Fire);
             Require(!building.IsOperational && building.ResidentsProvided == 0 && building.HousingCapacity == 0, "Damage disables housing");
             Require(!building.TryAddResident(), "Damaged housing cannot accept residents");

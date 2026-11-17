@@ -5,7 +5,7 @@ using UnityEngine;
 [DefaultExecutionOrder(-200)]
 public sealed class CurrencySystem : MonoBehaviour
 {
-    [SerializeField, Min(0)] private int startingBalance = 1300;
+    public const int StartingBalance = 1500;
     [SerializeField, Range(0f, 1f)] private float demolitionRefundRate = 0.5f;
 
     public int Balance { get; private set; }
@@ -15,7 +15,8 @@ public sealed class CurrencySystem : MonoBehaviour
 
     private void Awake()
 {
-    Balance = startingBalance;
+    Balance = StartingBalance;
+    fractionalBalance = 0;
 }
 
     public bool CanAfford(int amount) => amount >= 0 && amount <= Balance;

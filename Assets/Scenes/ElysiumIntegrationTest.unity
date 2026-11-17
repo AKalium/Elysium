@@ -1964,6 +1964,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialUI
   tutorialPanel: {fileID: 1426745517}
+  _Clip: {fileID: 8300000, guid: 27f4d407d8f8ce44db8902c707d4c6c9, type: 3}
 --- !u!1 &872029938
 GameObject:
   m_ObjectHideFlags: 0
@@ -3705,7 +3706,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd4df98a4777984c99e95c4890dc1e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CurrencySystem
-  startingBalance: 1300
 --- !u!4 &1778229094
 Transform:
   m_ObjectHideFlags: 0

@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingId: recycling_center
   buildingName: Recycling Center
   price: 650
-  jobsProvided: 5
+  jobsProvided: 3
   dailyIncome: 0
   dailyUpkeep: 10
   category: 2
