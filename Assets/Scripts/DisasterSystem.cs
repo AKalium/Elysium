@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using TMPro;
 
 /// <summary>Scene-local disaster scheduling and a reusable in-scene Dawny conversation.</summary>
 public sealed class DisasterSystem : MonoBehaviour
@@ -69,7 +68,7 @@ public sealed class DisasterSystem : MonoBehaviour
     {
         if (AnotherScreenOpen()) return;
         var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-        bool typing = selected != null && (selected.GetComponent<InputField>() != null || selected.GetComponent<TMP_InputField>() != null);
+        bool typing = selected != null && selected.GetComponent<InputField>() != null;
         var keyboard = Keyboard.current;
         if (enableTestKeys && !typing && keyboard != null)
         {

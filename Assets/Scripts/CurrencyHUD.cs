@@ -1,28 +1,32 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class CurrencyHUD : MonoBehaviour
 {
     [SerializeField] private CurrencySystem currency;
-    [SerializeField] private TMP_Text coinsText;
+    [SerializeField] private Text coinsText;
+    [SerializeField] private Font pixelFont;
 
     private GridPlacementSystem grid;
     private Image employmentFill;
     private Image occupancyFill;
-    private TMP_Text employmentText;
-    private TMP_Text occupancyText;
+    private Text employmentText;
+    private Text occupancyText;
     private float nextRefresh;
 
-    private void CreateRateBar(string name, float y, Color color, out Image fill, out TMP_Text label)
+    private void CreateRateBar(string name, float y, Color color, out Image fill, out Text label)
     {
+        Transform canvasTransform = (coinsText != null && coinsText.canvas != null)
+            ? coinsText.canvas.rootCanvas.transform
+            : FindAnyObjectByType<Canvas>()?.transform;
+
         var bar = new GameObject(name, typeof(RectTransform), typeof(Image));
         var rect = bar.GetComponent<RectTransform>();
-        rect.SetParent(coinsText.canvas.rootCanvas.transform, false);
+        if (canvasTransform != null) rect.SetParent(canvasTransform, false);
 
         rect.anchorMin = rect.anchorMax = new Vector2(0, 0.5f);
         rect.pivot = new Vector2(0, 0.5f);
-        rect.anchoredPosition = new Vector2(20, y+190);
+        rect.anchoredPosition = new Vector2(20, y + 190);
         rect.sizeDelta = new Vector2(290, 24);
         bar.GetComponent<Image>().color = new Color32(232, 213, 174, 255);
         var fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
@@ -34,22 +38,26 @@ public class CurrencyHUD : MonoBehaviour
         fill = fillObject.GetComponent<Image>();
         fill.color = color;
         fill.raycastTarget = false;
-        var labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-        label = labelObject.GetComponent<TextMeshProUGUI>();
+        var labelObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
+        label = labelObject.GetComponent<Text>();
         label.rectTransform.SetParent(rect, false);
         label.rectTransform.anchorMin = Vector2.zero;
         label.rectTransform.anchorMax = Vector2.one;
         label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
-        label.font = coinsText.font;
+        
+        if (pixelFont != null) label.font = pixelFont;
+        else if (coinsText != null && coinsText.font != null) label.font = coinsText.font;
+
         label.fontSize = 16;
         label.color = new Color32(129, 56, 74, 255);
-        label.alignment = TextAlignmentOptions.Center;
+        label.alignment = TextAnchor.MiddleCenter;
         label.raycastTarget = false;
     }
 
     private void LateUpdate()
     {
         if (Time.unscaledTime < nextRefresh || grid == null) return;
+        if (employmentFill == null || occupancyFill == null) return;
         nextRefresh = Time.unscaledTime + 0.25f;
         int residents = 0, capacity = 0, workers = 0, employed = 0;
         foreach (var item in grid.GetPlacedObjects())
@@ -74,19 +82,26 @@ public class CurrencyHUD : MonoBehaviour
     {
         grid = FindAnyObjectByType<GridPlacementSystem>();
         CreateRateBar("Employment", 15,
-        new Color32(181, 157, 129, 255),
-        out employmentFill, out employmentText);
+            new Color32(181, 157, 129, 255),
+            out employmentFill, out employmentText);
 
         CreateRateBar("Occupancy", -15,
             new Color32(170, 190, 150, 255),
             out occupancyFill, out occupancyText);
-        currency.BalanceChanged += UpdateCoins;
-        UpdateCoins(currency.Balance);
+
+        if (currency != null)
+        {
+            currency.BalanceChanged += UpdateCoins;
+            UpdateCoins(currency.Balance);
+        }
     }
 
     private void UpdateCoins(int balance)
     {
-        coinsText.text = "$" + currency.ExactBalance.ToString("N2");
+        if (coinsText != null && currency != null)
+        {
+            coinsText.text = "$" + currency.ExactBalance.ToString("N2");
+        }
     }
 
     private void OnDestroy()
