@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using TMPro;
 
 /// <summary>Scene-local clock. Other game systems can subscribe to Midnight.</summary>
 public class TimeManager : MonoBehaviour
@@ -14,7 +13,6 @@ public class TimeManager : MonoBehaviour
     private double minuteOfDay;
     private bool keyboardPaused;
     private float resumeTimeScale = 1f;
-
 
     public int Day { get; private set; } = 1;
     private bool settlingDay;
@@ -39,8 +37,7 @@ public class TimeManager : MonoBehaviour
         if (keyboard != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.dKey.wasPressedThisFrame))
         {
             var focused = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-            bool editingText = focused != null &&
-                (focused.GetComponent<InputField>() != null || focused.GetComponent<TMP_InputField>() != null);
+            bool editingText = focused != null && focused.GetComponent<InputField>() != null;
             var budget = FindAnyObjectByType<EconomyBudgetUI>();
             if (!editingText)
             {
@@ -73,7 +70,6 @@ public class TimeManager : MonoBehaviour
     {
         if (keyboardPaused) Time.timeScale = resumeTimeScale;
     }
-
 
     // Public for simulation/testing; scaled delta time also respects Unity's pause.
     public void AdvanceTime(double elapsedSeconds)

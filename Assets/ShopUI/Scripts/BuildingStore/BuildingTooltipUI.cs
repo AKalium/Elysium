@@ -1,10 +1,9 @@
-
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BuildingTooltipUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text tooltipText;
+    [SerializeField] private Text tooltipText;
 
     public void Show(BuildingData data, int cost)
     {
@@ -29,14 +28,14 @@ public class BuildingTooltipUI : MonoBehaviour
 
         int netPollution = pollutionGenerated - pollutionRemoved;
 
-
         string pollutionInfo = netPollution > 0
             ? $"+{netPollution}/day"
             : netPollution < 0
                 ? $"{netPollution}/day"
                 : "None";
+
         tooltipText.text =
-            $"<size=125%><b>{data.BuildingName}</b></size>\n" +
+            $"<size=20><b>{data.BuildingName}</b></size>\n" +
                 $"<color=#8A705A>BUILDING INFORMATION</color>\n\n" +
                 $"Construction:  <b>${cost:N0}</b>\n" +
                 $"Jobs provided:  <b>{data.JobsProvided}</b>\n" +
@@ -44,7 +43,6 @@ public class BuildingTooltipUI : MonoBehaviour
                 (data.BuildingId == "factory" ? "Begins after 10 days\n\n" : "\n") +
                 $"<color=#8A705A>ENVIRONMENT</color>\n" +
                 $"Pollution:  <b>{pollutionInfo}</b>";
-
 
         gameObject.SetActive(true);
     }
@@ -54,43 +52,41 @@ public class BuildingTooltipUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    public void PositionBeside(RectTransform card)
+    {
+        RectTransform tooltip = GetComponent<RectTransform>();
+        RectTransform parent = transform.parent as RectTransform;
 
-public void PositionBeside(RectTransform card)
-{
-    RectTransform tooltip = GetComponent<RectTransform>();
-    RectTransform parent = transform.parent as RectTransform;
+        if (card == null || parent == null) return;
 
-    if (card == null || parent == null) return;
+        Bounds cardBounds =
+            RectTransformUtility.CalculateRelativeRectTransformBounds(parent, card);
 
-    Bounds cardBounds =
-        RectTransformUtility.CalculateRelativeRectTransformBounds(parent, card);
+        float gap = 12f;
+        float width = tooltip.rect.width;
+        float height = tooltip.rect.height;
 
-    float gap = 12f;
-    float width = tooltip.rect.width;
-    float height = tooltip.rect.height;
+        // Determine which column the card belongs to.
+        bool isLeftColumn = cardBounds.center.x < parent.rect.center.x;
 
-    // Determine which column the card belongs to.
-    bool isLeftColumn = cardBounds.center.x < parent.rect.center.x;
+        // Left column -> tooltip on the right.
+        // Right column -> tooltip on the left.
+        float x = isLeftColumn
+            ? cardBounds.max.x + gap
+            : cardBounds.min.x - gap - width;
 
-    // Left column -> tooltip on the right.
-    // Right column -> tooltip on the left.
-    float x = isLeftColumn
-        ? cardBounds.max.x + gap
-        : cardBounds.min.x - gap - width;
+        // Align the tooltip with the top of the card.
+        float y = cardBounds.max.y - height;
 
-    // Align the tooltip with the top of the card.
-    float y = cardBounds.max.y - height;
+        // Keep the tooltip within the Store.
+        y = Mathf.Clamp(y, parent.rect.yMin, parent.rect.yMax - height);
 
-    // Keep the tooltip within the Store.
-    y = Mathf.Clamp(y, parent.rect.yMin, parent.rect.yMax - height);
+        // Account for the tooltip's pivot.
+        Vector2 position = new Vector2(
+            x + width * tooltip.pivot.x,
+            y + height * tooltip.pivot.y
+        );
 
-    // Account for the tooltip's pivot.
-    Vector2 position = new Vector2(
-        x + width * tooltip.pivot.x,
-        y + height * tooltip.pivot.y
-    );
-
-    tooltip.position = parent.TransformPoint(position);
-}
-
+        tooltip.position = parent.TransformPoint(position);
+    }
 }
