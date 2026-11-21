@@ -256,7 +256,6 @@ private int ghostPrefabIndex = -1;
 
     return false;
     }
-
         Vector2Int footprint = GetFootprint(prefab);
         int cost = GetConstructionCost(prefab);
         if (cost < 0) return false;

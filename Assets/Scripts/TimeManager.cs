@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Unity.Mathematics;
 
 /// <summary>Scene-local clock. Other game systems can subscribe to Midnight.</summary>
 public class TimeManager : MonoBehaviour
@@ -75,7 +76,7 @@ public class TimeManager : MonoBehaviour
             var budget = FindAnyObjectByType<EconomyBudgetUI>();
             if (!editingText)
             {
-                //if (keyboard.dKey.wasPressedThisFrame) CycleSpeed();
+                if (keyboard.tKey.wasPressedThisFrame) CycleSpeed();
                 if (keyboard.spaceKey.wasPressedThisFrame && (budget == null || !budget.IsReportOpen))
                     ToggleKeyboardPause();
             }
@@ -148,6 +149,16 @@ public class TimeManager : MonoBehaviour
         if (hour < dawnStartHour || hour >= nightStartHour)
         {
             daylight = 0f;
+            foreach (var building in FindObjectsByType<GridPlaceable>())
+            {
+                GridPlaceable placeable = building.GetComponent<GridPlaceable>();
+                if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
+                if (placeable.name != "road(Clone)")
+                {
+                    SpriteChanger spriteChanger = placeable.GetComponent<SpriteChanger>();
+                    if (UnityEngine.Random.value > 0.992f) spriteChanger.ChangeSprite(1);
+                }
+            }
         }
         else if (hour < sunriseHour)
         {
@@ -156,6 +167,17 @@ public class TimeManager : MonoBehaviour
         else if (hour <= sunsetHour)
         {
             daylight = 1f;
+            foreach (var building in FindObjectsByType<GridPlaceable>())
+            {
+                GridPlaceable placeable = building.GetComponent<GridPlaceable>();
+                if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
+                if (building.name != "road(Clone)")
+                {
+                    SpriteChanger spriteChanger = placeable.GetComponent<SpriteChanger>();
+                    if (UnityEngine.Random.value > 0.992f) spriteChanger.ChangeSprite(0);
+                }
+            }
+            
         }
         else
         {
