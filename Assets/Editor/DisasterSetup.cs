@@ -55,7 +55,7 @@ public static class DisasterSetup
 
     public static void InstallAndVerify()
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         Install();
         EditorSceneManager.SaveOpenScenes();
         Verify();

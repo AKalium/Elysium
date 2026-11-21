@@ -7682,6 +7682,12 @@ MonoBehaviour:
   secondsPerDay: 50
   startingHour: 8
   speed: 1
+  nightOverlayOpacity: 0.3
+  nightOverlayColor: {r: 0.08, g: 0.11, b: 0.28, a: 1}
+  dawnStartHour: 5
+  sunriseHour: 7
+  sunsetHour: 18
+  nightStartHour: 20
 --- !u!114 &2100000003
 MonoBehaviour:
   m_ObjectHideFlags: 0

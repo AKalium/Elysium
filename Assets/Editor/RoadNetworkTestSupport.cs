@@ -19,7 +19,7 @@ public static class RoadNetworkTestSupport
 
     public static Fixture Fresh(bool useTerrain = false)
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var fixture = new Fixture {
             Grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>(),
             Wallet = UnityEngine.Object.FindAnyObjectByType<CurrencySystem>(),

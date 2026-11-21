@@ -10,7 +10,14 @@ public class TimeManager : MonoBehaviour
     [SerializeField, Min(1f)] private float secondsPerDay = 300f;
     [SerializeField, Range(0, 23)] private int startingHour = 8;
     [SerializeField, Min(0f)] private float speed = 1f;
+    [SerializeField, Range(0f, 1f)] private float nightOverlayOpacity = 0.3f;
+    [SerializeField] private Color nightOverlayColor = new Color(0.08f, 0.11f, 0.28f);
+    [SerializeField, Range(0, 23)] private int dawnStartHour = 5;
+    [SerializeField, Range(0, 23)] private int sunriseHour = 7;
+    [SerializeField, Range(0, 23)] private int sunsetHour = 18;
+    [SerializeField, Range(0, 23)] private int nightStartHour = 20;
     private double minuteOfDay;
+    private Image nightOverlay;
     private bool keyboardPaused;
     private float resumeTimeScale = 1f;
 
@@ -29,7 +36,34 @@ public class TimeManager : MonoBehaviour
     public event Action<int> Midnight;
     public string DisplayTime => $"{(Hour % 12 == 0 ? 12 : Hour % 12)}:{Minute:00} {(Hour < 12 ? "AM" : "PM")}";
 
-    private void Awake() => minuteOfDay = startingHour * 60;
+    private void Awake()
+    {
+        minuteOfDay = startingHour * 60;
+        CreateNightOverlay();
+        UpdateDaylight();
+    }
+
+    private void CreateNightOverlay()
+    {
+        var canvasObject = new GameObject("DayNightOverlay", typeof(RectTransform), typeof(Canvas));
+        canvasObject.transform.SetParent(transform, false);
+        var canvas = canvasObject.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = -1;
+
+        var overlayObject = new GameObject("NightTint", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        overlayObject.transform.SetParent(canvasObject.transform, false);
+        var rect = (RectTransform)overlayObject.transform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        nightOverlay = overlayObject.GetComponent<Image>();
+        nightOverlay.raycastTarget = false;
+        nightOverlay.color = Color.clear;
+    }
+
     private void Update()
     {
         if (DisasterSystem.IsCutsceneOpen) return;
@@ -97,8 +131,39 @@ public class TimeManager : MonoBehaviour
             economy?.CompleteDayReport(populationSummary);
             // A daily report may pause during the event. Stop at midnight even
             // when a long frame would otherwise advance through several days.
-            if (Paused) return;
+            if (Paused)
+            {
+                UpdateDaylight();
+                return;
+            }
         }
         minuteOfDay += minutes;
+        UpdateDaylight();
+    }
+
+    private void UpdateDaylight()
+    {
+        float hour = (float)(minuteOfDay / 60d);
+        float daylight;
+        if (hour < dawnStartHour || hour >= nightStartHour)
+        {
+            daylight = 0f;
+        }
+        else if (hour < sunriseHour)
+        {
+            daylight = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(dawnStartHour, sunriseHour, hour));
+        }
+        else if (hour <= sunsetHour)
+        {
+            daylight = 1f;
+        }
+        else
+        {
+            daylight = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(sunsetHour, nightStartHour, hour));
+        }
+
+        var overlayColor = nightOverlayColor;
+        overlayColor.a *= (1f - daylight) * nightOverlayOpacity;
+        nightOverlay.color = overlayColor;
     }
 }

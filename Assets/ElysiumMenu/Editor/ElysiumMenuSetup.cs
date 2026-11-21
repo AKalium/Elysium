@@ -24,6 +24,6 @@ public static class ElysiumMenuSetup
         existing.Insert(0, new EditorBuildSettingsScene(path, true));
         EditorBuildSettings.scenes = existing.ToArray();
         Selection.activeGameObject = GameObject.Find("Main Menu Controller");
-        EditorUtility.DisplayDialog("Menu created", "Press Play to test. Check that your active Build Profile includes ElysiumMainMenu first and SampleScene second.", "OK");
+        EditorUtility.DisplayDialog("Menu created", "Press Play to test. Check that your active Build Profile includes ElysiumMainMenu first and MainScene second.", "OK");
     }
 }

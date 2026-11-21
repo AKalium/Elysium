@@ -1,7 +1,7 @@
 # Web demo
 
 The demo combines the time and daily economy feature with the latest main assets and UI.
-It starts at the main menu, continues through Dawny's intro, then opens SampleScene.
+It starts at the main menu, continues through Dawny's intro, then opens MainScene.
 
 ## Build
 

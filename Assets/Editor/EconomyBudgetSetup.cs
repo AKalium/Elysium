@@ -14,7 +14,7 @@ public static class EconomyBudgetSetup
     public static void Run()
     {
         if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         foreach (var old in Object.FindObjectsByType<EconomyBudgetUI>())
             Object.DestroyImmediate(old.gameObject);
         font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");

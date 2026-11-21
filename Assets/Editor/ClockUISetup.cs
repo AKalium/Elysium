@@ -8,7 +8,7 @@ public static class ClockUISetup
     public static void Install()
     {
         const string prefabPath = "Assets/UI/ClockHUD.prefab";
-        var scene = EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        var scene = EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         if (AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath) != null)
             throw new System.InvalidOperationException("Clock prefab already exists; edit it directly to preserve UI changes.");
         foreach (var old in Object.FindObjectsByType<TimeEconomyHUD>()) Object.DestroyImmediate(old);

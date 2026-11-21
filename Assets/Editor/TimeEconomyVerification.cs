@@ -8,7 +8,7 @@ public static class TimeEconomyVerification
     // Run in an isolated editor process; changes remain in memory.
     public static void Run()
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var clock = UnityEngine.Object.FindAnyObjectByType<TimeManager>();
         var economy = UnityEngine.Object.FindAnyObjectByType<DailyEconomy>();
         var grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>();
@@ -25,6 +25,8 @@ public static class TimeEconomyVerification
         InvokeLifecycle(wallet, "Awake");
         InvokeLifecycle(state, "Awake");
         InvokeLifecycle(clock, "Awake");
+        var nightOverlay = clock.GetComponentInChildren<UnityEngine.UI.Image>(true);
+        Check(nightOverlay && Mathf.Approximately(nightOverlay.color.a, 0f), "No night tint at starting hour");
         InvokeLifecycle(economy, "Awake");
         InvokeLifecycle(economy, "OnEnable");
         InvokeLifecycle(grid, "Awake");
@@ -87,6 +89,7 @@ public static class TimeEconomyVerification
         Check(wallet.Balance == afterPurchase && clock.Day == 1, "No early payout");
         clock.AdvanceTime(1.001);
         Check(wallet.Balance == afterPurchase + expectedIncome - expectedUpkeep && state.Balance == wallet.Balance && economy.Balance == wallet.Balance, "Shared midnight settlement");
+        Check(Mathf.Approximately(nightOverlay.color.a, 0.3f), "Night tint at midnight");
         Check(economy.LastIncome == expectedIncome && economy.LastUpkeep == expectedUpkeep, "Per-building rates");
         int settledBalance = wallet.Balance;
         clock.Paused = true;
@@ -130,6 +133,16 @@ public static class TimeEconomyVerification
         clock.AdvanceTime(dayLength);
         Check(clock.Day == speedDay + 3 && Time.timeScale == 1, "Pause works at increased speed without scaling UI time");
         InvokeLifecycle(clockView, "OnDisable");
+        clock.Paused = false;
+        clock.AdvanceTime(dayLength * 5d / 24d);
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Abs(nightOverlay.color.a - 0.15f) < 0.001f, "Dawn tint fade");
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Approximately(nightOverlay.color.a, 0f), "Night tint clears after sunrise");
+        clock.AdvanceTime(dayLength / 2d);
+        Check(Mathf.Abs(nightOverlay.color.a - 0.15f) < 0.001f, "Dusk tint fade");
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Approximately(nightOverlay.color.a, 0.3f), "Night after sunset");
         Debug.Log("TIME_ECONOMY_VERIFICATION_PASSED");
     }
     private static void InvokeLifecycle(MonoBehaviour component, string method)
