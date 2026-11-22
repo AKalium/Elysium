@@ -3001,10 +3001,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cb82ab74d30c1842b31d409ad87a1a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PerlinNoiseMap
-  grass: {fileID: 8315104012086528139, guid: 909340804acbf754b9781312a02689dc, type: 3}
   water: {fileID: 1962563674650991505, guid: 6278db2f12b2be145b6e40104dec82a0, type: 3}
-  dirt: {fileID: 6262045276327907788, guid: 1522bd3f9631b3e4c834667b87404fd9, type: 3}
+  grass: {fileID: 8315104012086528139, guid: 909340804acbf754b9781312a02689dc, type: 3}
   sand: {fileID: 6933915871038602295, guid: 39bf4c1289e8e7b4e8a9a4ba0435158f, type: 3}
+  islandRadius: 1
+  edgeSoftness: 0.117
+  islandCenterOffset: {x: 0, y: 0}
+  sandWidth: 2
+  sandIncludesDiagonals: 1
 --- !u!1 &804280717
 GameObject:
   m_ObjectHideFlags: 0
