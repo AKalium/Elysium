@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 4098351663074733459, guid: 23358c20579b0c44db779403a2afb043, type: 3}
+  m_Sprite: {fileID: -3858442848122499064, guid: 70e5fbac36338b749b8788c7c59b0cc9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -108,9 +108,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprint: {x: 3, y: 2}
-  definition: {fileID: 11400000, guid: 5f84ba40bc20a914f8ad01e9cfd82773, type: 2}
   category: 2
+  definition: {fileID: 11400000, guid: 5f84ba40bc20a914f8ad01e9cfd82773, type: 2}
+  maxAllowed: 0
+  buildingTypeId: 
   residentsProvided: 0
+  constructionDay: 1
 --- !u!114 &3613971730983793004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -125,6 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
   tier: 1
   pollutionPerDay: 2
+  pollutionRemovalPerDay: 0
 --- !u!114 &7867462068761241089
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -137,4 +141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a8cd5d5f37a5d14582885338f55c267, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteChanger
-  sprites: []
+  sprites:
+  - {fileID: -3858442848122499064, guid: 70e5fbac36338b749b8788c7c59b0cc9, type: 3}
+  - {fileID: 4098351663074733459, guid: 23358c20579b0c44db779403a2afb043, type: 3}

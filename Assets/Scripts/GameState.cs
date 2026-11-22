@@ -46,6 +46,7 @@ public class GameState : MonoBehaviour
             MaxPopulation += building.HousingCapacity;
             ResidentialCount++;
             residents += building.ResidentsProvided;
+
         }
         Population = residents;
         if (previous != Population) PopulationChanged?.Invoke(Population);
@@ -57,8 +58,7 @@ public class GameState : MonoBehaviour
 
     int count = 0;
 
-    foreach (GridPlaceable building in FindObjectsByType<GridPlaceable>(
-                 FindObjectsSortMode.None))
+    foreach (GridPlaceable building in FindObjectsByType<GridPlaceable>())
     {
         if (building.gameObject.scene != gameObject.scene)
             continue;

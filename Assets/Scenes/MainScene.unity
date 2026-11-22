@@ -7686,11 +7686,11 @@ MonoBehaviour:
   secondsPerDay: 50
   startingHour: 8
   speed: 1
-  nightOverlayOpacity: 0.3
-  nightOverlayColor: {r: 0.08, g: 0.11, b: 0.28, a: 1}
+  nightOverlayOpacity: 0.4
+  nightOverlayColor: {r: 0, g: 0.059299164, b: 0.1509434, a: 1}
   dawnStartHour: 5
-  sunriseHour: 7
-  sunsetHour: 18
+  sunriseHour: 8
+  sunsetHour: 17
   nightStartHour: 20
 --- !u!114 &2100000003
 MonoBehaviour:
@@ -8492,7 +8492,7 @@ PrefabInstance:
     - target: {fileID: 2259610429922621481, guid: 0c2398393fe96de49a99e0040a7d39d8, type: 3}
       propertyPath: m_FontData.m_Font
       value: 
-      objectReference: {fileID: 12800000, guid: bd8d2c118d51748348d29972d242ccac, type: 3}
+      objectReference: {fileID: 12800000, guid: 8a2b9e2a607dd2143b58c44bc32410b4, type: 3}
     - target: {fileID: 2259610429922621481, guid: 0c2398393fe96de49a99e0040a7d39d8, type: 3}
       propertyPath: m_FontData.m_MaxSize
       value: 120

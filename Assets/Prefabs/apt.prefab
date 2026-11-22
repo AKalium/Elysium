@@ -108,9 +108,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   footprint: {x: 2, y: 2}
-  definition: {fileID: 11400000, guid: 2d4e093d8b198456a83bee55b0cbca37, type: 2}
   category: 1
+  definition: {fileID: 11400000, guid: 2d4e093d8b198456a83bee55b0cbca37, type: 2}
+  maxAllowed: 0
+  buildingTypeId: 
   residentsProvided: 10
+  constructionDay: 1
 --- !u!114 &4955201372532174614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -125,6 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
   tier: 1
   pollutionPerDay: 1
+  pollutionRemovalPerDay: 0
 --- !u!114 &-6498545417638266021
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -137,4 +141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a8cd5d5f37a5d14582885338f55c267, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpriteChanger
-  sprites: []
+  sprites:
+  - {fileID: 7081727814881962400, guid: 10f011596b193414cbc093efd28d52c7, type: 3}
+  - {fileID: 8629231436830151870, guid: 29415da5bdb9d5044b5bf5d23e6e2ed0, type: 3}
