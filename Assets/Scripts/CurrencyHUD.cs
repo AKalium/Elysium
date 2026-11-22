@@ -7,58 +7,33 @@ public class CurrencyHUD : MonoBehaviour
     [SerializeField] private Text coinsText;
     [SerializeField] private Font pixelFont;
 
+    [Header("Employment Bar")]
+    [SerializeField] private Image employmentFill;
+    [SerializeField] private Text employmentText;
+
+    [Header("Occupancy Bar")]
+    [SerializeField] private Image occupancyFill;
+    [SerializeField] private Text occupancyText;
+
     private GridPlacementSystem grid;
-    private Image employmentFill;
-    private Image occupancyFill;
-    private Text employmentText;
-    private Text occupancyText;
     private float nextRefresh;
 
-    private void CreateRateBar(string name, float y, Color color, out Image fill, out Text label)
+    private void Start()
     {
-        Transform canvasTransform = (coinsText != null && coinsText.canvas != null)
-            ? coinsText.canvas.rootCanvas.transform
-            : FindAnyObjectByType<Canvas>()?.transform;
+        grid = FindAnyObjectByType<GridPlacementSystem>();
 
-        var bar = new GameObject(name, typeof(RectTransform), typeof(Image));
-        var rect = bar.GetComponent<RectTransform>();
-        if (canvasTransform != null) rect.SetParent(canvasTransform, false);
-
-        rect.anchorMin = rect.anchorMax = new Vector2(0, 0.5f);
-        rect.pivot = new Vector2(0, 0.5f);
-        rect.anchoredPosition = new Vector2(20, y + 190);
-        rect.sizeDelta = new Vector2(290, 24);
-        bar.GetComponent<Image>().color = new Color32(232, 213, 174, 255);
-        var fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-        var fillRect = fillObject.GetComponent<RectTransform>();
-        fillRect.SetParent(rect, false);
-        fillRect.anchorMin = Vector2.zero;
-        fillRect.anchorMax = Vector2.one;
-        fillRect.offsetMin = fillRect.offsetMax = Vector2.zero;
-        fill = fillObject.GetComponent<Image>();
-        fill.color = color;
-        fill.raycastTarget = false;
-        var labelObject = new GameObject("Label", typeof(RectTransform), typeof(Text));
-        label = labelObject.GetComponent<Text>();
-        label.rectTransform.SetParent(rect, false);
-        label.rectTransform.anchorMin = Vector2.zero;
-        label.rectTransform.anchorMax = Vector2.one;
-        label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
-        
-        if (pixelFont != null) label.font = pixelFont;
-        else if (coinsText != null && coinsText.font != null) label.font = coinsText.font;
-
-        label.fontSize = 16;
-        label.color = new Color32(129, 56, 74, 255);
-        label.alignment = TextAnchor.MiddleCenter;
-        label.raycastTarget = false;
+        if (currency != null)
+        {
+            currency.BalanceChanged += UpdateCoins;
+            UpdateCoins(currency.Balance);
+        }
     }
 
     private void LateUpdate()
     {
         if (Time.unscaledTime < nextRefresh || grid == null) return;
-        if (employmentFill == null || occupancyFill == null) return;
         nextRefresh = Time.unscaledTime + 0.25f;
+
         int residents = 0, capacity = 0, workers = 0, employed = 0;
         foreach (var item in grid.GetPlacedObjects())
         {
@@ -70,30 +45,20 @@ public class CurrencyHUD : MonoBehaviour
             foreach (var assignment in ApartmentStatsUI.GetWorkplaces(grid, home))
                 employed += assignment.Value;
         }
+
         float employment = workers > 0 ? (float)employed / workers : 0;
         float occupancy = capacity > 0 ? (float)residents / capacity : 0;
-        employmentFill.rectTransform.anchorMax = new Vector2(employment, 1);
-        occupancyFill.rectTransform.anchorMax = new Vector2(occupancy, 1);
-        employmentText.text = $"Employment: {employed}/{workers} ({employment:P0}) {GridPlacementSystem.DailyChange(employment * 100, grid.PreviousEmployment, grid.HasPreviousDayStats, " pp")}";
-        occupancyText.text = $"Occupancy: {residents}/{capacity} ({occupancy:P0}) {GridPlacementSystem.DailyChange(occupancy * 100, grid.PreviousOccupancy, grid.HasPreviousDayStats, " pp")}";
-    }
 
-    private void Start()
-    {
-        grid = FindAnyObjectByType<GridPlacementSystem>();
-        CreateRateBar("Employment", 15,
-            new Color32(181, 157, 129, 255),
-            out employmentFill, out employmentText);
+        if (employmentFill != null)
+            employmentFill.rectTransform.anchorMax = new Vector2(employment, 1);
+        if (occupancyFill != null)
+            occupancyFill.rectTransform.anchorMax = new Vector2(occupancy, 1);
 
-        CreateRateBar("Occupancy", -15,
-            new Color32(170, 190, 150, 255),
-            out occupancyFill, out occupancyText);
+        if (employmentText != null)
+            employmentText.text = $"Employment: {employed}/{workers} ({employment:P0})";
 
-        if (currency != null)
-        {
-            currency.BalanceChanged += UpdateCoins;
-            UpdateCoins(currency.Balance);
-        }
+        if (occupancyText != null)
+            occupancyText.text = $"Occupancy: {residents}/{capacity} ({occupancy:P0})";
     }
 
     private void UpdateCoins(int balance)
