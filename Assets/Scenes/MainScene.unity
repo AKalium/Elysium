@@ -4158,10 +4158,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4cb82ab74d30c1842b31d409ad87a1a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PerlinNoiseMap
-  grass: {fileID: 8315104012086528139, guid: 909340804acbf754b9781312a02689dc, type: 3}
   water: {fileID: 1962563674650991505, guid: 6278db2f12b2be145b6e40104dec82a0, type: 3}
-  dirt: {fileID: 6262045276327907788, guid: 1522bd3f9631b3e4c834667b87404fd9, type: 3}
+  grass: {fileID: 8315104012086528139, guid: 909340804acbf754b9781312a02689dc, type: 3}
   sand: {fileID: 6933915871038602295, guid: 39bf4c1289e8e7b4e8a9a4ba0435158f, type: 3}
+  islandRadius: 0.9
+  edgeSoftness: 0.3
+  islandCenterOffset: {x: 0, y: 0}
+  sandWidth: 1
+  sandIncludesDiagonals: 1
 --- !u!1 &784155079
 GameObject:
   m_ObjectHideFlags: 0
@@ -8621,6 +8625,340 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1813434560
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1813434562}
+  - component: {fileID: 1813434561}
+  m_Layer: 0
+  m_Name: CitizenSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1813434561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813434560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12460e7bd0ba74c7dabc161bf9d0dc09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CitizenSpawner
+  citizenPrefab: {fileID: 8376694411835269800, guid: 0a68045bbc30943a8b70712b17b740a9, type: 3}
+  citizenCount: 5
+  maxCitizens: 20
+  appearances:
+  - characterName: ChrisRock
+    walkUp:
+    - {fileID: -1943494782, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    - {fileID: 1705067224, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    walkDown:
+    - {fileID: 1306603355, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    - {fileID: -1067034280, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    walkLeft:
+    - {fileID: -1327097691, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    - {fileID: -589702961, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    walkRight:
+    - {fileID: 904129419, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+    - {fileID: -2125631266, guid: 2cf909f0849884529a12d5cf3e567a55, type: 3}
+  - characterName: Darryl
+    walkUp:
+    - {fileID: -636404926, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    - {fileID: 222456244, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    walkDown:
+    - {fileID: 1050562905, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    - {fileID: -1154549210, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    walkLeft:
+    - {fileID: 406061648, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    - {fileID: 1138061891, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    walkRight:
+    - {fileID: 480185290, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+    - {fileID: -1808143873, guid: 2aa6694f5f1ed471896fd0e56296d8e3, type: 3}
+  - characterName: Farmer
+    walkUp:
+    - {fileID: 1417404312, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    - {fileID: 1949382983, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    walkDown:
+    - {fileID: 1375772590, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    - {fileID: 1053897885, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    walkLeft:
+    - {fileID: -1083966274, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    - {fileID: -41553854, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    walkRight:
+    - {fileID: -1158200863, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+    - {fileID: 1990013639, guid: 0ef4f829f620d4fdbbe805f1dde8757e, type: 3}
+  - characterName: King
+    walkUp:
+    - {fileID: 819474666, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    - {fileID: 2090164054, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    walkDown:
+    - {fileID: 469772668, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    - {fileID: -82450490, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    walkLeft:
+    - {fileID: 1329616615, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    - {fileID: -576492610, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    walkRight:
+    - {fileID: 1377014100, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+    - {fileID: -1692816695, guid: 303f6fed53b71443e8ccc8f58d9b6c7b, type: 3}
+  - characterName: Mate
+    walkUp:
+    - {fileID: -1117878747, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    - {fileID: -892837724, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    walkDown:
+    - {fileID: 445511429, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    - {fileID: 469969014, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    walkLeft:
+    - {fileID: 1973259338, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    - {fileID: -1705644931, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    walkRight:
+    - {fileID: 904585430, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+    - {fileID: -493316450, guid: 7b48a028be28b4fe9a123c8d5532eae0, type: 3}
+  - characterName: Mom
+    walkUp:
+    - {fileID: 517749557, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    - {fileID: -1330875376, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    walkDown:
+    - {fileID: 1898002725, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    - {fileID: 528352436, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    walkLeft:
+    - {fileID: -283690698, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    - {fileID: 1560013893, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    walkRight:
+    - {fileID: 130146897, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+    - {fileID: 1828151452, guid: 5d5c7d06227894702bfc4699792f5464, type: 3}
+  - characterName: SallyJones
+    walkUp:
+    - {fileID: -1130094253, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    - {fileID: -1599912374, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    walkDown:
+    - {fileID: 653024026, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    - {fileID: -2037319638, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    walkLeft:
+    - {fileID: 1848676382, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    - {fileID: 618225876, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    walkRight:
+    - {fileID: -628206057, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+    - {fileID: -1522285370, guid: f5ab540743a8346bebb6c3756ded1423, type: 3}
+  - characterName: Seaside_informant
+    walkUp:
+    - {fileID: -1194087327, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    - {fileID: -259991421, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    walkDown:
+    - {fileID: -1978256664, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    - {fileID: -630278220, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    walkLeft:
+    - {fileID: 1623829341, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    - {fileID: 856307738, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    walkRight:
+    - {fileID: -63539214, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+    - {fileID: -1446651864, guid: 4171b8a550a9443968fcd1e85f437690, type: 3}
+  - characterName: Trent
+    walkUp:
+    - {fileID: -855068184, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    - {fileID: 1421714861, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    walkDown:
+    - {fileID: 1838757293, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    - {fileID: -889000467, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    walkLeft:
+    - {fileID: 1971981182, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    - {fileID: 1212118927, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    walkRight:
+    - {fileID: 1746563573, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+    - {fileID: -42423231, guid: 2f5eb15447694497dad6b8d37cf719fb, type: 3}
+  - characterName: astronomer
+    walkUp:
+    - {fileID: 1717206996, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    - {fileID: -678545346, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    walkDown:
+    - {fileID: -1087292850, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    - {fileID: 1251321411, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    walkLeft:
+    - {fileID: -1707921932, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    - {fileID: -854559383, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    walkRight:
+    - {fileID: 2138425670, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+    - {fileID: -252241910, guid: e079bda91cc4c4a6f93ac2e7bc599d86, type: 3}
+  - characterName: babies_mother
+    walkUp:
+    - {fileID: 778216585, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    - {fileID: 1225065212, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    walkDown:
+    - {fileID: 1883812698, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    - {fileID: -1597859977, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    walkLeft:
+    - {fileID: -20498112, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    - {fileID: -1533935951, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    walkRight:
+    - {fileID: -2125599897, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+    - {fileID: 1628806294, guid: e264332557bd04694aadbf2cb09e1b87, type: 3}
+  - characterName: bartender
+    walkUp:
+    - {fileID: 378798663, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    - {fileID: 1870489939, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    walkDown:
+    - {fileID: -1195305026, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    - {fileID: 2008986182, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    walkLeft:
+    - {fileID: 1500869642, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    - {fileID: -916783826, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    walkRight:
+    - {fileID: 1045729111, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+    - {fileID: -1393982095, guid: b046b944eeffc4a0b8540a5de797d0bd, type: 3}
+  - characterName: big_momma
+    walkUp:
+    - {fileID: -196354301, guid: 99ec979e89969467198133716981dc73, type: 3}
+    - {fileID: 112373831, guid: 99ec979e89969467198133716981dc73, type: 3}
+    walkDown:
+    - {fileID: -1371800720, guid: 99ec979e89969467198133716981dc73, type: 3}
+    - {fileID: 700680860, guid: 99ec979e89969467198133716981dc73, type: 3}
+    walkLeft:
+    - {fileID: -980823743, guid: 99ec979e89969467198133716981dc73, type: 3}
+    - {fileID: 500252926, guid: 99ec979e89969467198133716981dc73, type: 3}
+    walkRight:
+    - {fileID: 1638637045, guid: 99ec979e89969467198133716981dc73, type: 3}
+    - {fileID: 1232279846, guid: 99ec979e89969467198133716981dc73, type: 3}
+  - characterName: drunkard0
+    walkUp:
+    - {fileID: 2012210322, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    - {fileID: -1790578487, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    walkDown:
+    - {fileID: -403056961, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    - {fileID: -176769708, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    walkLeft:
+    - {fileID: 1051370562, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    - {fileID: 116571317, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    walkRight:
+    - {fileID: 526859577, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+    - {fileID: 2004475119, guid: 59c9a4a5d067d407b8aca917d4b0075e, type: 3}
+  - characterName: drunkard1
+    walkUp:
+    - {fileID: -750009914, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    - {fileID: 1862108606, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    walkDown:
+    - {fileID: 466929583, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    - {fileID: -507970164, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    walkLeft:
+    - {fileID: 1063744229, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    - {fileID: 1363220155, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    walkRight:
+    - {fileID: 1831410889, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+    - {fileID: -1372944156, guid: 1a64fafaa4f534d48a716c701cf035e1, type: 3}
+  - characterName: fat_old_guy
+    walkUp:
+    - {fileID: -578155595, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    - {fileID: -1838306589, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    walkDown:
+    - {fileID: -234396694, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    - {fileID: 1089144528, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    walkLeft:
+    - {fileID: -772129825, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    - {fileID: 1209745207, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    walkRight:
+    - {fileID: 1573147084, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+    - {fileID: -1793258909, guid: fa226c3aeb7cf43e1bb9ae2af1c15666, type: 3}
+  - characterName: geisha
+    walkUp:
+    - {fileID: -2129381759, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    - {fileID: -2010347040, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    walkDown:
+    - {fileID: 1703375989, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    - {fileID: 1148544083, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    walkLeft:
+    - {fileID: 1878185653, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    - {fileID: -730021108, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    walkRight:
+    - {fileID: 1166384374, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+    - {fileID: 157069729, guid: 5b34c4e4aaf584bfc867d54589543d7b, type: 3}
+  - characterName: lady
+    walkUp:
+    - {fileID: -1217461760, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    - {fileID: -768300568, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    walkDown:
+    - {fileID: 1880562798, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    - {fileID: 103430032, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    walkLeft:
+    - {fileID: -1222926015, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    - {fileID: -1658454501, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    walkRight:
+    - {fileID: 1768881304, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+    - {fileID: 1494315731, guid: 9a3cfac507ce4405c8e77e59680981ca, type: 3}
+  - characterName: mokkan
+    walkUp:
+    - {fileID: 831890041, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    - {fileID: -1762430188, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    walkDown:
+    - {fileID: 125874859, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    - {fileID: 1926102485, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    walkLeft:
+    - {fileID: -959664004, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    - {fileID: -794345414, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    walkRight:
+    - {fileID: 73193625, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+    - {fileID: 888696934, guid: acfa093e2c86b4abd8b31d3109db4f85, type: 3}
+  - characterName: prisoner
+    walkUp:
+    - {fileID: 308486801, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    - {fileID: 570438700, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    walkDown:
+    - {fileID: -1512024166, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    - {fileID: 858515268, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    walkLeft:
+    - {fileID: 1624840852, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    - {fileID: -863923624, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    walkRight:
+    - {fileID: -1031325702, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+    - {fileID: 687651197, guid: 968392194d49d4373b2384ee25a0ef52, type: 3}
+  - characterName: ring_bearer
+    walkUp:
+    - {fileID: 2054274775, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    - {fileID: -1671107330, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    walkDown:
+    - {fileID: -606191438, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    - {fileID: -1025754589, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    walkLeft:
+    - {fileID: -361278985, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    - {fileID: -477577109, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    walkRight:
+    - {fileID: 815329156, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+    - {fileID: -1602885476, guid: dbb7bf09ff6ac4406b14ac61088f50fc, type: 3}
+  - characterName: sensei
+    walkUp:
+    - {fileID: -584288223, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    - {fileID: 51016410, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    walkDown:
+    - {fileID: 1257140651, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    - {fileID: -886956361, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    walkLeft:
+    - {fileID: -863352795, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    - {fileID: 1658915168, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    walkRight:
+    - {fileID: 1795596428, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+    - {fileID: 241244741, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+--- !u!4 &1813434562
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1813434560}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 686.06494, y: 297.3239, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1825889490 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4830752986703833513, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -11665,3 +12003,4 @@ SceneRoots:
   - {fileID: 4926666263909496061}
   - {fileID: 2147580352099903185}
   - {fileID: 1876997455}
+  - {fileID: 1813434562}
