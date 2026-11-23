@@ -9,7 +9,7 @@ public static class EconomyBudgetVerification
     public static void Run()
     {
         TimeEconomyVerification.Run();
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var clock = UnityEngine.Object.FindAnyObjectByType<TimeManager>();
         var economy = UnityEngine.Object.FindAnyObjectByType<DailyEconomy>();
         var wallet = UnityEngine.Object.FindAnyObjectByType<CurrencySystem>();

@@ -11,6 +11,13 @@ public sealed class DisasterSystem : MonoBehaviour
 {
     private static readonly int[] PopulationMilestones = { 25, 50, 100 };
 
+    public const int FirstDisasterDay = 8;
+    public const int FloodPollutionThreshold = 100;
+    public const int FirePollutionThreshold = 150;
+
+    public static bool MeetsNaturalDisasterThreshold(DisasterKind kind, int day, int totalPollution) =>
+        day >= FirstDisasterDay && totalPollution >=
+        (kind == DisasterKind.Fire ? FirePollutionThreshold : FloodPollutionThreshold);
     [SerializeField] private TimeManager clock;
     [SerializeField] private PollutionSystem pollution;
     [SerializeField] private GridPlacementSystem grid;
@@ -111,8 +118,8 @@ public sealed class DisasterSystem : MonoBehaviour
         if (!pendingDailyRoll) return;
         pendingDailyRoll = false;
         if (clock.Day - lastDisasterDay <= cooldownDays || pollution == null) return;
-        bool flood = pollution.TotalPollution > 25 && Random.value < dailyChance;
-        bool fire = pollution.TotalPollution > 50 && Random.value < dailyChance;
+        bool flood = MeetsNaturalDisasterThreshold(DisasterKind.Flood, clock.Day, pollution.TotalPollution) && Random.value < dailyChance;
+        bool fire = MeetsNaturalDisasterThreshold(DisasterKind.Fire, clock.Day, pollution.TotalPollution) && Random.value < dailyChance;
         if (flood || fire)
             Trigger(flood && fire ? (Random.value < 0.5f ? DisasterKind.Flood : DisasterKind.Fire)
                 : fire ? DisasterKind.Fire : DisasterKind.Flood);
@@ -122,27 +129,29 @@ public sealed class DisasterSystem : MonoBehaviour
         Mathf.Min(eligibleCount, kind == DisasterKind.Fire ? Mathf.CeilToInt(eligibleCount / 6f)
             : Mathf.Max(2, Mathf.CeilToInt(eligibleCount / 12f)));
 
-    public List<GridPlaceable> EligibleBuildings()
+    public List<GridPlaceable> EligibleBuildings(DisasterKind? kind = null)
     {
         var result = new List<GridPlaceable>();
         if (grid == null) return result;
         foreach (var item in grid.GetPlacedObjects())
         {
-            if (item.IsRoad || item.Object == null) continue;
+            if (item.Object == null) continue;
             var building = item.Object.GetComponent<GridPlaceable>();
             if (building == null || !building.isActiveAndEnabled || !building.IsOperational) continue;
             string id = building.Definition != null ? building.Definition.BuildingId : building.BuildingTypeId;
-            if (building.Category == BuildingCategory.MayorsOffice || id == "city_hall" || id == "mayors_office" || id == "road") continue;
+            if (building.Category == BuildingCategory.MayorsOffice || id == "city_hall" || id == "mayors_office") continue;
+            if (building.IsRoad && !(kind == DisasterKind.Flood && building.IsBridge && !building.IsStoneBridge)) continue;
             result.Add(building);
         }
         return result;
     }
 
-    // Manual triggers intentionally bypass thresholds and cooldown, but respect modal screens.
+    // Manual triggers bypass pollution thresholds and cooldown, but respect the
+    // first-week grace period and modal screens.
     public bool Trigger(DisasterKind kind)
     {
-        if (AnotherScreenOpen() || dialoguePrefab == null) return false;
-        var candidates = EligibleBuildings();
+        if (AnotherScreenOpen() || dialoguePrefab == null || clock.Day < FirstDisasterDay) return false;
+        var candidates = EligibleBuildings(kind);
         if (candidates.Count == 0)
         {
             LastSummary = "No undamaged buildings are available for this disaster.";
@@ -151,26 +160,31 @@ public sealed class DisasterSystem : MonoBehaviour
         }
         lastDisasterDay = clock.Day;
         pendingDailyRoll = false;
-        int count = DamageCount(kind, candidates.Count);
-        string line = $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {count} building{(count == 1 ? " is" : "s are")} damaged and can no longer be used. You can sell them to clear space for rebuilding.";
-        StartCoroutine(PlayDawnyCutscene(line, () => ApplyDisaster(kind, candidates, count),
+        StartCoroutine(PlayDawnyCutscene(() => ApplyDisaster(kind, candidates),
             () => summaryUntil = Time.unscaledTime + 8));
         return true;
     }
 
-    private void ApplyDisaster(DisasterKind kind, List<GridPlaceable> candidates, int count)
+    private string ApplyDisaster(DisasterKind kind, List<GridPlaceable> candidates)
     {
+        int count = DamageCount(kind, candidates.Count);
+        var selectedTargets = new List<GridPlaceable>(count);
         for (int i = 0; i < count; i++)
         {
             int pick = Random.Range(i, candidates.Count);
             (candidates[i], candidates[pick]) = (candidates[pick], candidates[i]);
-            var damage = candidates[i].GetComponent<DisasterDamage>() ?? candidates[i].gameObject.AddComponent<DisasterDamage>();
-            damage.Apply(kind);
+            selectedTargets.Add(candidates[i]);
         }
-        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {count} building{(count == 1 ? "" : "s")} damaged. Sell damaged buildings to clear their space.";
+        int damaged = ApplySelectedTargets(kind, selectedTargets, out int saved);
+        string savedText = kind == DisasterKind.Fire ? $" {saved} saved by fire stations." : "";
+        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {damaged} structures damaged.{savedText} Demolish and rebuild damaged bridges to restore access. Disconnected buildings are temporarily unavailable.";
+        return $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {damaged} structure{(damaged == 1 ? " is" : "s are")} damaged.{savedText} Demolish and rebuild damaged structures. Buildings cut off by a damaged bridge are preserved and will reactivate when road access is restored.";
     }
 
-    private IEnumerator PlayDawnyCutscene(string line, System.Action onBlack = null, System.Action onFinished = null)
+    private IEnumerator PlayDawnyCutscene(string line, System.Action onFinished) =>
+        PlayDawnyCutscene(() => line, onFinished);
+
+    private IEnumerator PlayDawnyCutscene(System.Func<string> getLine, System.Action onFinished)
     {
         previousPaused = clock.Paused;
         previousTimeScale = Time.timeScale;
@@ -190,13 +204,13 @@ public sealed class DisasterSystem : MonoBehaviour
         var image = shade.GetComponent<Image>();
         yield return Fade(image, 0, 1);
 
-        onBlack?.Invoke();
+        string line = getLine();
         // Instantiate inactive so configuration happens before the dialogue starts.
         var holder = new GameObject("Dawny Conversation Holder");
         holder.SetActive(false);
         conversation = Instantiate(dialoguePrefab, holder.transform);
         int total = pollution != null ? pollution.TotalPollution : 0;
-        int form = total > 50 ? 2 : total > 25 ? 1 : 0;
+        int form = total >= FirePollutionThreshold ? 2 : total >= FloodPollutionThreshold ? 1 : 0;
         conversation.ConfigureConversation(line, idleForms[form], talkingForms[form], portraitUVs[form]);
         foreach (var uiCanvas in conversation.GetComponentsInChildren<Canvas>(true)) uiCanvas.sortingOrder = 30001;
         conversation.transform.SetParent(null, false);
@@ -208,6 +222,41 @@ public sealed class DisasterSystem : MonoBehaviour
         Destroy(overlay);
         ReleasePause();
         onFinished?.Invoke();
+    }
+
+    public bool HasFireCoverage(GridPlaceable target)
+    {
+        if (grid == null || target == null) return false;
+        foreach (var item in grid.GetPlacedObjects())
+        {
+            var station = item.Object.GetComponent<GridPlaceable>();
+            if (station == null || station.Definition?.BuildingId != "fire_station" ||
+                !ApartmentStatsUI.IsServiceActive(grid, station)) continue;
+            if (Vector2.Distance(target.transform.position, station.transform.position) <= 12 * grid.CellSize)
+                return true;
+        }
+        return false;
+    }
+
+    public int ApplySelectedTargets(DisasterKind kind, IReadOnlyList<GridPlaceable> selected, out int saved)
+    {
+        // Snapshot protection before any damage changes staffing or destroys a
+        // station. Selection is already complete; saved targets are never replaced.
+        var protectedTargets = new bool[selected.Count];
+        for (int i = 0; i < selected.Count; i++)
+            protectedTargets[i] = kind == DisasterKind.Fire && HasFireCoverage(selected[i]);
+        saved = 0;
+        int damaged = 0;
+        for (int i = 0; i < selected.Count; i++)
+        {
+            var target = selected[i];
+            if (target == null || !target.gameObject.activeInHierarchy || target.IsDamaged) continue;
+            if (protectedTargets[i] && Random.value < .5f) { saved++; continue; }
+            var damage = target.GetComponent<DisasterDamage>() ?? target.gameObject.AddComponent<DisasterDamage>();
+            damage.Apply(kind);
+            if (damage.IsDamaged) damaged++;
+        }
+        return damaged;
     }
 
     private IEnumerator Fade(Image image, float from, float to)

@@ -8,7 +8,6 @@ public enum BuildingCategory { Neither, Residential, Economic, MayorsOffice }
 [DefaultExecutionOrder(-100)]
 public class DailyEconomy : MonoBehaviour
 {
-    [SerializeField, Min(0)] private int startingMoney = 1300;
     [SerializeField] private CurrencySystem currency;
     private TimeManager clock;
     private long standaloneBalance;
@@ -25,7 +24,7 @@ public class DailyEconomy : MonoBehaviour
     {
         clock = GetComponent<TimeManager>();
         if (currency == null) currency = FindAnyObjectByType<CurrencySystem>();
-        standaloneBalance = startingMoney;
+        standaloneBalance = CurrencySystem.StartingBalance;
     }
     private void OnEnable()
     {
@@ -44,6 +43,7 @@ public class DailyEconomy : MonoBehaviour
     {
         var counts = new Dictionary<BuildingData, int>();
         var incomes = new Dictionary<BuildingData, long>();
+        var upkeeps = new Dictionary<BuildingData, double>();
         var grid = FindAnyObjectByType<GridPlacementSystem>();
         foreach (var building in FindObjectsByType<GridPlaceable>())
         {
@@ -52,6 +52,8 @@ public class DailyEconomy : MonoBehaviour
             if (data == null) continue;
             counts.TryGetValue(data, out int count);
             counts[data] = count + 1;
+            upkeeps.TryGetValue(data, out double buildingUpkeep);
+            upkeeps[data] = buildingUpkeep + building.UpkeepForDay(clock.SimulationDay);
             int happiness = 0;
             int employed = 0;
             if (data.BuildingId == "apartment" && grid != null &&
@@ -76,7 +78,7 @@ public class DailyEconomy : MonoBehaviour
         foreach (var entry in counts)
         {
             long income = incomes[entry.Key];
-            double upkeep = (double)entry.Key.DailyUpkeep * entry.Value;
+            double upkeep = upkeeps[entry.Key];
             lines.Add(new BudgetReport.Line(entry.Key.BuildingName, entry.Value, income, upkeep));
             net += income - upkeep;
         }
@@ -86,8 +88,8 @@ public class DailyEconomy : MonoBehaviour
 
     public static int HappinessRevenueBonusPercent(int happiness)
     {
-        if (happiness >= 90) return 25;
-        return happiness > 50 ? 12 : 0;
+        if (happiness < 40) return 0;
+        return 5 + 4 * ((Math.Min(happiness, 90) - 40) / 10);
     }
 
     public static long GetCitizenIncome(int residents, int employed, int happiness, int workplaceBonus = 0)
@@ -100,9 +102,21 @@ public class DailyEconomy : MonoBehaviour
         return (baseIncome * (100 + bonus) + 50) / 100;
     }
 
+    public static int WorkplaceBonusPerWorker(BuildingData employer)
+    {
+        if (employer == null) return 0;
+        switch (employer.BuildingId)
+        {
+            case "factory": return 7;
+            case "solar factory": return 10;
+            case "market": return 3;
+            default: return 0;
+        }
+    }
+
     public static long GetWorkplaceRevenue(BuildingData employer, int workers, int happiness)
     {
-        int extra = employer.BuildingId == "factory" ? 7 : employer.BuildingId == "market" ? 3 : 0;
+        int extra = WorkplaceBonusPerWorker(employer);
         long earnings = (long)Math.Max(0, workers) * extra;
         return (earnings * (100 + HappinessRevenueBonusPercent(happiness)) + 50) / 100;
     }

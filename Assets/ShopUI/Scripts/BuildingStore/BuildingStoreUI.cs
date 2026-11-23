@@ -1,5 +1,3 @@
-
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
@@ -11,12 +9,14 @@ public class BuildingStoreUI : MonoBehaviour
 
     [Header("Card References")]
     [SerializeField] private BuildingCardUI[] buildingCards;
+    [Header("Building Tooltip")]
+    [SerializeField] private BuildingTooltipUI buildingTooltip;
 
     [Header("Economy")]
     [SerializeField] private CurrencySystem economy;
-    [SerializeField] private TMP_Text balanceText;
+    [SerializeField] private Text balanceText; // MEOW
     [SerializeField] private GameObject messagePanel;
-    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private Text messageText; // MEOW
 
     [Header("Category Buttons")]
     [SerializeField] private Button allButton;
@@ -26,6 +26,7 @@ public class BuildingStoreUI : MonoBehaviour
 
     [Header("Store")]
     [SerializeField] private GameObject storePanel;
+    [SerializeField] private GameObject cityBudgetButton;
     [SerializeField] private Button closeButton;
     [SerializeField] private Button openStoreButton;
     [Header("Placement Integration")]
@@ -33,155 +34,229 @@ public class BuildingStoreUI : MonoBehaviour
 
     private Coroutine messageCoroutine;
     private BuildingCardUI selectedCard;
+
     private void Start()
     {
-        if (buildingCards.Length > 0 && buildingCards.Length < buildings.Length)
+        if (placementAdapter == null) placementAdapter = FindAnyObjectByType<BuildingStoreAdapter>();
+        RegisterResourceBuilding("Bridge");
+        RegisterResourceBuilding("StoneBridge");
+        RegisterResourceBuilding("WaterPark");
+        RegisterResourceBuilding("SolarFactory");
+        InitializeCards();
+    }
+
+    private void RegisterResourceBuilding(string resource)
+    {
+        var bridge = Resources.Load<BuildingData>(resource);
+        if (bridge != null && placementAdapter != null)
         {
-            int existingCount = buildingCards.Length;
-            BuildingCardUI template = buildingCards[existingCount - 1];
-            System.Array.Resize(ref buildingCards, buildings.Length);
-            for (int i = existingCount; i < buildingCards.Length; i++)
-                buildingCards[i] = Instantiate(template, template.transform.parent);
+            placementAdapter.RegisterBuilding(bridge);
+            if (System.Array.IndexOf(buildings, bridge) < 0)
+            {
+                System.Array.Resize(ref buildings, buildings.Length + 1);
+                buildings[buildings.Length - 1] = bridge;
+            }
+        }
+    }
+
+    private void InitializeCards()
+    {
+        if (buildingCards == null || buildingCards.Length == 0)
+        {
+            buildingCards = GetComponentsInChildren<BuildingCardUI>(true);
         }
 
-        if (buildings.Length != buildingCards.Length)
+        if (closeButton != null) closeButton.onClick.AddListener(CloseStore);
+        if (openStoreButton != null)
         {
-            Debug.LogError("Building count must match card count.");
+            openStoreButton.onClick.AddListener(OpenStore);
+            if (storePanel != null) openStoreButton.gameObject.SetActive(!storePanel.activeSelf);
+        }
+
+        if (allButton != null) allButton.onClick.AddListener(() => FilterBuildings(-1));
+        if (residentialButton != null) residentialButton.onClick.AddListener(
+            () => FilterBuildings((int)BuildingData.BuildingCategory.Residential));
+        if (commercialButton != null) commercialButton.onClick.AddListener(
+            () => FilterBuildings((int)BuildingData.BuildingCategory.Commercial));
+        if (servicesButton != null) servicesButton.onClick.AddListener(
+            () => FilterBuildings((int)BuildingData.BuildingCategory.Services));
+
+        if (economy != null)
+        {
+            economy.BalanceChanged += UpdateBalance;
+            UpdateBalance(economy.Balance);
+        }
+
+        if (messagePanel != null) messagePanel.SetActive(false);
+
+        Debug.Log($"[Store Init] Found {buildings?.Length ?? 0} buildings and {buildingCards?.Length ?? 0} cards.");
+
+        for (int i = 0; i < buildingCards.Length; i++)
+        {
+            if (buildingCards[i] == null) continue;
+
+            if (buildings != null && i < buildings.Length)
+            {
+                buildingCards[i].Setup(buildings[i], placementAdapter != null
+                    ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
+            }
+
+            buildingCards[i].OnBuildingSelected -= HandleBuildingSelected;
+            buildingCards[i].OnBuildingSelected += HandleBuildingSelected;
+            buildingCards[i].OnCardHovered -= HandleCardHovered;
+            buildingCards[i].OnCardHovered += HandleCardHovered;
+            buildingCards[i].OnCardUnhovered -= HandleCardUnhovered;
+            buildingCards[i].OnCardUnhovered += HandleCardUnhovered;
+        }
+    }
+
+    private void HandleCardHovered(BuildingCardUI card, BuildingData data)
+    {
+        if (buildingTooltip == null) return;
+
+        int cost = placementAdapter != null
+            ? placementAdapter.GetPlacementCost(data)
+            : data.Price;
+
+        buildingTooltip.Show(data, cost);
+        Canvas.ForceUpdateCanvases();
+        buildingTooltip.PositionBeside(card.GetComponent<RectTransform>());
+    }
+
+    private void HandleCardUnhovered(BuildingCardUI card)
+    {
+        if (buildingTooltip != null)
+            buildingTooltip.Hide();
+    }
+
+    private void HandleBuildingSelected(BuildingData building)
+    {
+        Debug.Log("HandleBuildingSelected reached for: " + building.BuildingName);
+
+        if (placementAdapter != null && !placementAdapter.HasRequiredMayorsOffice(building))
+        {
+            Debug.LogWarning("Blocked: Missing Mayor's Office!");
+            ShowMessage(GridPlacementSystem.OfficeRequirementMessage(building));
             return;
         }
 
-        for (int i = 0; i < buildings.Length; i++)
+        int cost = placementAdapter != null ? placementAdapter.GetPlacementCost(building) : -1;
+        if (cost < 0)
         {
-            buildingCards[i].Setup(buildings[i], placementAdapter != null
-                ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
-            buildingCards[i].OnBuildingSelected += HandleBuildingSelected;
+            Debug.LogWarning("Blocked: Cost < 0");
+            ShowMessage("This building is not available yet!");
+            return;
         }
 
-        allButton.onClick.AddListener(() => FilterBuildings(-1));
-        residentialButton.onClick.AddListener(
-            () => FilterBuildings((int)BuildingData.BuildingCategory.Residential));
-        commercialButton.onClick.AddListener(
-            () => FilterBuildings((int)BuildingData.BuildingCategory.Commercial));
-        servicesButton.onClick.AddListener(
-            () => FilterBuildings((int)BuildingData.BuildingCategory.Services));
+        if (cost > 0 && economy != null && !economy.CanAfford(cost))
+        {
+            Debug.LogWarning("Blocked: Cannot afford! Cost: " + cost);
+            ShowMessage("Not enough money!");
+            return;
+        }
 
-        closeButton.onClick.AddListener(CloseStore);
-        openStoreButton.onClick.AddListener(OpenStore);
-        openStoreButton.gameObject.SetActive(!storePanel.activeSelf);
+        if (placementAdapter == null)
+        {
+            Debug.LogError("Blocked: placementAdapter is NULL!");
+            ShowMessage("Placement system not connected!");
+            return;
+        }
 
-        economy.BalanceChanged += UpdateBalance;
-        UpdateBalance(economy.Balance);
+        if (!placementAdapter.SelectBuilding(building))
+        {
+            Debug.LogWarning("Blocked: SelectBuilding returned false!");
+            ShowMessage("This building is not available yet!");
+            return;
+        }
 
-        messagePanel.SetActive(false);
-    }
-
-    
-    private void HandleBuildingSelected(BuildingData building)
-    {
-    if (placementAdapter != null && !placementAdapter.HasRequiredMayorsOffice(building))
-    {
-        ShowMessage("Build a Mayor's Office before constructing service buildings.");
-        return;
-    }
-    int cost = placementAdapter != null ? placementAdapter.GetPlacementCost(building) : -1;
-    if (cost < 0)
-    {
-        ShowMessage("This building is not available yet!");
-        return;
-    }
-    if (cost > 0 && !economy.CanAfford(cost))
-    {
-        ShowMessage("Not enough money!");
-        return;
-    }
-
-    if (placementAdapter == null)
-    {
-        ShowMessage("Placement system not connected!");
-        return;
-    }
-
-    if (!placementAdapter.SelectBuilding(building))
-    {
-        ShowMessage("This building is not available yet!");
-        return;
-    }
-
-    messagePanel.SetActive(false);
-
-    HighlightSelectedCard(building);
-
-    Debug.Log("Ready to place: " + building.BuildingName);
+        if (messagePanel != null) messagePanel.SetActive(false);
+        HighlightSelectedCard(building);
+        Debug.Log("Ready to place: " + building.BuildingName);
     }
 
     private void HighlightSelectedCard(BuildingData building)
-{
-    if (selectedCard != null)
-        selectedCard.SetSelected(false);
-
-    selectedCard = null;
-
-    for (int i = 0; i < buildings.Length; i++)
     {
-        if (buildings[i] == building)
+        if (selectedCard != null)
+            selectedCard.SetSelected(false);
+
+        selectedCard = null;
+
+        for (int i = 0; i < buildings.Length; i++)
         {
-            selectedCard = buildingCards[i];
-            selectedCard.SetSelected(true);
-            break;
+            if (buildings[i] == building && i < buildingCards.Length)
+            {
+                selectedCard = buildingCards[i];
+                selectedCard.SetSelected(true);
+                break;
+            }
         }
     }
-}
+
     private void UpdateBalance(int balance)
     {
-        balanceText.text = "$" + economy.ExactBalance.ToString("N2");
+        if (balanceText != null && economy != null)
+        {
+            balanceText.text = "$" + economy.ExactBalance.ToString("N2");
+        }
     }
 
     public void ShowMessage(string message)
-{
-    if (messageCoroutine != null)
     {
-        StopCoroutine(messageCoroutine);
+        if (messageCoroutine != null)
+        {
+            StopCoroutine(messageCoroutine);
+        }
+
+        if (messageText != null) messageText.text = message;
+        if (messagePanel != null) messagePanel.SetActive(true);
+
+        messageCoroutine = StartCoroutine(HideMessageAfterDelay());
     }
 
-    messageText.text = message;
-    messagePanel.SetActive(true);
+    private IEnumerator HideMessageAfterDelay()
+    {
+        yield return new WaitForSeconds(1.5f);
 
-    messageCoroutine = StartCoroutine(HideMessageAfterDelay());
-}
-
-private IEnumerator HideMessageAfterDelay()
-{
-    yield return new WaitForSeconds(1.5f);
-
-    messagePanel.SetActive(false);
-    messageCoroutine = null;
-}
+        if (messagePanel != null) messagePanel.SetActive(false);
+        messageCoroutine = null;
+    }
 
     private void FilterBuildings(int category)
     {
-        for (int i = 0; i < buildings.Length; i++)
+        for (int i = 0; i < buildings.Length && i < buildingCards.Length; i++)
         {
-            bool visible = category == -1 ||
-                (int)buildings[i].Category == category;
-
-            buildingCards[i].gameObject.SetActive(visible);
+            bool visible = category == -1 || (int)buildings[i].Category == category;
+            if (buildingCards[i] != null)
+                buildingCards[i].gameObject.SetActive(visible);
         }
     }
 
     private void CloseStore()
-{
-    storePanel.SetActive(false);
-    openStoreButton.gameObject.SetActive(true);
-}
+    {
+        if (storePanel != null) storePanel.SetActive(false);
+        if (openStoreButton != null) openStoreButton.gameObject.SetActive(true);
+
+        if (cityBudgetButton != null)
+            cityBudgetButton.SetActive(true);
+    }
 
     private void OpenStore()
-{
-    for (int i = 0; i < buildings.Length && i < buildingCards.Length; i++)
-        buildingCards[i].Setup(buildings[i], placementAdapter != null
-            ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
-    storePanel.SetActive(true);
-    openStoreButton.gameObject.SetActive(false);
-}
+    {
+        for (int i = 0; i < buildings.Length && i < buildingCards.Length; i++)
+        {
+            if (buildingCards[i] != null)
+            {
+                buildingCards[i].Setup(buildings[i], placementAdapter != null
+                    ? (int?)placementAdapter.GetPlacementCost(buildings[i]) : null);
+            }
+        }
+
+        if (storePanel != null) storePanel.SetActive(true);
+        if (openStoreButton != null) openStoreButton.gameObject.SetActive(false);
+
+        if (cityBudgetButton != null)
+            cityBudgetButton.SetActive(false);
+    }
 
     private void OnDestroy()
     {
@@ -190,7 +265,11 @@ private IEnumerator HideMessageAfterDelay()
             foreach (BuildingCardUI card in buildingCards)
             {
                 if (card != null)
+                {
                     card.OnBuildingSelected -= HandleBuildingSelected;
+                    card.OnCardHovered -= HandleCardHovered;
+                    card.OnCardUnhovered -= HandleCardUnhovered;
+                }
             }
         }
 

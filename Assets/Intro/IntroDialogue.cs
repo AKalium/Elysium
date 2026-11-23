@@ -11,7 +11,7 @@ public sealed class IntroDialogue : MonoBehaviour
     [SerializeField] private Texture2D idleTexture;
     [SerializeField] private Texture2D talkingTexture;
     [SerializeField] private string mascotName = "Dawny";
-    [SerializeField] private string nextScene = "SampleScene";
+    [SerializeField] private string nextScene = "MainScene";
     [SerializeField, Min(1)] private float charactersPerSecond = 40f;
     [SerializeField, TextArea(2, 5)] private string[] dialogueLines =
     {

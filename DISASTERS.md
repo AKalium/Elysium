@@ -1,6 +1,6 @@
 # Natural disasters
 
-I added fires and small floods to SampleScene. The game pauses and fades to black,
+I added fires and small floods to MainScene. The game pauses and fades to black,
 then Dawny tells you what happened and how many buildings were damaged. Press
 Continue to go back to the city. The fade takes 2 seconds each way, and the game
 returns to whatever speed you were using before.
@@ -10,7 +10,7 @@ being worked on separately.
 
 ## How to test it
 
-- Open SampleScene, press Play, and place some buildings.
+- Open MainScene, press Play, and place some buildings.
 - Press **K for a fire** or **L for a flood**. You don't need to raise pollution
   first; these keys skip the pollution requirements and cooldown for testing.
 - Make sure the game is unpaused and any daily report or dialogue is closed.
@@ -61,7 +61,7 @@ I'm using the top pose from the level 3 sprite sheet. The original images
 haven't been changed.
 
 The setup is in `Assets/Disasters/NaturalDisasters.prefab`, which is already
-in SampleScene. It uses our existing `Assets/Intro/Dialogue.prefab`, so the
+in MainScene. It uses our existing `Assets/Intro/Dialogue.prefab`, so the
 dialogue UI can still be edited there. The intro still works the same way.
 You can change the fade duration, disaster chance, cooldown, and portrait
 framing on the disaster prefab. Turn off **Enable Test Keys** when we don't
@@ -81,7 +81,7 @@ a building's contributions. The building itself stays enabled so selling and
 occupied grid spaces still work.
 
 There are checks under **Elysium > Verify Disaster Rules** and
-**Elysium > Verify Disasters in Play Mode**. Save SampleScene before running
+**Elysium > Verify Disasters in Play Mode**. Save MainScene before running
 the Play Mode check. It creates a temporary test city, checks the disasters,
 and exits Play Mode without saving those buildings. Results go in `Logs`.
 Interactive runs also request screenshots; batch runs don't capture the Game view.

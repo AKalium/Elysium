@@ -16,6 +16,14 @@ public class ApartmentStatsUI : MonoBehaviour
 
     private void UpdatePanelBounds()
     {
+        if (selected != null && selected.IsMayorsOffice)
+        {
+            Vector3 point = grid.PlacementCamera.WorldToScreenPoint(selected.transform.position);
+            float officeWidth = Mathf.Min(300, Screen.width - 24);
+            panel = new Rect(Mathf.Clamp(point.x - officeWidth / 2, 12, Screen.width - officeWidth - 12),
+                Mathf.Clamp(Screen.height - point.y, 12, Mathf.Max(12, Screen.height - 172)), officeWidth, 160);
+            return;
+        }
         float width = Mathf.Min(680, Screen.width - 24);
         float height = Mathf.Min(780, Screen.height - 32);
         panel = new Rect(Screen.width - width - 12, (Screen.height - height) * 0.5f, width, height);
@@ -52,7 +60,7 @@ public class ApartmentStatsUI : MonoBehaviour
         {
             if (!new RectInt(item.Anchor, item.Footprint).Contains(grid.HoveredCell)) continue;
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building != null && building.IsApartment) selected = building;
+            if (building != null && (building.IsApartment || building.IsMayorsOffice)) selected = building;
             break;
         }
     }
@@ -62,11 +70,11 @@ public class ApartmentStatsUI : MonoBehaviour
         out int unemployment, out int pollution, out int happiness)
     {
         covered = new bool[services.Length];
-        int[] missingPenalties = GetMissingServicePenalties(grid);
+        float[] missingPenalties = GetMissingServicePenalties(grid);
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building == null || !building.isActiveAndEnabled || !building.IsOperational) continue;
+            if (!IsServiceActive(grid, building)) continue;
             string id = building.Definition != null ? building.Definition.BuildingId : building.BuildingTypeId;
             for (int i = 0; i < services.Length; i++)
             {
@@ -84,25 +92,30 @@ public class ApartmentStatsUI : MonoBehaviour
         pollution = pollutionSystem != null ? Mathf.Min(20, pollutionSystem.TotalPollution / 10) : 0;
         happiness = selected.BaseHappiness - unemployment - pollution;
 
+        float serviceEffect = 0;
         for (int i = 0; i < services.Length; i++)
         {
-            int effect = covered[i] ? 10 : -missingPenalties[i];
-            happiness += effect;
+            serviceEffect += covered[i] ? 10 : -missingPenalties[i];
 
         }
-        happiness = Mathf.Clamp(happiness + GetParkBonus(grid, selected), 0, 100);
+        happiness = Mathf.Clamp(Mathf.RoundToInt(happiness + serviceEffect + GetParkBonus(grid, selected)), 0, 100);
     }
 
-    private static int[] GetMissingServicePenalties(GridPlacementSystem grid)
+    public static float MissingServicePenalty(int normalPenalty, int day) => normalPenalty * (day <= 30 ? .5f : 1f);
+
+    private static float[] GetMissingServicePenalties(GridPlacementSystem grid)
     {
-        var penalties = new int[] { 5, 5, 5, 5 };
+        var penalties = new float[] { 5, 5, 5, 5 };
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building == null || !building.isActiveAndEnabled || !building.IsOperational || building.Definition == null) continue;
+            if (!IsServiceActive(grid, building) || building.Definition == null) continue;
             for (int i = 0; i < services.Length; i++)
                 if (building.Definition.BuildingId == services[i]) penalties[i] = 7;
         }
+        var clock = FindAnyObjectByType<TimeManager>();
+        int day = clock != null ? clock.SimulationDay : 1;
+        for (int i = 0; i < penalties.Length; i++) penalties[i] = MissingServicePenalty((int)penalties[i], day);
         return penalties;
     }
 
@@ -138,7 +151,9 @@ public class ApartmentStatsUI : MonoBehaviour
                 if (examined == homes.Count) return result;
                 var home = homes[nextHome];
                 filled[home]++;
-                if (home == selected)
+                // A null home requests the citywide staffing totals. Allocation must
+                // include understaffed services so they can eventually activate.
+                if (selected == null || home == selected)
                 {
                     result.TryGetValue(employer, out int count);
                     result[employer] = count + 1;
@@ -154,11 +169,20 @@ public class ApartmentStatsUI : MonoBehaviour
         int bonus = 0;
         foreach (var entry in workplaces)
         {
-            string id = entry.Key.Definition.BuildingId;
-            if (id == "factory") bonus += entry.Value * 7;
-            if (id == "market") bonus += entry.Value * 3;
+            bonus += entry.Value * DailyEconomy.WorkplaceBonusPerWorker(entry.Key.Definition);
         }
         return bonus;
+    }
+
+    public static bool IsServiceActive(GridPlacementSystem grid, GridPlaceable building)
+    {
+        if (building == null || !building.isActiveAndEnabled || !building.IsOperational) return false;
+        var data = building.Definition;
+        if (data == null || data.Category != BuildingData.BuildingCategory.Services || data.JobsProvided == 0)
+            return true;
+        var staffing = GetWorkplaces(grid, null);
+        staffing.TryGetValue(building, out int assigned);
+        return assigned >= data.JobsProvided;
     }
 
     private static int GetParkBonus(GridPlacementSystem grid, GridPlaceable home)
@@ -167,7 +191,7 @@ public class ApartmentStatsUI : MonoBehaviour
         foreach (var item in grid.GetPlacedObjects())
         {
             var building = item.Object.GetComponent<GridPlaceable>();
-            if (building != null && building.IsOperational && building.Definition != null &&
+            if (IsServiceActive(grid, building) && building.Definition != null &&
                 building.Definition.BuildingId == "park" &&
                 Vector2.Distance(home.transform.position, building.transform.position) <= 8 * grid.CellSize)
                 bonus += 5;
@@ -176,21 +200,28 @@ public class ApartmentStatsUI : MonoBehaviour
     }
 
     private static void SetWhiteText(GUIStyle style)
-    {
-        style.normal.textColor = Color.white;
-        style.hover.textColor = Color.white;
-        style.active.textColor = Color.white;
-        style.focused.textColor = Color.white;
-        style.onNormal.textColor = Color.white;
-        style.onHover.textColor = Color.white;
-        style.onActive.textColor = Color.white;
-        style.onFocused.textColor = Color.white;
-    }
+{
+    Color brown = new Color32(55, 42, 32, 255);
+
+    style.normal.textColor = brown;
+    style.hover.textColor = brown;
+    style.active.textColor = brown;
+    style.focused.textColor = brown;
+    style.onNormal.textColor = brown;
+    style.onHover.textColor = brown;
+    style.onActive.textColor = brown;
+    style.onFocused.textColor = brown;
+}
 
     private void OnGUI()
     {
         if (DisasterSystem.IsCutsceneOpen) return;
         if (selected == null || !selected.isActiveAndEnabled) return;
+        if (selected.IsMayorsOffice)
+        {
+            DrawOfficeUpgrade();
+            return;
+        }
         CalculateHappiness(grid, selected, out var covered, out int residents, out int workforce,
             out int working, out int unemployment, out int pollution, out int happiness);
         int baseHappiness = selected.BaseHappiness;
@@ -198,7 +229,7 @@ public class ApartmentStatsUI : MonoBehaviour
         int revenueBonus = DailyEconomy.HappinessRevenueBonusPercent(happiness);
         var workplaces = GetWorkplaces(grid, selected);
         int parkBonus = GetParkBonus(grid, selected);
-        int[] missingPenalties = GetMissingServicePenalties(grid);
+        float[] missingPenalties = GetMissingServicePenalties(grid);
         long dailyRevenue = DailyEconomy.GetCitizenIncome(residents, working, happiness);
         foreach (var workplace in workplaces)
             dailyRevenue += DailyEconomy.GetWorkplaceRevenue(workplace.Key.Definition, workplace.Value, happiness);
@@ -219,8 +250,8 @@ public class ApartmentStatsUI : MonoBehaviour
         }
         Color previousColor = GUI.color;
         Color previousContentColor = GUI.contentColor;
-        GUI.contentColor = Color.white;
-        GUI.color = new Color(0.07f, 0.10f, 0.15f, 1);
+        GUI.contentColor = new Color32(55, 42, 32, 255);
+        GUI.color = new Color32(232, 213, 174, 255);
         GUI.DrawTexture(panel, Texture2D.whiteTexture);
         GUI.color = Color.white;
         GUILayout.BeginArea(new Rect(panel.x + 22, panel.y + 18, panel.width - 44, panel.height - 36));
@@ -232,6 +263,8 @@ public class ApartmentStatsUI : MonoBehaviour
         GUILayout.Space(12);
         scroll = GUILayout.BeginScrollView(scroll);
         GUILayout.Label("Residents: " + residents + " / " + capacity, bodyStyle);
+        if (selected.IsTemporarilyUnavailable)
+            GUILayout.Label("Temporarily unavailable: demolish and rebuild damaged bridges to restore road access. Residents are preserved.", bodyStyle);
         GUILayout.Label("Employed: " + working + " / " + workforce + " workers", bodyStyle);
         GUILayout.Label("Workplaces", titleStyle);
         foreach (var workplace in workplaces)
@@ -243,11 +276,14 @@ public class ApartmentStatsUI : MonoBehaviour
         GUILayout.Label("Average happiness: " + Mathf.Clamp(happiness, 0, 100) + " / 100", titleStyle);
         GUILayout.Space(14);
         GUILayout.Label($"Resident income: ${dailyRevenue:N0}  (+{revenueBonus}% happiness bonus)", bodyStyle);
-        GUILayout.Label("Workers earn $6/day; factory workers add $7 and market workers add $3. Other residents earn $1/day.", bodyStyle);
-        GUILayout.Label("Above 50 happiness: +12% revenue. At 90 or above: +25%.", bodyStyle);
+        GUILayout.Label("Workers earn $6/day; factory workers add $7, solar factory workers add $10, and market workers add $3. Other residents earn $1/day.", bodyStyle);
+        GUILayout.Label("Services require every job to be filled before providing benefits. Upkeep still applies while understaffed.", bodyStyle);
+        GUILayout.Label("Revenue bonus: +5% at 40 happiness, then +4 percentage points every 10 happiness, capped at +25% at 90.", bodyStyle);
         GUILayout.Space(14);
         GUILayout.Label("Happiness breakdown", titleStyle);
         GUILayout.Label("Base happiness    +" + baseHappiness, bodyStyle);
+        if (selected.IsFoundingApartment)
+            GUILayout.Label("Founding bonus fades by 5/day from day 11; base happiness reaches 60 on day 18.", bodyStyle);
         for (int i = 0; i < services.Length; i++)
         {
             GUILayout.Label(labels[i] + (covered[i] ? " available    +10" : " missing    -" + missingPenalties[i]), bodyStyle);
@@ -262,5 +298,46 @@ public class ApartmentStatsUI : MonoBehaviour
         GUILayout.EndArea();
         GUI.color = previousColor;
         GUI.contentColor = previousContentColor;
+    }
+
+    private void DrawOfficeUpgrade()
+    {
+        UpdatePanelBounds();
+        Color oldColor = GUI.color;
+        Color oldContent = GUI.contentColor;
+        Color oldBackground = GUI.backgroundColor;
+        bool oldEnabled = GUI.enabled;
+        GUI.color = new Color32(112, 83, 69, 255);
+        GUI.DrawTexture(panel, Texture2D.whiteTexture);
+        GUI.color = new Color32(243, 233, 211, 255);
+        GUI.DrawTexture(new Rect(panel.x + 3, panel.y + 3, panel.width - 6, panel.height - 6), Texture2D.whiteTexture);
+        GUI.color = Color.white;
+        GUI.contentColor = new Color32(83, 60, 52, 255);
+        var label = new GUIStyle(GUI.skin.label) { fontSize = 17, alignment = TextAnchor.MiddleCenter };
+        label.normal.textColor = GUI.contentColor;
+        GUI.Label(new Rect(panel.x + 8, panel.y + 12, panel.width - 40, 28),
+            "Mayor's Office - Level " + selected.OfficeLevel, label);
+        if (GUI.Button(new Rect(panel.xMax - 30, panel.y + 8, 22, 24), "X"))
+        {
+            selected = null;
+        }
+        else
+        {
+            var wallet = grid.GetComponent<CurrencySystem>();
+            if (wallet == null) wallet = FindAnyObjectByType<CurrencySystem>();
+            bool upgraded = selected.OfficeLevel >= 2;
+            GUI.Label(new Rect(panel.x + 8, panel.y + 48, panel.width - 16, 28),
+                upgraded ? "Recycling, water parks, solar unlocked" : "Unlocks recycling, water parks, solar", label);
+            GUI.enabled = oldEnabled && !upgraded && selected.IsOperational &&
+                wallet != null && wallet.CanAfford(GridPlaceable.OfficeUpgradeCost);
+            GUI.backgroundColor = new Color32(222, 175, 126, 255);
+            if (GUI.Button(new Rect(panel.x + 16, panel.y + 90, panel.width - 32, 42),
+                upgraded ? "Level 2" : "Upgrade - $1,000"))
+                selected.TryUpgradeOffice(wallet);
+        }
+        GUI.enabled = oldEnabled;
+        GUI.color = oldColor;
+        GUI.contentColor = oldContent;
+        GUI.backgroundColor = oldBackground;
     }
 }

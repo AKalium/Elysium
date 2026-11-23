@@ -17,9 +17,9 @@ public static class RoadNetworkTestSupport
         public Vector2Int Center => Grid.CentralRoadCell;
     }
 
-    public static Fixture Fresh()
+    public static Fixture Fresh(bool useTerrain = false)
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var fixture = new Fixture {
             Grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>(),
             Wallet = UnityEngine.Object.FindAnyObjectByType<CurrencySystem>(),
@@ -28,6 +28,7 @@ public static class RoadNetworkTestSupport
             Road = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/road.prefab"),
             House = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/apt.prefab")
         };
+        if (!useTerrain) UseFlatTerrain(fixture.Grid);
         Invoke(fixture.Wallet, "Awake"); Invoke(fixture.State, "Awake");
         Invoke(UnityEngine.Object.FindAnyObjectByType<TimeManager>(), "Awake");
         Invoke(fixture.Economy, "Awake"); Invoke(fixture.Grid, "Awake");
@@ -39,9 +40,18 @@ public static class RoadNetworkTestSupport
     // building counts, so tests still measure actual purchase/refund behavior.
     public static void Connect(GridPlacementSystem grid, Vector2Int target)
     {
+        UseFlatTerrain(grid);
         Invoke(grid, "Start");
         var from = grid.CentralRoadCell;
         LayPath(grid, from, new Vector2Int(target.x, from.y), target);
+    }
+
+    // Existing fixtures lay out infrastructure at fixed coordinates.
+    private static void UseFlatTerrain(GridPlacementSystem grid)
+    {
+        var settings = new SerializedObject(grid);
+        settings.FindProperty("terrain").objectReferenceValue = null;
+        settings.ApplyModifiedPropertiesWithoutUndo();
     }
 
     public static void LayPath(GridPlacementSystem grid, params Vector2Int[] points)

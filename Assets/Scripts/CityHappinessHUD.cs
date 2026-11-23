@@ -1,14 +1,12 @@
-
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class CityHappinessHUD : MonoBehaviour
 {
     [SerializeField] private GridPlacementSystem grid;
-    [SerializeField] private TMP_Text happinessText;
+    [SerializeField] private Text happinessText;
     [SerializeField] private Image happinessBarFill;
-    [SerializeField] private TMP_Text breakdownText;
+    [SerializeField] private Text breakdownText;
 
     private readonly string[] serviceIds =
     {

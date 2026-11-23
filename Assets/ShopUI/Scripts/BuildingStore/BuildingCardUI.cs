@@ -1,32 +1,33 @@
-
+using UnityEngine.EventSystems;
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BuildingCardUI : MonoBehaviour
+public class BuildingCardUI : MonoBehaviour,
+    IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI References")]
     [SerializeField] private Image buildingIcon;
-    [SerializeField] private TMP_Text buildingName;
-    [SerializeField] private TMP_Text buildingPrice;
+    [SerializeField] private Text buildingName;
+    [SerializeField] private Text buildingPrice;
     [SerializeField] private Button selectButton;
+    [SerializeField] private Font pixelFont;
 
     private BuildingData buildingData;
     private TimeManager clock;
     private int displayedPollution = -1;
     [SerializeField] private Image cardBackground;
 
-[SerializeField] private Color normalColor = Color.white;
-[SerializeField] private Color selectedColor = new Color(0.85f, 0.65f, 0.45f, 1f);
+    [SerializeField] private Color normalColor = Color.white;
+    [SerializeField] private Color selectedColor = new Color(0.85f, 0.65f, 0.45f, 1f);
 
-public void SetSelected(bool selected)
-{
-    if (cardBackground != null)
+    public void SetSelected(bool selected)
     {
-        cardBackground.color = selected ? selectedColor : normalColor;
+        if (cardBackground != null)
+        {
+            cardBackground.color = selected ? selectedColor : normalColor;
+        }
     }
-}
 
     public event Action<BuildingData> OnBuildingSelected;
 
@@ -43,27 +44,40 @@ public void SetSelected(bool selected)
         displayedPollution = -1;
         RefreshPollutionBadge();
 
-        buildingName.text = data.BuildingName;
-        int cost = placementCost ?? data.Price;
-        buildingPrice.text = cost < 0 ? "Unavailable" :
-            $"${cost:N0}\n<size=75%>Income ${data.DailyIncome:N0} / Upkeep ${data.DailyUpkeep:N2}\nNet {EconomyBudgetUI.SignedMoney(data.DailyNet)} / day</size>";
-        if (cost >= 0 && data.BuildingId == "apartment")
-            buildingPrice.text = $"${cost:N0}\n<size=75%>Residents: workers $6 / others $1 daily\nUpkeep ${data.DailyUpkeep:N2} / day</size>";
-        buildingPrice.enableAutoSizing = true;
-        buildingPrice.fontSizeMin = 14;
-        buildingPrice.fontSizeMax = 18;
-        selectButton.interactable = cost >= 0;
+        if (buildingName != null) buildingName.text = data.BuildingName;
 
-        if (data.BuildingIcon != null)
+        int cost = placementCost ?? data.Price;
+        {
+            buildingPrice.text = cost < 0 ? "Unavailable" :
+                $"${cost:N0}\n<size=12>Upkeep ${data.DailyUpkeep:#,0.#} / day{(data.BuildingId == "factory" ? " after 10 days" : "")}</size>";
+
+            buildingPrice.resizeTextForBestFit = true;
+            buildingPrice.resizeTextMinSize = 14;
+            buildingPrice.resizeTextMaxSize = 18;
+        }
+
+        if (selectButton != null) selectButton.interactable = cost >= 0;
+
+        if (data.BuildingIcon != null && buildingIcon != null)
         {
             buildingIcon.sprite = data.BuildingIcon;
             buildingIcon.enabled = true;
         }
-        else
+        else if (buildingIcon != null)
         {
-            // Hide the placeholder image if no sprite is assigned.
             buildingIcon.enabled = false;
         }
+
+        if (buildingPrice != null)
+        {
+            buildingPrice.text = cost < 0 ? "Unavailable" :
+                $"${cost:N0}\n<size=12>Upkeep ${data.DailyUpkeep:#,0.#} / day{(data.BuildingId == "factory" ? " after 10 days" : "")}</size>";
+            buildingPrice.resizeTextForBestFit = true;
+            buildingPrice.resizeTextMinSize = 14;
+            buildingPrice.resizeTextMaxSize = 18;
+        }
+
+        
     }
 
     private void RefreshJobsBadge(int jobs)
@@ -83,24 +97,30 @@ public void SetSelected(bool selected)
             var background = badge.GetComponent<Image>();
             background.color = new Color32(24, 46, 62, 255);
             background.raycastTarget = false;
-            var textObject = new GameObject("Count", typeof(RectTransform), typeof(TextMeshProUGUI));
+
+            var textObject = new GameObject("Count", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(rect, false);
             var textRect = textObject.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = textRect.offsetMax = Vector2.zero;
-            var text = textObject.GetComponent<TextMeshProUGUI>();
-            text.font = buildingName.font;
+
+            var text = textObject.GetComponent<Text>();
+            if (pixelFont != null) text.font = pixelFont;
+            else if (buildingName != null && buildingName.font != null) text.font = buildingName.font; // MEOW
+            else text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
             text.fontSize = 18;
-            text.fontStyle = FontStyles.Bold;
+            text.fontStyle = FontStyle.Bold;
             text.color = Color.white;
-            text.alignment = TextAlignmentOptions.Center;
+            text.alignment = TextAnchor.MiddleCenter;
             text.raycastTarget = false;
             existing = rect;
         }
         existing.gameObject.SetActive(jobs > 0);
         existing.SetAsLastSibling();
-        existing.GetComponentInChildren<TMP_Text>(true).text = jobs.ToString();
+        var label = existing.GetComponentInChildren<Text>(true);
+        if (label != null) label.text = jobs.ToString();
     }
 
     private void LateUpdate() => RefreshPollutionBadge();
@@ -130,18 +150,21 @@ public void SetSelected(bool selected)
             var background = badge.GetComponent<Image>();
             background.color = new Color32(180, 35, 35, 255);
             background.raycastTarget = false;
-            var textObject = new GameObject("Count", typeof(RectTransform), typeof(TextMeshProUGUI));
+            var textObject = new GameObject("Count", typeof(RectTransform), typeof(Text));
             textObject.transform.SetParent(rect, false);
             var textRect = textObject.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = textRect.offsetMax = Vector2.zero;
-            var text = textObject.GetComponent<TextMeshProUGUI>();
-            text.font = buildingName.font;
+            var text = textObject.GetComponent<Text>();
+            if (pixelFont != null) text.font = pixelFont;
+            else if (buildingName != null && buildingName.font != null) text.font = buildingName.font;
+            else text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
             text.fontSize = 18;
-            text.fontStyle = FontStyles.Bold;
+            text.fontStyle = FontStyle.Bold;
             text.color = Color.white;
-            text.alignment = TextAlignmentOptions.Center;
+            text.alignment = TextAnchor.MiddleCenter;
             text.raycastTarget = false;
             existing = rect;
         }
@@ -149,17 +172,32 @@ public void SetSelected(bool selected)
         existing.GetComponent<Image>().color = amount < 0
             ? new Color32(30, 125, 65, 255) : new Color32(180, 35, 35, 255);
         existing.SetAsLastSibling();
-        existing.GetComponentInChildren<TMP_Text>(true).text = Mathf.Abs(amount).ToString();
+        var label = existing.GetComponentInChildren<Text>(true);
+        if (label != null) label.text = Mathf.Abs(amount).ToString();
     }
 
     private void OnEnable()
     {
-        selectButton.onClick.AddListener(HandleSelection);
+        if (selectButton != null) selectButton.onClick.AddListener(HandleSelection);
     }
 
     private void OnDisable()
     {
-        selectButton.onClick.RemoveListener(HandleSelection);
+        if (selectButton != null) selectButton.onClick.RemoveListener(HandleSelection);
+    }
+
+    public event Action<BuildingCardUI, BuildingData> OnCardHovered;
+    public event Action<BuildingCardUI> OnCardUnhovered;
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (buildingData != null)
+            OnCardHovered?.Invoke(this, buildingData);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        OnCardUnhovered?.Invoke(this);
     }
 
     private void HandleSelection()

@@ -11,7 +11,7 @@ public static class DragInteractionVerification
     [MenuItem("Elysium/Verify Drag Interactions")]
     public static void Run()
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>();
         var wallet = UnityEngine.Object.FindAnyObjectByType<CurrencySystem>();
         var state = UnityEngine.Object.FindAnyObjectByType<GameState>();

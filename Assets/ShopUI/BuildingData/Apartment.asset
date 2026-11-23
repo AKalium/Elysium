@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingData
   buildingId: apartment
   buildingName: Apartment
-  price: 100
+  price: 150
   dailyIncome: 0
   dailyUpkeep: 5
   category: 0

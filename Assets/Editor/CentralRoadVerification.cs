@@ -16,15 +16,83 @@ public static class CentralRoadVerification
             AlternateRoute();
             BulkDemolition();
             InputCancellationAndGraphics();
+            BridgesCrossWater();
         }
         finally { Time.timeScale = 1; }
         Debug.Log("CENTRAL_ROAD_VERIFICATION_PASSED");
     }
 
+    private static void BridgesCrossWater()
+    {
+        var f = RoadNetworkTestSupport.Fresh(useTerrain: true);
+        var terrain = UnityEngine.Object.FindAnyObjectByType<PerlinNoiseMap>();
+        var bridge = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/bridge.prefab");
+        Check(terrain != null && bridge != null && bridge.GetComponent<SpriteRenderer>().sprite != null,
+            "Terrain and bridge graphics are wired");
+        Check(f.Grid.IsRoadConnected(f.Center) && !terrain.IsWaterAt(f.Grid.CellToWorld(f.Center)),
+            "Starting road is on land");
+
+        var water = f.Center;
+        int nearestDistance = int.MaxValue;
+        Rect bounds = f.Grid.WorldBounds;
+        for (int x = 0; x < Mathf.RoundToInt(bounds.width / f.Grid.CellSize); x++)
+        for (int y = 0; y < Mathf.RoundToInt(bounds.height / f.Grid.CellSize); y++)
+        {
+            var cell = new Vector2Int(x, y);
+            int distance = Mathf.Abs(x - f.Center.x) + Mathf.Abs(y - f.Center.y);
+            if (distance >= nearestDistance || !terrain.IsWaterAt(f.Grid.CellToWorld(cell))) continue;
+            nearestDistance = distance;
+            water = cell;
+        }
+        Check(nearestDistance != int.MaxValue, "Map contains water");
+
+        var shore = water - (water.y != f.Center.y
+            ? new Vector2Int(0, Math.Sign(water.y - f.Center.y))
+            : new Vector2Int(Math.Sign(water.x - f.Center.x), 0));
+        // Every earlier tile on this shortest path is closer than the nearest water tile.
+        RoadNetworkTestSupport.LayPath(f.Grid, f.Center, new Vector2Int(shore.x, f.Center.y), shore);
+        var land = new Vector2Int(0, 0);
+        Check(!terrain.IsWaterAt(f.Grid.CellToWorld(land)) && !f.Grid.TryPlace(bridge, land, out _),
+            "Bridge rejects empty land");
+        int balance = f.Wallet.Balance;
+        Check(!f.Grid.TryPlace(f.Road, water, out _) && !f.Grid.TryPlace(f.House, water, out _) &&
+            f.Wallet.Balance == balance, "Water rejects ordinary construction without charging");
+
+        var farShore = water + (water - shore);
+        while (terrain.IsWaterAt(f.Grid.CellToWorld(farShore))) farShore += water - shore;
+        Check(bounds.Contains(f.Grid.CellToWorld(farShore)), "Road drag fixture has land across the water");
+        var prefabs = new SerializedObject(f.Grid).FindProperty("placeablePrefabs");
+        for (int i = 0; i < prefabs.arraySize; i++)
+        {
+            if (prefabs.GetArrayElementAtIndex(i).objectReferenceValue != f.Road) continue;
+            f.Grid.SelectPlaceable(i);
+            break;
+        }
+        var paint = typeof(GridPlacementSystem).GetMethod("ProcessPlacementInput", BindingFlags.Instance | BindingFlags.NonPublic);
+        paint.Invoke(f.Grid, new object[] { shore, true, true, true });
+        paint.Invoke(f.Grid, new object[] { farShore, true, false, true });
+        Check(!f.Grid.IsCellOccupied(farShore), "A fast road drag cannot skip over water");
+        paint.Invoke(f.Grid, new object[] { water, true, true, true });
+        paint.Invoke(f.Grid, new object[] { farShore, true, false, true });
+        Check(!f.Grid.IsCellOccupied(farShore), "A road drag started on water cannot continue onto land");
+        paint.Invoke(f.Grid, new object[] { farShore, true, true, true });
+        Check(f.Grid.IsCellOccupied(farShore), "A fresh press can build on the far shore");
+        f.Grid.DestroyBuilding(farShore);
+
+        balance = f.Wallet.Balance;
+        int freeRoads = f.Grid.FreeRoadsRemaining;
+        Check(f.Grid.TryPlace(bridge, water, out var span) && f.Grid.IsRoadConnected(water) &&
+            f.Wallet.Balance == balance - 50 && f.Grid.FreeRoadsRemaining == freeRoads &&
+            span.GetComponent<SpriteRenderer>().sprite != null,
+            "Bridge costs $50, joins the road network, and displays its connected sprite");
+        f.Grid.DestroyBuilding(water);
+        Check(!f.Grid.IsRoadConnected(water) && !f.Grid.IsCellOccupied(water), "Bridge demolition clears its road connection");
+    }
+
     private static void StartupAndIslands()
     {
         var f = RoadNetworkTestSupport.Fresh();
-        int initial = new SerializedObject(f.Wallet).FindProperty("startingBalance").intValue;
+        int initial = CurrencySystem.StartingBalance;
         Check(f.Wallet.Balance == initial && f.Grid.IsRoadConnected(f.Center), "Free connected starting tile at map center");
         int count = f.State.BuildingCount;
         RoadNetworkTestSupport.Invoke(f.Grid, "Start"); f.State.RefreshPopulation();

@@ -1,6 +1,6 @@
 # Time and economy integration
 
-CurrencySystem owns one gameplay balance, starting at 10000 in SampleScene.
+CurrencySystem owns one gameplay balance, starting at 10000 in MainScene.
 The shop, CurrencyHUD, GameState, and midnight DailyEconomy settlements use it.
 The obsolete TemporaryEconomy script has been removed, following main.
 
@@ -9,8 +9,11 @@ are apartment 100, road 50, Mayor's Office 500, and market 200. Cards display
 these mapped placement prices. All non-road buildings require an adjacent road.
 Demolition refunds 50% of the original price once.
 
-The clock starts at 8 AM; SampleScene currently sets a full day to 50 real seconds at 1x. The editable
+The clock starts at 8 AM; MainScene currently sets a full day to 50 real seconds at 1x. The editable
 ClockHUD prefab sits at top center. Speed remains controllable via TimeManager.
+The screen tint follows the clock: it fades in from 5-7 AM, stays clear through 6 PM,
+and reaches a cool, dim night tint by 8 PM. It affects sprites and the world view
+without changing the directional light or tinting the HUD.
 At midnight, active buildings contribute their BuildingData income/upkeep:
 apartments 25/5, markets 60/10, roads and Mayor's Office 0/2. Purchase prices and
 daily rates are stored together in each definition. Upkeep can create debt. Inactive/demolished

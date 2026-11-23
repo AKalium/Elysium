@@ -9,6 +9,7 @@ public class GridPlacementSystem : MonoBehaviour {
     private TimeEconomyHUD timeHUD;
     private EconomyBudgetUI budgetUI;
     [SerializeField] private Camera targetCamera;
+    [SerializeField] private PerlinNoiseMap terrain;
     [SerializeField, Min(0.01f)] private float cellSize = 1f;
     [SerializeField, Min(1)] private int gridWidth = 100;
     [SerializeField, Min(1)] private int gridHeight = 100;
@@ -70,8 +71,8 @@ private int ghostPrefabIndex = -1;
     private RoadNetworkVisuals roadVisuals;
     public int MapVersion { get; private set; }
     public float CellSize => cellSize;
+    public Rect WorldBounds => new Rect(gridOrigin, new Vector2(gridWidth, gridHeight) * cellSize);
     public Camera PlacementCamera => targetCamera;
-    internal Rect WorldBounds => new Rect(gridOrigin, new Vector2(gridWidth, gridHeight) * cellSize);
     public bool HasMapHover => hasHoveredCell;
     public Vector2Int HoveredCell => hoveredCell;
     public Vector2Int ToCityCoordinates(Vector2Int cell) => cell - CentralRoadCell;
@@ -87,7 +88,28 @@ private int ghostPrefabIndex = -1;
             ? ToCityCoordinates(cells[0]) : ToCityCoordinates(WorldToCell(building.transform.position));
     }
 
-    public Vector2Int CentralRoadCell => new Vector2Int(gridWidth / 2, gridHeight / 2);
+    private Vector2Int? startingRoadCell;
+    public Vector2Int CentralRoadCell => startingRoadCell ?? new Vector2Int(gridWidth / 2, gridHeight / 2);
+
+    private Vector2Int FindStartingRoadCell()
+    {
+        var center = new Vector2Int(gridWidth / 2, gridHeight / 2);
+        if (!IsWaterCell(center)) return center;
+
+        var closest = center;
+        int closestDistance = int.MaxValue;
+        for (int x = 0; x < gridWidth; x++)
+        for (int y = 0; y < gridHeight; y++)
+        {
+            int distance = Mathf.Abs(x - center.x) + Mathf.Abs(y - center.y);
+            if (distance >= closestDistance) continue;
+            var candidate = new Vector2Int(x, y);
+            if (IsWaterCell(candidate)) continue;
+            closest = candidate;
+            closestDistance = distance;
+        }
+        return closest;
+    }
 
     private void Start()
     {
@@ -114,6 +136,17 @@ private int ghostPrefabIndex = -1;
 
     private void Awake() 
     {
+        if (terrain == null) terrain = FindAnyObjectByType<PerlinNoiseMap>();
+        var bridge = Resources.Load<BuildingData>("Bridge");
+        if (bridge != null) RegisterBuilding(bridge);
+        var stoneBridge = Resources.Load<BuildingData>("StoneBridge");
+        if (stoneBridge != null) RegisterBuilding(stoneBridge);
+        var waterPark = Resources.Load<BuildingData>("WaterPark");
+        if (waterPark != null) RegisterBuilding(waterPark);
+        var solarFactory = Resources.Load<BuildingData>("SolarFactory");
+        if (solarFactory != null) RegisterBuilding(solarFactory);
+        startingRoadCell = FindStartingRoadCell();
+
         //initialize audio
         _Speaker = GetComponent<AudioSource>();
 
@@ -216,7 +249,7 @@ private int ghostPrefabIndex = -1;
         var definition = prefab.GetComponent<GridPlaceable>()?.Definition;
         if (!HasRequiredMayorsOffice(definition))
         {
-            if (storeUI != null) storeUI.ShowMessage("Build a Mayor's Office before constructing service buildings.");
+            if (storeUI != null) storeUI.ShowMessage(OfficeRequirementMessage(definition));
             return false;
         }
 
@@ -229,13 +262,13 @@ private int ghostPrefabIndex = -1;
 
     return false;
     }
-
         Vector2Int footprint = GetFootprint(prefab);
         int cost = GetConstructionCost(prefab);
         if (cost < 0) return false;
         if (startingRoad) cost = 0;
         else if (cost > 0 && !currency.CanAfford(cost)) return false;
-        if (!CanPlace(cell, footprint))
+        var placeable = prefab.GetComponent<GridPlaceable>();
+        if (!CanPlace(cell, footprint, placeable != null && placeable.RequiresWater))
     {
     if (storeUI != null)
     {
@@ -245,7 +278,7 @@ private int ghostPrefabIndex = -1;
     return false;
 }
 
-        if (prefab.name != "road" && !HasCentralRoadAccess(cell, footprint))
+        if ((placeable == null || !placeable.IsRoad) && !HasCentralRoadAccess(cell, footprint))
         {
             if (storeUI != null)
             {
@@ -265,6 +298,7 @@ private int ghostPrefabIndex = -1;
         RegisterPlacement(placedObject, cell, footprint, cost);
         if (prefab.name == "road" && freeRoadsUsed < 10) freeRoadsUsed++;
         var placedBuilding = placedObject.GetComponent<GridPlaceable>();
+        placedBuilding?.InitializeConstructionDay(FindAnyObjectByType<TimeManager>()?.Day ?? 1);
         if (placedBuilding != null && placedBuilding.Definition != null &&
             placedBuilding.Definition.BuildingId == "apartment" && foundingApartmentsUsed < 3)
         {
@@ -276,10 +310,11 @@ private int ghostPrefabIndex = -1;
         GameState.Instance?.RefreshPopulation();
         if (Time.timeScale == 0f) pausePurchases.Add(placedObject);
 
-        if (prefab.name =="road")
+        if (placedBuilding != null && placedBuilding.IsRoad)
         {
             roadNetworkDirty = true;
             SetRoadSprite(placedObject, cell, footprint, false);    
+            RestoreRoadAccess();
         }
 
         MapVersion++;
@@ -333,6 +368,7 @@ private int ghostPrefabIndex = -1;
                 anchor = item.Anchor,
                 footprint = item.Footprint,
                 paidCost = paidCosts[item.Object],
+                constructionDay = building.ConstructionDay,
                 residents = building.SavedResidents,
                 foundingApartment = building.IsFoundingApartment,
                 pausePurchase = save.keyboardPaused && pausePurchases.Contains(item.Object),
@@ -361,8 +397,13 @@ private int ghostPrefabIndex = -1;
                 !prefabs.TryGetValue(entry.buildingId, out var prefab) ||
                 entry.footprint != GetFootprint(prefab) || !FitsGrid(entry.anchor, entry.footprint) ||
                 entry.paidCost < 0 || entry.residents < 0 ||
-                (entry.damaged && (entry.buildingId == "road" || !System.Enum.IsDefined(typeof(DisasterKind), entry.disaster))))
+                (entry.damaged && !System.Enum.IsDefined(typeof(DisasterKind), entry.disaster)))
                 throw new System.IO.InvalidDataException("The save contains an invalid or unavailable building.");
+
+            var placeable = prefab.GetComponent<GridPlaceable>();
+            if (entry.damaged && placeable.IsRoad &&
+                (!placeable.IsBridge || placeable.IsStoneBridge || entry.disaster != DisasterKind.Flood))
+                throw new System.IO.InvalidDataException("The save contains invalid road damage.");
 
             for (int x = 0; x < entry.footprint.x; x++)
                 for (int y = 0; y < entry.footprint.y; y++)
@@ -381,10 +422,19 @@ private int ghostPrefabIndex = -1;
             {
                 var building = CreatePlacement(prefabs[entry.buildingId], entry.anchor, entry.footprint);
                 RegisterPlacement(building, entry.anchor, entry.footprint, entry.paidCost);
-                building.GetComponent<GridPlaceable>().RestoreResidents(entry.residents, entry.foundingApartment);
+                var placeable = building.GetComponent<GridPlaceable>();
+                placeable.RestoreResidents(entry.residents, entry.foundingApartment);
+                placeable.InitializeConstructionDay(entry.constructionDay);
                 if (entry.pausePurchase && save.keyboardPaused) pausePurchases.Add(building);
+            }
+
+            foreach (var entry in save.placements)
+            {
                 if (entry.damaged)
+                {
+                    var building = cellOwners[entry.anchor];
                     (building.GetComponent<DisasterDamage>() ?? building.AddComponent<DisasterDamage>()).Apply(entry.disaster);
+                }
             }
         }
         finally
@@ -407,6 +457,40 @@ private int ghostPrefabIndex = -1;
         restoredMap = true;
         MapVersion++;
         gameState?.RefreshPopulation();
+    }
+
+    public bool TryUpgradeBridge(Vector2Int cell)
+    {
+        if (!cellOwners.TryGetValue(cell, out var owner) || owner == null) return false;
+        var bridge = owner.GetComponent<GridPlaceable>();
+        if (bridge == null || !bridge.IsBridge || bridge.IsStoneBridge) return false;
+        if (bridge.IsDamaged)
+        {
+            storeUI?.ShowMessage("Demolish and rebuild damaged bridges before upgrading.");
+            return false;
+        }
+        var stone = Resources.Load<BuildingData>("StoneBridge");
+        var source = stone != null && stone.BuildingPrefab != null
+            ? stone.BuildingPrefab.GetComponent<SpriteChanger>() : null;
+        var changer = owner.GetComponent<SpriteChanger>();
+        if (source == null || changer == null || currency == null) return false;
+        if (!currency.TrySpend(GridPlaceable.BridgeUpgradeCost))
+        {
+            storeUI?.ShowMessage("Upgrading a wooden bridge to stone costs $100.");
+            return false;
+        }
+        bridge.UpgradeBridgeDefinition(stone);
+        changer.UseSpritesFrom(source);
+        paidCosts.TryGetValue(owner, out int paid);
+        paidCosts[owner] = paid + GridPlaceable.BridgeUpgradeCost;
+        // Keep the existing pause-purchase status: upgrading an old bridge does
+        // not make its original cost eligible for a full paused refund.
+        var anchor = objectCells[owner][0];
+        SetRoadSprite(owner, anchor, bridge.Footprint, false);
+        owner.transform.localScale = stone.BuildingPrefab.transform.localScale;
+        MapVersion++;
+        storeUI?.ShowMessage("Bridge upgraded to flood-resistant stone for $100.");
+        return true;
     }
 
     public void DestroyBuilding(Vector2Int cell) 
@@ -601,7 +685,8 @@ private int ghostPrefabIndex = -1;
         }
         else if (demolitionStrokeActive)
         {
-            TraceStroke(lastDemolitionCell, cell, EraseRoadCell);
+            foreach (var step in TraceStroke(lastDemolitionCell, cell))
+                EraseRoadCell(step);
             lastDemolitionCell = cell;
         }
     }
@@ -617,7 +702,7 @@ private int ghostPrefabIndex = -1;
         roadStrokeVisited.Clear();
     }
 
-    private static void TraceStroke(Vector2Int from, Vector2Int to, System.Action<Vector2Int> visit)
+    private static IEnumerable<Vector2Int> TraceStroke(Vector2Int from, Vector2Int to)
     {
         int dx = Mathf.Abs(to.x - from.x);
         int dy = Mathf.Abs(to.y - from.y);
@@ -632,13 +717,13 @@ private int ghostPrefabIndex = -1;
             {
                 error -= dy;
                 cell.x += stepX;
-                visit(cell);
+                yield return cell;
             }
             if (doubledError < dx)
             {
                 error += dx;
                 cell.y += stepY;
-                visit(cell);
+                yield return cell;
             }
         }
     }
@@ -647,6 +732,16 @@ private int ghostPrefabIndex = -1;
     {
         demolitionStrokeActive = false;
         demolitionStrokeVisited.Clear();
+    }
+
+    public int RegisterBuilding(BuildingData building)
+    {
+        int index = System.Array.IndexOf(placeablePrefabs, building.BuildingPrefab);
+        if (index >= 0) return index;
+        index = placeablePrefabs.Length;
+        System.Array.Resize(ref placeablePrefabs, index + 1);
+        placeablePrefabs[index] = building.BuildingPrefab;
+        return index;
     }
 
     public bool IsCellOccupied(Vector2Int cell) 
@@ -668,14 +763,24 @@ private int ghostPrefabIndex = -1;
     {
         if (definition == null || definition.BuildingId == "city_hall" ||
             definition.BuildingId == "road" || definition.BuildingId == "park" ||
-            definition.Category != BuildingData.BuildingCategory.Services) return true;
+            (definition.Category != BuildingData.BuildingCategory.Services && !RequiresLevelTwoOffice(definition))) return true;
         foreach (var building in FindObjectsByType<GridPlaceable>())
         {
             if (!building.isActiveAndEnabled || building.gameObject.scene != gameObject.scene) continue;
-            if (building.Category == BuildingCategory.MayorsOffice) return true;
+            if (building.IsMayorsOffice && building.IsOperational &&
+                building.OfficeLevel >= (RequiresLevelTwoOffice(definition) ? 2 : 1)) return true;
         }
         return false;
     }
+
+    public static string OfficeRequirementMessage(BuildingData definition) =>
+        RequiresLevelTwoOffice(definition)
+            ? "Upgrade the Mayor's Office to level 2 to build " + definition.BuildingName + "."
+            : "Build a Mayor's Office before constructing service buildings.";
+
+    private static bool RequiresLevelTwoOffice(BuildingData definition) => definition != null &&
+        (definition.BuildingId == "recycling_center" || definition.BuildingId == "water_park" ||
+            definition.BuildingId == "solar factory");
 
 private bool HasReachedBuildingLimit(GameObject prefab)
 {
@@ -702,7 +807,7 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         anchor.x >= 0 && anchor.y >= 0 &&
         anchor.x <= gridWidth - footprint.x && anchor.y <= gridHeight - footprint.y;
 
-    private bool CanPlace(Vector2Int anchor, Vector2Int footprint)
+    private bool CanPlace(Vector2Int anchor, Vector2Int footprint, bool bridge)
     {
         if (!FitsGrid(anchor, footprint))
         {
@@ -713,7 +818,8 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         {
             for (int y = 0; y < footprint.y; y++)
             {
-                if (cellOwners.ContainsKey(anchor + new Vector2Int(x, y)))
+                Vector2Int cell = anchor + new Vector2Int(x, y);
+                if (cellOwners.ContainsKey(cell) || IsWaterCell(cell) != bridge)
                 {
                     return false;
                 }
@@ -722,6 +828,8 @@ private bool HasReachedBuildingLimit(GameObject prefab)
 
         return true;
     }
+
+    private bool IsWaterCell(Vector2Int cell) => terrain != null && terrain.IsWaterAt(CellToWorld(cell));
 
     private bool HasCentralRoadAccess(Vector2Int anchor, Vector2Int footprint)
     {
@@ -768,7 +876,7 @@ private bool HasReachedBuildingLimit(GameObject prefab)
     private void FloodRoadNetwork(HashSet<Vector2Int> result, ISet<Vector2Int> excluded)
     {
         result.Clear();
-        if (!IsRoadAt(CentralRoadCell) || (excluded != null && excluded.Contains(CentralRoadCell))) return;
+        if (!IsUsableRoadAt(CentralRoadCell) || (excluded != null && excluded.Contains(CentralRoadCell))) return;
         var frontier = new Queue<Vector2Int>();
         result.Add(CentralRoadCell);
         frontier.Enqueue(CentralRoadCell);
@@ -778,7 +886,7 @@ private bool HasReachedBuildingLimit(GameObject prefab)
             foreach (var direction in NeighborDirections)
             {
                 var next = cell + direction;
-                if ((excluded == null || !excluded.Contains(next)) && IsRoadAt(next) && result.Add(next)) frontier.Enqueue(next);
+                if ((excluded == null || !excluded.Contains(next)) && IsUsableRoadAt(next) && result.Add(next)) frontier.Enqueue(next);
             }
         }
     }
@@ -804,8 +912,9 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         var direct = new HashSet<GameObject>();
         if (from.x < 0 || from.y < 0 || to.x < 0 || to.y < 0 || from.x >= gridWidth ||
             from.y >= gridHeight || to.x >= gridWidth || to.y >= gridHeight) return BuildDemolitionPlan(direct);
-        System.Action<Vector2Int> collect = cell => { if (IsRoadAt(cell)) direct.Add(cellOwners[cell]); };
-        collect(from); TraceStroke(from, to, collect);
+        if (IsRoadAt(from)) direct.Add(cellOwners[from]);
+        foreach (var cell in TraceStroke(from, to))
+            if (IsRoadAt(cell)) direct.Add(cellOwners[cell]);
         return BuildDemolitionPlan(direct);
     }
 
@@ -824,7 +933,8 @@ private bool HasReachedBuildingLimit(GameObject prefab)
             var remainingNetwork = new HashSet<Vector2Int>();
             FloodRoadNetwork(remainingNetwork, removedRoadCells);
             foreach (var item in snapshot)
-                if (!item.IsRoad && !BordersRoadNetwork(item.Anchor, item.Footprint, remainingNetwork)) targets.Add(item.Object);
+                if (!item.IsRoad && item.Object.GetComponent<GridPlaceable>()?.IsTemporarilyUnavailable != true &&
+                    !BordersRoadNetwork(item.Anchor, item.Footprint, remainingNetwork)) targets.Add(item.Object);
         }
         var result = new List<PlacedMapObject>();
         long refund = 0;
@@ -846,7 +956,8 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         {
             if (entry.Key == null || entry.Value.Count == 0) continue;
             var anchor = entry.Value[0];
-            if (!IsRoadAt(anchor) && !HasCentralRoadAccess(anchor, GetFootprint(entry.Key))) disconnected.Add(anchor);
+            if (!IsRoadAt(anchor) && entry.Key.GetComponent<GridPlaceable>()?.IsTemporarilyUnavailable != true &&
+                !HasCentralRoadAccess(anchor, GetFootprint(entry.Key))) disconnected.Add(anchor);
         }
         foreach (var anchor in disconnected) DestroyBuilding(anchor);
     }
@@ -854,7 +965,38 @@ private bool HasReachedBuildingLimit(GameObject prefab)
     private bool IsRoadAt(Vector2Int cell)
     {
         return cellOwners.TryGetValue(cell, out GameObject owner) &&
-            owner != null && owner.activeInHierarchy && owner.name == "road(Clone)";
+            owner != null && owner.activeInHierarchy && owner.GetComponent<GridPlaceable>()?.IsRoad == true;
+    }
+
+    private bool IsUsableRoadAt(Vector2Int cell) => IsRoadAt(cell) &&
+        !cellOwners[cell].GetComponent<GridPlaceable>().IsDamaged;
+
+    // Disaster disconnections preserve occupancy and stored residents. They must
+    // also survive demolition of the damaged bridge during its replacement.
+    public void RefreshDisasterRoadAccess()
+    {
+        roadNetworkDirty = true;
+        RebuildRoadNetwork();
+        foreach (var item in GetPlacedObjects())
+        {
+            var building = item.Object.GetComponent<GridPlaceable>();
+            if (building != null && !building.IsRoad)
+                building.SetTemporarilyUnavailable(!HasCentralRoadAccess(item.Anchor, item.Footprint));
+        }
+        MapVersion++;
+        GameState.Instance?.RefreshPopulation();
+    }
+
+    private void RestoreRoadAccess()
+    {
+        RebuildRoadNetwork();
+        foreach (var item in GetPlacedObjects())
+        {
+            var building = item.Object.GetComponent<GridPlaceable>();
+            if (building != null && building.IsTemporarilyUnavailable && HasCentralRoadAccess(item.Anchor, item.Footprint))
+                building.SetTemporarilyUnavailable(false);
+        }
+        GameState.Instance?.RefreshPopulation();
     }
 
     private Vector2Int GetFootprint(GameObject prefab) 
@@ -910,21 +1052,25 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         }
     }
 
+    public bool IsPointerOverUI(Vector2 pointer)
+    {
+        var apartmentStats = GetComponent<ApartmentStatsUI>();
+        return (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) ||
+            (apartmentStats != null && apartmentStats.ContainsScreenPoint(pointer)) ||
+            (timeHUD != null && timeHUD.ContainsScreenPoint(pointer)) ||
+            (budgetUI != null && budgetUI.ContainsScreenPoint(pointer)) ||
+            (roadVisuals != null && roadVisuals.ContainsLegendScreenPoint(pointer));
+    }
+
     private void UpdateHoveredCell() 
     {
         Mouse mouse = Mouse.current;
         hasHoveredCell = false;
-        var apartmentStats = GetComponent<ApartmentStatsUI>();
-        if (mouse != null && apartmentStats != null && apartmentStats.ContainsScreenPoint(mouse.position.ReadValue())) return;
-        if (mouse == null || (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) ||
-            (timeHUD != null && timeHUD.ContainsScreenPoint(mouse.position.ReadValue())) ||
-            (budgetUI != null && budgetUI.ContainsScreenPoint(mouse.position.ReadValue())) ||
-            (roadVisuals != null && roadVisuals.ContainsLegendScreenPoint(mouse.position.ReadValue())))
-        {
-            return;
-        }
+        if (mouse == null) return;
+        Vector2 pointer = mouse.position.ReadValue();
+        if (IsPointerOverUI(pointer)) return;
 
-        Ray ray = targetCamera.ScreenPointToRay(mouse.position.ReadValue());
+        Ray ray = targetCamera.ScreenPointToRay(pointer);
         Plane placementPlane = new Plane(Vector3.forward, Vector3.zero);
         if (!placementPlane.Raycast(ray, out float distance)) 
         {
@@ -936,11 +1082,14 @@ private bool HasReachedBuildingLimit(GameObject prefab)
         hoveredFootprint = selectedPrefabIndex >= 0
             ? GetFootprint(placeablePrefabs[selectedPrefabIndex])
             : Vector2Int.one;
+        var placeable = selectedPrefabIndex >= 0
+            ? placeablePrefabs[selectedPrefabIndex].GetComponent<GridPlaceable>()
+            : null;
         hoveredCellIsValid = selectedPrefabIndex >= 0 &&
-    CanPlace(hoveredCell, hoveredFootprint) &&
+    CanPlace(hoveredCell, hoveredFootprint, placeable != null && placeable.RequiresWater) &&
     !HasReachedBuildingLimit(placeablePrefabs[selectedPrefabIndex]) &&
-    HasRequiredMayorsOffice(placeablePrefabs[selectedPrefabIndex].GetComponent<GridPlaceable>()?.Definition) &&
-    (placeablePrefabs[selectedPrefabIndex].name == "road" ||
+    HasRequiredMayorsOffice(placeable?.Definition) &&
+    ((placeable != null && placeable.IsRoad) ||
         HasCentralRoadAccess(hoveredCell, hoveredFootprint)) &&
         (GetConstructionCost(selectedPrefabIndex) == 0 ||
          currency.CanAfford(GetConstructionCost(selectedPrefabIndex)));
@@ -951,7 +1100,7 @@ hasHoveredCell = true;
 
     private bool RoadSelected => selectedPrefabIndex >= 0 &&
         placeablePrefabs[selectedPrefabIndex] != null &&
-        placeablePrefabs[selectedPrefabIndex].name == "road";
+        placeablePrefabs[selectedPrefabIndex].GetComponent<GridPlaceable>()?.IsRoad == true;
 
     private void HandlePlacementInput()
     {
@@ -967,6 +1116,16 @@ hasHoveredCell = true;
 
     private void ProcessPlacementInput(Vector2Int cell, bool pointerOnMap, bool pressed, bool held)
     {
+        // A click on an existing wooden bridge is an upgrade action even when
+        // no store item is selected. Holding the mouse does not repeat it.
+        if (pressed && pointerOnMap && cellOwners.TryGetValue(cell, out var existing) &&
+            existing != null && existing.GetComponent<GridPlaceable>() is GridPlaceable bridge &&
+            bridge.IsBridge && !bridge.IsStoneBridge)
+        {
+            ResetRoadStroke();
+            TryUpgradeBridge(cell);
+            return;
+        }
         if ((!pressed && !held) || !pointerOnMap ||
             selectedPrefabIndex < 0 || cell.x < 0 || cell.y < 0 ||
             cell.x >= gridWidth || cell.y >= gridHeight)
@@ -989,15 +1148,26 @@ hasHoveredCell = true;
         }
         else if (roadStrokeActive)
         {
-            TraceStroke(lastRoadCell, cell, PaintRoadCell);
+            foreach (var step in TraceStroke(lastRoadCell, cell))
+            {
+                PaintRoadCell(step);
+                if (!roadStrokeActive) break;
+            }
             lastRoadCell = cell;
         }
     }
 
     private void PaintRoadCell(Vector2Int cell)
     {
+        var prefab = placeablePrefabs[selectedPrefabIndex];
+        if (prefab.GetComponent<GridPlaceable>()?.IsBridge != true && IsWaterCell(cell))
+        {
+            ResetRoadStroke();
+            return;
+        }
+
         if (!roadStrokeVisited.Add(cell) || IsCellOccupied(cell)) return;
-        TryPlace(placeablePrefabs[selectedPrefabIndex], cell, out _);
+        TryPlace(prefab, cell, out _);
     }
 
     private void CreateGridVisual() 
@@ -1012,34 +1182,40 @@ hasHoveredCell = true;
         GameObject gridObject = new GameObject("Grid Visual");
         MeshFilter meshFilter = gridObject.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = gridObject.AddComponent<MeshRenderer>();
-        gridMesh = new Mesh { name = "Placement Grid" };
-        int verticalLineCount = gridWidth + 1;
-        int horizontalLineCount = gridHeight + 1;
-        Vector3[] vertices = new Vector3[(verticalLineCount + horizontalLineCount) * 2];
-        int[] indices = new int[vertices.Length];
-        int vertex = 0;
+        gridMesh = new Mesh { name = "Placement Grid", indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 };
+        var vertices = new List<Vector3>();
+        var waterCells = new bool[gridWidth, gridHeight];
+        for (int x = 0; x < gridWidth; x++)
+            for (int y = 0; y < gridHeight; y++)
+                waterCells[x, y] = IsWaterCell(new Vector2Int(x, y));
 
         for (int x = 0; x <= gridWidth; x++) 
         {
             float worldX = gridOrigin.x + x * cellSize;
-            vertices[vertex] = new Vector3(worldX, gridOrigin.y, -0.05f);
-            vertices[vertex + 1] = new Vector3(worldX, gridOrigin.y + gridHeight * cellSize, -0.05f);
-            indices[vertex] = vertex;
-            indices[vertex + 1] = vertex + 1;
-            vertex += 2;
+            for (int y = 0; y < gridHeight; y++)
+            {
+                if (x > 0 && x < gridWidth && waterCells[x - 1, y] && waterCells[x, y]) continue;
+                float worldY = gridOrigin.y + y * cellSize;
+                vertices.Add(new Vector3(worldX, worldY, -0.05f));
+                vertices.Add(new Vector3(worldX, worldY + cellSize, -0.05f));
+            }
         }
 
         for (int y = 0; y <= gridHeight; y++) 
         {
             float worldY = gridOrigin.y + y * cellSize;
-            vertices[vertex] = new Vector3(gridOrigin.x, worldY, -0.05f);
-            vertices[vertex + 1] = new Vector3(gridOrigin.x + gridWidth * cellSize, worldY, -0.05f);
-            indices[vertex] = vertex;
-            indices[vertex + 1] = vertex + 1;
-            vertex += 2;
+            for (int x = 0; x < gridWidth; x++)
+            {
+                if (y > 0 && y < gridHeight && waterCells[x, y - 1] && waterCells[x, y]) continue;
+                float worldX = gridOrigin.x + x * cellSize;
+                vertices.Add(new Vector3(worldX, worldY, -0.05f));
+                vertices.Add(new Vector3(worldX + cellSize, worldY, -0.05f));
+            }
         }
 
-        gridMesh.vertices = vertices;
+        int[] indices = new int[vertices.Count];
+        for (int i = 0; i < indices.Length; i++) indices[i] = i;
+        gridMesh.SetVertices(vertices);
         gridMesh.SetIndices(indices, MeshTopology.Lines, 0);
         gridMesh.RecalculateBounds();
         meshFilter.sharedMesh = gridMesh;
@@ -1094,7 +1270,8 @@ private void UpdateGhostPreview()
             return;
         }
 
-        ghostRenderer.sprite = prefabRenderer.sprite;
+        ghostRenderer.sprite = prefab.GetComponent<GridPlaceable>()?.IsStoneBridge == true
+            ? SpriteChanger.StoneConnectionSprite(3) : prefabRenderer.sprite;
         ghostRenderer.flipX = prefabRenderer.flipX;
         ghostRenderer.flipY = prefabRenderer.flipY;
 
@@ -1186,25 +1363,32 @@ private void UpdateGhostPreview()
         bool up = false;
         bool down = false;
 
-        if (cellOwners.TryGetValue(rightCell, out GameObject possibleRoad) && possibleRoad.name == "road(Clone)")
+        if (IsRoadAt(rightCell))
         {
             right = true;
-            if (cycle == false) SetRoadSprite(possibleRoad, rightCell, footprint, true);
+            if (!cycle) SetRoadSprite(cellOwners[rightCell], rightCell, footprint, true);
         }
-        if (cellOwners.TryGetValue(leftCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        if (IsRoadAt(leftCell))
         {
             left = true;
-            if (cycle == false) SetRoadSprite(possibleRoad, leftCell, footprint, true);
+            if (!cycle) SetRoadSprite(cellOwners[leftCell], leftCell, footprint, true);
         }
-        if (cellOwners.TryGetValue(upCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        if (IsRoadAt(upCell))
         {
             up = true;
-            if (cycle == false) SetRoadSprite(possibleRoad, upCell, footprint, true);
+            if (!cycle) SetRoadSprite(cellOwners[upCell], upCell, footprint, true);
         }
-        if (cellOwners.TryGetValue(downCell, out possibleRoad) && possibleRoad.name == "road(Clone)")
+        if (IsRoadAt(downCell))
         {
             down = true;
-            if (cycle == false) SetRoadSprite(possibleRoad, downCell, footprint, true);
+            if (!cycle) SetRoadSprite(cellOwners[downCell], downCell, footprint, true);
+        }
+
+        if (road.GetComponent<GridPlaceable>()?.IsBridge == true)
+        {
+            int connections = (right ? 1 : 0) | (left ? 2 : 0) | (up ? 4 : 0) | (down ? 8 : 0);
+            road.GetComponent<SpriteChanger>().ChangeSprite(connections);
+            return;
         }
 
         if ((right && left && up) || (right && left && down) || (right && up && down) || (left && up && down))

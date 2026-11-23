@@ -20,15 +20,15 @@ public static class DisasterVerificationRunner
     private static float speedBefore;
     public static void RunPlayBatch()
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         BeginPlayCheck();
     }
     [MenuItem("Elysium/Verify Disasters in Play Mode")]
     public static void BeginPlayCheck()
     {
         var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        if (EditorApplication.isPlayingOrWillChangePlaymode || scene.isDirty || scene.path != "Assets/Scenes/SampleScene.unity")
-            throw new System.InvalidOperationException("Save SampleScene and exit Play Mode before verification.");
+        if (EditorApplication.isPlayingOrWillChangePlaymode || scene.isDirty || scene.path != "Assets/Scenes/MainScene.unity")
+            throw new System.InvalidOperationException("Save MainScene and exit Play Mode before verification.");
         phase = 0; cycle = 0; nextAction = 0;
         Directory.CreateDirectory("Logs");
         SessionState.SetBool("DisasterPlayCheck", true);
@@ -142,7 +142,7 @@ public static class DisasterVerificationRunner
         foreach (var source in UnityEngine.Object.FindObjectsByType<BuildingPollution>())
         {
             var building = source.GetComponent<GridPlaceable>();
-            if (building == null || building.IsOperational) expectedPollution += source.GetPollutionForDay(1) - source.PollutionRemovalPerDay;
+            if (building == null || ApartmentStatsUI.IsServiceActive(grid, building)) expectedPollution += source.GetPollutionForDay(1) - source.PollutionRemovalPerDay;
         }
         var pollution = UnityEngine.Object.FindAnyObjectByType<PollutionSystem>();
         typeof(PollutionSystem).GetMethod("AddDailyPollution", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)

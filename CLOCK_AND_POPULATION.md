@@ -1,6 +1,6 @@
 # Clock and population handoff
 
-`Assets/UI/ClockHUD.prefab` is a linked instance in SampleScene. Double-click it
+`Assets/UI/ClockHUD.prefab` is a linked instance in MainScene. Double-click it
 to edit the lower-left panel, font, colors, spacing, or add other UI elements.
 TimeEconomyHUD formats TimeManager's time into the assigned Text label. Turn off
 Show Day for time alone. The UI lead's shop and currency display remain connected.
@@ -20,7 +20,7 @@ Purchase prices and daily income/upkeep now share each building's BuildingData d
 Happiness and jobs remain unimplemented placeholders.
 
 Main now supplies apartment, market, road, and Mayor's Office sprites and prefabs
-under Assets/Sprites and Assets/Prefabs. SampleScene maps the CityHall shop entry
+under Assets/Sprites and Assets/Prefabs. MainScene maps the CityHall shop entry
 to the new Mayor's Office prefab, replacing the previously missing source prefab.
 
 The clock's Speed Button cycles 1× → 2× → 4× → 1×. It scales TimeManager and

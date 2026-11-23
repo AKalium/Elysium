@@ -66,6 +66,7 @@
     <Compile Include="Assets\ShopUI\BuildingData\BuildingStoreAdapter.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
     <Compile Include="Assets\Scripts\DailyEconomy.cs" />
+    <Compile Include="Assets\ShopUI\Scripts\BuildingStore\BuildingTooltipUI.cs" />
     <Compile Include="Assets\Scripts\DisasterDamage.cs" />
     <Compile Include="Assets\Scripts\BuildingPollution.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />

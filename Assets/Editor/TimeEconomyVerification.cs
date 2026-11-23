@@ -8,7 +8,7 @@ public static class TimeEconomyVerification
     // Run in an isolated editor process; changes remain in memory.
     public static void Run()
     {
-        EditorSceneManager.OpenScene("Assets/Scenes/SampleScene.unity");
+        EditorSceneManager.OpenScene("Assets/Scenes/MainScene.unity");
         var clock = UnityEngine.Object.FindAnyObjectByType<TimeManager>();
         var economy = UnityEngine.Object.FindAnyObjectByType<DailyEconomy>();
         var grid = UnityEngine.Object.FindAnyObjectByType<GridPlacementSystem>();
@@ -25,6 +25,8 @@ public static class TimeEconomyVerification
         InvokeLifecycle(wallet, "Awake");
         InvokeLifecycle(state, "Awake");
         InvokeLifecycle(clock, "Awake");
+        var nightOverlay = clock.GetComponentInChildren<UnityEngine.UI.Image>(true);
+        Check(nightOverlay && Mathf.Approximately(nightOverlay.color.a, 0f), "No night tint at starting hour");
         InvokeLifecycle(economy, "Awake");
         InvokeLifecycle(economy, "OnEnable");
         InvokeLifecycle(grid, "Awake");
@@ -69,9 +71,9 @@ public static class TimeEconomyVerification
         Check(grid.TryPlace(prefabs[0], new Vector2Int(40, 40), out var house), "Place apartment");
         Check(grid.TryPlace(prefabs[3], new Vector2Int(37, 40), out var market), "Place market");
         Check(grid.TryPlace(prefabs[2], new Vector2Int(39, 38), out var hall), "Place Mayor's Office");
-        int afterPurchase = initialBalance - 850;
+        int afterPurchase = initialBalance - 900;
         Check(wallet.Balance == afterPurchase && economy.Balance == afterPurchase, "Charge once");
-        Check(state.Population == initialPopulation + 10 && state.BuildingCount == initialBuildings + 4, "Apartment population");
+        Check(state.Population == initialPopulation + 8 && state.BuildingCount == initialBuildings + 4, "Apartment population");
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(39, 40), out _) && wallet.Balance == afterPurchase, "Overlap costs nothing");
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(-1, 0), out _) && wallet.Balance == afterPurchase, "Bounds costs nothing");
         long expectedIncome = 0;
@@ -87,6 +89,7 @@ public static class TimeEconomyVerification
         Check(wallet.Balance == afterPurchase && clock.Day == 1, "No early payout");
         clock.AdvanceTime(1.001);
         Check(wallet.Balance == afterPurchase + expectedIncome - expectedUpkeep && state.Balance == wallet.Balance && economy.Balance == wallet.Balance, "Shared midnight settlement");
+        Check(Mathf.Approximately(nightOverlay.color.a, 0.3f), "Night tint at midnight");
         Check(economy.LastIncome == expectedIncome && economy.LastUpkeep == expectedUpkeep, "Per-building rates");
         int settledBalance = wallet.Balance;
         clock.Paused = true;
@@ -94,10 +97,10 @@ public static class TimeEconomyVerification
         Check(wallet.Balance == settledBalance && clock.Day == 2, "Pause");
         clock.Paused = false;
         grid.DestroyBuilding(new Vector2Int(40, 40));
-        Check(wallet.Balance == settledBalance + 50 && !grid.IsCellOccupied(new Vector2Int(40, 40)), "Refund");
+        Check(wallet.Balance == settledBalance + 75 && !grid.IsCellOccupied(new Vector2Int(40, 40)), "Refund");
         Check(state.Population == initialPopulation && state.BuildingCount == initialBuildings + 3, "Population after demolition");
         grid.DestroyBuilding(new Vector2Int(40, 40));
-        Check(wallet.Balance == settledBalance + 50, "No duplicate refund");
+        Check(wallet.Balance == settledBalance + 75, "No duplicate refund");
         Check(wallet.TrySpend(wallet.Balance), "Drain wallet");
         Check(!grid.TryPlace(prefabs[1], new Vector2Int(60, 60), out _), "Unaffordable placement");
         wallet.ApplySettlement(-20);
@@ -119,6 +122,8 @@ public static class TimeEconomyVerification
         clock.AdvanceTime(dayLength / 2d);
         Check(clock.Day == speedDay + 3 && wallet.Balance == beforeFastSettlement + economy.LastNet * 2, "4x applies each midnight settlement");
         speedButton.onClick.Invoke();
+        Check(clock.Speed == 8 && speedLabel.text == "8×", "Button selects 8x");
+        speedButton.onClick.Invoke();
         Check(clock.Speed == 1 && speedLabel.text == "1×", "Button cycles back to 1x");
         InvokeLifecycle(clockView, "OnDisable");
         InvokeLifecycle(clockView, "OnEnable");
@@ -128,6 +133,16 @@ public static class TimeEconomyVerification
         clock.AdvanceTime(dayLength);
         Check(clock.Day == speedDay + 3 && Time.timeScale == 1, "Pause works at increased speed without scaling UI time");
         InvokeLifecycle(clockView, "OnDisable");
+        clock.Paused = false;
+        clock.AdvanceTime(dayLength * 5d / 24d);
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Abs(nightOverlay.color.a - 0.15f) < 0.001f, "Dawn tint fade");
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Approximately(nightOverlay.color.a, 0f), "Night tint clears after sunrise");
+        clock.AdvanceTime(dayLength / 2d);
+        Check(Mathf.Abs(nightOverlay.color.a - 0.15f) < 0.001f, "Dusk tint fade");
+        clock.AdvanceTime(dayLength / 24d);
+        Check(Mathf.Approximately(nightOverlay.color.a, 0.3f), "Night after sunset");
         Debug.Log("TIME_ECONOMY_VERIFICATION_PASSED");
     }
     private static void InvokeLifecycle(MonoBehaviour component, string method)

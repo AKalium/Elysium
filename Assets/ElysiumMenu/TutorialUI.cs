@@ -10,13 +10,16 @@ public class TutorialUI : MonoBehaviour
 
     public void CloseTutorial()
     {
-        var speaker = GetComponent<AudioSource>();
-        if (speaker != null)
+        tutorialPanel.SetActive(false);
+
+        if (_Clip == null) return;
+
+        if (!TryGetComponent<AudioSource>(out var speaker))
         {
-            speaker.clip = _Clip;
-            speaker.Play();
+            speaker = gameObject.AddComponent<AudioSource>();
+            speaker.playOnAwake = false;
         }
 
-        tutorialPanel.SetActive(false);
+        speaker.PlayOneShot(_Clip);
     }
 }

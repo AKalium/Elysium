@@ -126,4 +126,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuildingPollution
   tier: 0
   pollutionPerDay: 0
-  pollutionRemovalPerDay: 5
+  pollutionRemovalPerDay: 6

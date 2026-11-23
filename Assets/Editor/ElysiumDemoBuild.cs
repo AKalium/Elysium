@@ -41,7 +41,7 @@ public static class ElysiumDemoBuild
 
     public static void ValidateDemo()
     {
-        string[] scenes = { "ElysiumMainMenu", "IntroScene", "SampleScene" };
+        string[] scenes = { "ElysiumMainMenu", "IntroScene", "MainScene" };
         var configured = EditorBuildSettings.scenes;
         if (configured.Length < scenes.Length) throw new Exception("Demo scenes are missing from Build Settings.");
         for (int i = 0; i < scenes.Length; i++)

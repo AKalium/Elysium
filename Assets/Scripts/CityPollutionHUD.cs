@@ -1,5 +1,3 @@
-
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,8 +5,8 @@ public class CityPollutionHUD : MonoBehaviour
 {
     [SerializeField] private PollutionSystem pollution;
     [SerializeField] private GridPlacementSystem grid;
-    [SerializeField] private TMP_Text pollutionText;
-    [SerializeField] private TMP_Text pollutionStatusText;
+    [SerializeField] private Text pollutionText;
+    [SerializeField] private Text pollutionStatusText;
     [SerializeField] private Image pollutionBarFill;
 
     [SerializeField] private int displayMaximum = 200;
@@ -42,14 +40,18 @@ public class CityPollutionHUD : MonoBehaviour
         }
 
         pollutionText.text = $"Pollution: {total}{changeText}";
-        pollutionStatusText.text = status;
+        if (pollutionStatusText != null)
+            pollutionStatusText.text = status;
 
-if (status == "Increasing")
-    pollutionStatusText.color = new Color32(179, 65, 57, 255);
-else if (status == "Decreasing")
-    pollutionStatusText.color = new Color32(51, 139, 95, 255);
-else
-    pollutionStatusText.color = new Color32(102, 80, 60, 255);
+        if (pollutionStatusText != null)
+        {
+            if (status.StartsWith("Increasing"))
+                pollutionStatusText.color = new Color32(179, 65, 57, 255);
+            else if (status.StartsWith("Decreasing"))
+                pollutionStatusText.color = new Color32(51, 139, 95, 255);
+            else
+                pollutionStatusText.color = new Color32(102, 80, 60, 255);
+        }
 
         pollutionBarFill.color = Color.Lerp(
             new Color32(51, 139, 95, 255),

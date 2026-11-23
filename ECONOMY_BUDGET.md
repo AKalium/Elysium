@@ -7,7 +7,7 @@ roads. Separate road islands are allowed, but cannot support buildings until
 joined to the central network. Building previews and purchases use this rule.
 The starting tile has normal road upkeep, but no construction charge or refund.
 
-Open `Assets/Scenes/SampleScene.unity` in Unity 6000.6.2f1. The **CITY BUDGET**
+Open `Assets/Scenes/MainScene.unity` in Unity 6000.6.2f1. The **CITY BUDGET**
 button toggles the budget panel. At midnight, the shared wallet receives the
 daily settlement and a report opens for the new day (first report: Day 2).
 It shows gross income, upkeep, net earnings or loss, opening/closing balance,
@@ -97,7 +97,7 @@ shop entries remain unavailable.
 
 ## Edit the UI
 
-`Assets/UI/EconomyBudget.prefab` is linked in SampleScene. Its budget panel,
+`Assets/UI/EconomyBudget.prefab` is linked in MainScene. Its budget panel,
 button, modal report, scrollable detail text and Continue button are editable.
 The full-screen report overlay intercepts pointer clicks to protect the map.
 The setup command **Elysium > Set Up Economy Budget** regenerates this prefab

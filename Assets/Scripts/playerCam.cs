@@ -2,14 +2,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Camera))]
-public class PlayerCam : MonoBehaviour
+public class playerCam : MonoBehaviour
 {
     [SerializeField, Min(0f)] private float moveSpeed = 10f;
     [SerializeField, Min(0f)] private float zoomSpeed = 20f;
     [SerializeField, Min(0.1f)] private float minZoom = 3f;
     [SerializeField, Min(0.1f)] private float maxZoom = 20f;
-    [SerializeField] private Vector2 mapMin;
-    [SerializeField] private Vector2 mapMax;
 
     private InputAction moveAction;
     private Camera controlledCamera;
@@ -20,8 +18,36 @@ public class PlayerCam : MonoBehaviour
     private void LateUpdate()
     {
         if (grid == null) grid = FindAnyObjectByType<GridPlacementSystem>();
+
+        UpdateDrag();
+        if (grid == null) return;
+
+        Rect bounds = grid.WorldBounds;
+        float aspect = controlledCamera.aspect;
+        float maxMapZoom = Mathf.Min(bounds.height * 0.5f, bounds.width * 0.5f / aspect);
+        float zoomLimit = Mathf.Min(maxZoom, maxMapZoom);
+        float zoom = controlledCamera.orthographicSize;
         var mouse = Mouse.current;
-        if (CityPauseMenu.BlocksGameplayInput || grid == null || mouse == null || grid.HasBuildingSelection ||
+
+        // Read UI hover after the EventSystem has processed this frame's pointer input.
+        if (!DisasterSystem.IsCutsceneOpen && !CityPauseMenu.BlocksGameplayInput && mouse != null)
+        {
+            float scroll = mouse.scroll.ReadValue().y;
+            Vector2 pointer = mouse.position.ReadValue();
+            if (scroll != 0f && controlledCamera.pixelRect.Contains(pointer) && !grid.IsPointerOverUI(pointer))
+                zoom = Mathf.Clamp(zoom - scroll * zoomSpeed * 0.01f,
+                    Mathf.Min(minZoom, zoomLimit), zoomLimit);
+        }
+
+        controlledCamera.orthographicSize = Mathf.Min(zoom, zoomLimit);
+        ClampCameraPosition(bounds);
+    }
+
+    private void UpdateDrag()
+    {
+        var mouse = Mouse.current;
+        if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput ||
+            grid == null || mouse == null || grid.HasBuildingSelection ||
             !grid.HasMapHover || !mouse.leftButton.isPressed)
         {
             dragging = false;
@@ -38,9 +64,7 @@ public class PlayerCam : MonoBehaviour
         Vector3 currentWorld = controlledCamera.ScreenToWorldPoint(pointer);
         transform.position += previousWorld - currentWorld;
         previousPointer = pointer;
-        ClampCameraPosition();
     }
-
 
     private void Awake()
     {
@@ -82,48 +106,19 @@ public class PlayerCam : MonoBehaviour
 
         Vector3 movement = transform.right * input.x + transform.up * input.y;
         transform.position += movement * moveSpeed * Time.unscaledDeltaTime;
-
-        if (Mouse.current != null)
-        {
-            float scroll = Mouse.current.scroll.ReadValue().y;
-            if (scroll != 0f)
-            {
-                controlledCamera.orthographicSize = Mathf.Clamp(
-                    controlledCamera.orthographicSize - scroll * zoomSpeed * 0.01f,
-                    minZoom,
-                    maxZoom);
-            }
-        }
-
-        ClampCameraPosition();
     }
 
-    private void ClampCameraPosition()
+    private void ClampCameraPosition(Rect bounds)
     {
-        Rect bounds;
-        if (mapMax.x > mapMin.x && mapMax.y > mapMin.y)
-        {
-            bounds = Rect.MinMaxRect(mapMin.x, mapMin.y, mapMax.x, mapMax.y);
-        }
-        else
-        {
-            if (grid == null) return;
-            bounds = grid.WorldBounds;
-        }
-
         float halfHeight = controlledCamera.orthographicSize;
         float halfWidth = halfHeight * controlledCamera.aspect;
 
-        float minX = bounds.xMin + halfWidth;
-        float maxX = bounds.xMax - halfWidth;
-        float minY = bounds.yMin + halfHeight;
-        float maxY = bounds.yMax - halfHeight;
+        Vector2 travel = Vector2.Max(Vector2.zero, bounds.size * 0.5f - new Vector2(halfWidth, halfHeight));
+        Vector2 center = bounds.center;
 
         Vector3 position = transform.position;
-        position.x = minX > maxX ? bounds.center.x
-            : Mathf.Clamp(position.x, minX, maxX);
-        position.y = minY > maxY ? bounds.center.y
-            : Mathf.Clamp(position.y, minY, maxY);
+        position.x = Mathf.Clamp(position.x, center.x - travel.x, center.x + travel.x);
+        position.y = Mathf.Clamp(position.y, center.y - travel.y, center.y + travel.y);
         transform.position = position;
     }
 }

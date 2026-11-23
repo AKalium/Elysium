@@ -42,6 +42,7 @@ internal sealed class CitySave
         public Vector2Int anchor;
         public Vector2Int footprint;
         public int paidCost;
+        public int constructionDay;
         public int residents;
         public bool foundingApartment;
         public bool pausePurchase;
@@ -68,7 +69,7 @@ internal sealed class CitySave
 internal static class CitySaveSlots
 {
     public const int Count = 3;
-    public const string GameplayScene = "SampleScene";
+    public const string GameplayScene = "MainScene";
     public const string MainMenuScene = "ElysiumMainMenu";
 
     public static CitySave PendingLoad { get; set; }
