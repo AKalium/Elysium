@@ -964,11 +964,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 214608132}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 214608131}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -2152,11 +2152,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 347015866}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 347015865}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -2650,16 +2650,16 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: 3cfae62eaaac7430db166077b741db7e, type: 3}
-    m_FontSize: 56
+    m_FontSize: 30
     m_FontStyle: 0
     m_BestFit: 1
-    m_MinSize: 18
+    m_MinSize: 3
     m_MaxSize: 72
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: Not enough money!
 --- !u!1 &433113397 stripped
@@ -2829,11 +2829,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 448778110}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 448778109}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -4177,7 +4177,6 @@ GameObject:
   - component: {fileID: 784155080}
   - component: {fileID: 784155083}
   - component: {fileID: 784155082}
-  - component: {fileID: 784155081}
   m_Layer: 5
   m_Name: OccupanyPanel
   m_TagString: Untagged
@@ -4205,24 +4204,6 @@ RectTransform:
   m_AnchoredPosition: {x: 165, y: -308.8}
   m_SizeDelta: {x: 300, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &784155081
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 784155079}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33ff5d632c91541f1b3da4c1fe6cf0d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CityPollutionHUD
-  pollution: {fileID: 2100000004}
-  grid: {fileID: 330585549}
-  pollutionText: {fileID: 0}
-  pollutionStatusText: {fileID: 0}
-  pollutionBarFill: {fileID: 0}
-  displayMaximum: 200
 --- !u!114 &784155082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4756,7 +4737,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PollutionHUD
   pollution: {fileID: 2100000004}
-  pollutionSlider: {fileID: 0}
+  pollutionSlider: {fileID: 1741762723}
   pollutionLabel: {fileID: 910000004}
   fillImage: {fileID: 1628754627}
   displayMaximum: 100
@@ -4993,6 +4974,18 @@ PrefabInstance:
       propertyPath: buildingPrice
       value: 
       objectReference: {fileID: 1904030322}
+    - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
+      propertyPath: selectedColor.b
+      value: 0.8632076
+      objectReference: {fileID: 0}
+    - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
+      propertyPath: selectedColor.g
+      value: 0.9015094
+      objectReference: {fileID: 0}
+    - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
+      propertyPath: selectedColor.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: m_text
       value: $900
@@ -5999,9 +5992,9 @@ MonoBehaviour:
   currency: {fileID: 330585551}
   coinsText: {fileID: 1614699442}
   pixelFont: {fileID: 12800000, guid: 3cfae62eaaac7430db166077b741db7e, type: 3}
-  employmentFill: {fileID: 1405049265}
+  employmentFill: {fileID: 0}
   employmentText: {fileID: 606037177}
-  occupancyFill: {fileID: 784155082}
+  occupancyFill: {fileID: 0}
   occupancyText: {fileID: 914175311}
 --- !u!1001 &1289148921
 PrefabInstance:
@@ -6150,11 +6143,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 1289148931}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 1289148930}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -6933,7 +6926,6 @@ GameObject:
   - component: {fileID: 1405049263}
   - component: {fileID: 1405049266}
   - component: {fileID: 1405049265}
-  - component: {fileID: 1405049264}
   m_Layer: 5
   m_Name: EmploymentPanel
   m_TagString: Untagged
@@ -6961,24 +6953,6 @@ RectTransform:
   m_AnchoredPosition: {x: 165, y: -260}
   m_SizeDelta: {x: 300, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1405049264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1405049262}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 33ff5d632c91541f1b3da4c1fe6cf0d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CityPollutionHUD
-  pollution: {fileID: 2100000004}
-  grid: {fileID: 330585549}
-  pollutionText: {fileID: 0}
-  pollutionStatusText: {fileID: 0}
-  pollutionBarFill: {fileID: 0}
-  displayMaximum: 200
 --- !u!114 &1405049265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8332,11 +8306,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 1749543588}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 1749543587}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -8944,6 +8918,7 @@ MonoBehaviour:
     walkRight:
     - {fileID: 1795596428, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
     - {fileID: 241244741, guid: 42578cefe40cd4d5eb15f1df472e477c, type: 3}
+  refreshInterval: 0.5
 --- !u!4 &1813434562
 Transform:
   m_ObjectHideFlags: 0
@@ -9680,11 +9655,11 @@ PrefabInstance:
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingName
       value: 
-      objectReference: {fileID: 253409111}
+      objectReference: {fileID: 1982443925}
     - target: {fileID: 8680717223513938137, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
       propertyPath: buildingPrice
       value: 
-      objectReference: {fileID: 1904030322}
+      objectReference: {fileID: 1982443924}
     m_RemovedComponents:
     - {fileID: 3085869450565128439, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
     - {fileID: 8844835141326801719, guid: 76fa290ce4e83463886ba8b377d4c414, type: 3}
@@ -10920,8 +10895,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CityPollutionHUD
   pollution: {fileID: 2100000004}
   grid: {fileID: 330585549}
-  pollutionText: {fileID: 0}
-  pollutionStatusText: {fileID: 0}
+  pollutionText: {fileID: 1372394718}
+  pollutionStatusText: {fileID: 977118788}
   pollutionBarFill: {fileID: 73126016}
   displayMaximum: 200
 --- !u!1001 &2147580352099903185
