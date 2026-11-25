@@ -68,10 +68,10 @@ MonoBehaviour:
     width: 0.44
     height: 0.92
   - serializedVersion: 2
-    x: 0.53
-    y: 0.62
-    width: 0.31
-    height: 0.36
+    x: 0.51
+    y: 0
+    width: 0.37
+    height: 1
   dailyChance: 0.1
   cooldownDays: 3
   enableTestKeys: 1

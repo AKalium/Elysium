@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>Schedules disasters and population milestones that use the in-scene Dawny cutscene.</summary>
+/// <summary>Schedules in-scene Dawny cutscenes for disasters, milestones, and new city rules.</summary>
 public sealed class DisasterSystem : MonoBehaviour
 {
     private static readonly int[] PopulationMilestones = { 25, 50, 100 };
@@ -27,7 +27,7 @@ public sealed class DisasterSystem : MonoBehaviour
     [SerializeField] private Rect[] portraitUVs = {
         new Rect(0.06f, 0, 0.45f, 0.92f),
         new Rect(0.53f, 0, 0.44f, 0.92f),
-        new Rect(0.53f, 0.62f, 0.31f, 0.36f) };
+        new Rect(0.51f, 0, 0.37f, 1f) };
     [SerializeField, Range(0, 1)] private float dailyChance = 0.1f;
     [SerializeField, Min(0)] private int cooldownDays = 3;
     [SerializeField] private bool enableTestKeys = true;
@@ -41,6 +41,7 @@ public sealed class DisasterSystem : MonoBehaviour
     private IntroDialogue conversation;
     private int milestonesReached;
     private int milestonesShown;
+    private int cityRuleAnnouncementsShown;
     public static bool IsCutsceneOpen { get; private set; }
     public string LastSummary { get; private set; }
     private float summaryUntil;
@@ -52,6 +53,7 @@ public sealed class DisasterSystem : MonoBehaviour
         save.pendingDisasterRoll = pendingDailyRoll;
         save.populationMilestonesReached = milestonesReached;
         save.populationMilestonesShown = milestonesShown;
+        save.cityRuleAnnouncementsShown = cityRuleAnnouncementsShown;
     }
 
     internal void RestoreSchedule(CitySave save)
@@ -60,6 +62,7 @@ public sealed class DisasterSystem : MonoBehaviour
         pendingDailyRoll = save.pendingDisasterRoll;
         milestonesReached = Mathf.Clamp(save.populationMilestonesReached, 0, PopulationMilestones.Length);
         milestonesShown = Mathf.Clamp(save.populationMilestonesShown, 0, milestonesReached);
+        cityRuleAnnouncementsShown = Mathf.Clamp(save.cityRuleAnnouncementsShown, 0, CityRuleChanges.Announcements.Length);
     }
 
     private void Awake()
@@ -99,6 +102,17 @@ public sealed class DisasterSystem : MonoBehaviour
         // Count after placement has initialized the apartment's residents.
         RecordPopulationMilestones();
         if (AnotherScreenOpen()) return;
+        bool canPlayDialogue = dialoguePrefab != null && FindAnyObjectByType<TutorialUI>()?.IsOpen != true;
+        if (canPlayDialogue && cityRuleAnnouncementsShown < CityRuleChanges.Announcements.Length)
+        {
+            var announcement = CityRuleChanges.Announcements[cityRuleAnnouncementsShown];
+            if (clock.Day >= announcement.Day)
+            {
+                StartCoroutine(PlayDawnyCutscene(announcement.Message, onFinished: () => cityRuleAnnouncementsShown++));
+                return;
+            }
+        }
+
         var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
         bool typing = selected != null && (selected.GetComponent<InputField>() != null || selected.GetComponent<TMP_InputField>() != null);
         var keyboard = Keyboard.current;
@@ -107,8 +121,7 @@ public sealed class DisasterSystem : MonoBehaviour
             if (keyboard.kKey.wasPressedThisFrame) { Trigger(DisasterKind.Fire); return; }
             if (keyboard.lKey.wasPressedThisFrame) { Trigger(DisasterKind.Flood); return; }
         }
-        if (milestonesShown < milestonesReached && dialoguePrefab != null &&
-            FindAnyObjectByType<TutorialUI>()?.IsOpen != true)
+        if (milestonesShown < milestonesReached && canPlayDialogue)
         {
             int residents = PopulationMilestones[milestonesShown];
             StartCoroutine(PlayDawnyCutscene($"You reached {residents} residents!", onFinished: () => milestonesShown++));

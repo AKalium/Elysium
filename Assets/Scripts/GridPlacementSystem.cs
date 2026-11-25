@@ -608,8 +608,8 @@ private int ghostPrefabIndex = -1;
             int leaving = 0;
             if (residents >= 5)
             {
-                if (completedDay >= 3 && happiness < 30) { leaving += 2; unhappyDepartures += 2; }
-                if (completedDay >= 6 && employed == 0) { leaving += 2; unemployedDepartures += 2; }
+                if (completedDay >= CityRuleChanges.LowHappinessDepartureDay && happiness < 30) { leaving += 2; unhappyDepartures += 2; }
+                if (completedDay >= CityRuleChanges.UnemploymentDepartureDay && employed == 0) { leaving += 2; unemployedDepartures += 2; }
             }
             if (leaving > 0) departures.Add(home, leaving);
             weightedHappiness += (long)happiness * residents;

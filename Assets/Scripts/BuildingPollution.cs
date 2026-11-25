@@ -29,10 +29,17 @@ public class BuildingPollution : MonoBehaviour
         return factory ? FactoryPollutionForDay(day) : PollutionPerDay;
     }
 
+    internal const int InitialFactoryPollution = 8;
+    internal const int FirstFactoryPollutionIncreaseDay = 15;
+    internal const int FactoryPollutionIncreaseInterval = 3;
+    internal const int MaximumFactoryPollution = 18;
+    internal const int MaximumFactoryPollutionDay = FirstFactoryPollutionIncreaseDay +
+        (MaximumFactoryPollution - InitialFactoryPollution - 1) * FactoryPollutionIncreaseInterval;
+
     public static int FactoryPollutionForDay(int day)
     {
-        if (day < 15) return 8;
-        return 9 + Mathf.Min(9, (day - 15) / 3);
+        if (day < FirstFactoryPollutionIncreaseDay) return InitialFactoryPollution;
+        int increases = 1 + (day - FirstFactoryPollutionIncreaseDay) / FactoryPollutionIncreaseInterval;
+        return Mathf.Min(MaximumFactoryPollution, InitialFactoryPollution + increases);
     }
-
 }

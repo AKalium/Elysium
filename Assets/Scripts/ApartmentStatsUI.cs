@@ -101,7 +101,8 @@ public class ApartmentStatsUI : MonoBehaviour
         happiness = Mathf.Clamp(Mathf.RoundToInt(happiness + serviceEffect + GetParkBonus(grid, selected)), 0, 100);
     }
 
-    public static float MissingServicePenalty(int normalPenalty, int day) => normalPenalty * (day <= 30 ? .5f : 1f);
+    public static float MissingServicePenalty(int normalPenalty, int day) =>
+        normalPenalty * (day < CityRuleChanges.FullMissingServicePenaltyDay ? .5f : 1f);
 
     private static float[] GetMissingServicePenalties(GridPlacementSystem grid)
     {

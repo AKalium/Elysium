@@ -29,6 +29,7 @@ internal sealed class CitySave
     public bool pendingDisasterRoll;
     public int populationMilestonesReached;
     public int populationMilestonesShown;
+    public int cityRuleAnnouncementsShown;
     public bool hasPreviousDayStats;
     public float previousHappiness;
     public float previousEmployment;
