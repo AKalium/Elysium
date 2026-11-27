@@ -12,6 +12,12 @@ public class PollutionSystem : MonoBehaviour
     public int TotalPollution { get; private set; }
     public int LastDailyPollution { get; private set; }
 
+    internal void RestorePollution(CitySave save)
+    {
+        TotalPollution = save.totalPollution;
+        LastDailyPollution = save.lastDailyPollution;
+    }
+
     private void OnEnable()
     {
         if (clock != null)

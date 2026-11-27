@@ -67,6 +67,7 @@ private int ghostPrefabIndex = -1;
     private readonly HashSet<Vector2Int> demolitionStrokeVisited = new();
     private readonly HashSet<Vector2Int> connectedRoads = new();
     private bool roadNetworkDirty = true;
+    private bool restoredMap;
     private RoadNetworkVisuals roadVisuals;
     public int MapVersion { get; private set; }
     public float CellSize => cellSize;
@@ -112,7 +113,7 @@ private int ghostPrefabIndex = -1;
 
     private void Start()
     {
-        if (IsRoadAt(CentralRoadCell)) return;
+        if (restoredMap || CitySaveSlots.PendingLoad != null || IsRoadAt(CentralRoadCell)) return;
         foreach (var prefab in placeablePrefabs)
         {
             if (prefab == null || prefab.name != "road") continue;
@@ -181,7 +182,12 @@ private int ghostPrefabIndex = -1;
 
     private void Update()
 {
-    if (DisasterSystem.IsCutsceneOpen) return;
+    if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput)
+    {
+        hasHoveredCell = false;
+        ResetStrokes();
+        return;
+    }
     UpdateSelection();
     UpdateHoveredCell();
     GetComponent<ApartmentStatsUI>().ProcessSelectionInput();
@@ -281,11 +287,7 @@ private int ghostPrefabIndex = -1;
             return false;
         }
 
-        Vector3 position = new Vector3(
-            gridOrigin.x + (cell.x + footprint.x * 0.5f) * cellSize,
-            gridOrigin.y + (cell.y + footprint.y * 0.5f) * cellSize,
-            prefab.transform.position.z);
-        placedObject = Instantiate(prefab, position, prefab.transform.rotation);
+        placedObject = CreatePlacement(prefab, cell, footprint);
         if (cost > 0 && !currency.TrySpend(cost))
         {
             Destroy(placedObject);
@@ -293,17 +295,7 @@ private int ghostPrefabIndex = -1;
             return false;
         }
 
-        List<Vector2Int> cells = new List<Vector2Int>(footprint.x * footprint.y);
-        for (int x = 0; x < footprint.x; x++)
-        {
-            for (int y = 0; y < footprint.y; y++)
-            {
-                Vector2Int occupiedCell = cell + new Vector2Int(x, y);
-                cellOwners.Add(occupiedCell, placedObject);
-                cells.Add(occupiedCell);
-            }
-        }
-
+        RegisterPlacement(placedObject, cell, footprint, cost);
         if (prefab.name == "road" && freeRoadsUsed < 10) freeRoadsUsed++;
         var placedBuilding = placedObject.GetComponent<GridPlaceable>();
         placedBuilding?.InitializeConstructionDay(FindAnyObjectByType<TimeManager>()?.Day ?? 1);
@@ -316,8 +308,6 @@ private int ghostPrefabIndex = -1;
         else if (placedBuilding != null && placedBuilding.IsApartment)
             placedBuilding.InitializeEmptyApartment();
         GameState.Instance?.RefreshPopulation();
-        objectCells.Add(placedObject, cells);
-        paidCosts.Add(placedObject, cost);
         if (Time.timeScale == 0f) pausePurchases.Add(placedObject);
 
         if (placedBuilding != null && placedBuilding.IsRoad)
@@ -329,6 +319,144 @@ private int ghostPrefabIndex = -1;
 
         MapVersion++;
         return true;
+    }
+
+    private GameObject CreatePlacement(GameObject prefab, Vector2Int cell, Vector2Int footprint)
+    {
+        Vector3 position = new Vector3(
+            gridOrigin.x + (cell.x + footprint.x * 0.5f) * cellSize,
+            gridOrigin.y + (cell.y + footprint.y * 0.5f) * cellSize,
+            prefab.transform.position.z);
+        return Instantiate(prefab, position, prefab.transform.rotation);
+    }
+
+    private void RegisterPlacement(GameObject building, Vector2Int anchor, Vector2Int footprint, int cost)
+    {
+        var cells = new List<Vector2Int>(footprint.x * footprint.y);
+        for (int x = 0; x < footprint.x; x++)
+        {
+            for (int y = 0; y < footprint.y; y++)
+            {
+                var cell = anchor + new Vector2Int(x, y);
+                cellOwners.Add(cell, building);
+                cells.Add(cell);
+            }
+        }
+
+        objectCells.Add(building, cells);
+        paidCosts.Add(building, cost);
+    }
+
+    internal void CaptureMap(CitySave save)
+    {
+        save.balance = currency.ExactBalance;
+        save.freeRoadsUsed = freeRoadsUsed;
+        save.foundingApartmentsUsed = foundingApartmentsUsed;
+        save.hasPreviousDayStats = HasPreviousDayStats;
+        save.previousHappiness = PreviousHappiness;
+        save.previousEmployment = PreviousEmployment;
+        save.previousOccupancy = PreviousOccupancy;
+        save.previousPollution = PreviousPollution;
+        save.placements = new List<CitySave.Placement>(objectCells.Count);
+        foreach (var item in GetPlacedObjects())
+        {
+            var building = item.Object.GetComponent<GridPlaceable>();
+            var damage = item.Object.GetComponent<DisasterDamage>();
+            save.placements.Add(new CitySave.Placement
+            {
+                buildingId = building.Definition.BuildingId,
+                anchor = item.Anchor,
+                footprint = item.Footprint,
+                paidCost = paidCosts[item.Object],
+                constructionDay = building.ConstructionDay,
+                residents = building.SavedResidents,
+                foundingApartment = building.IsFoundingApartment,
+                pausePurchase = save.keyboardPaused && pausePurchases.Contains(item.Object),
+                damaged = damage != null && damage.IsDamaged,
+                disaster = damage != null ? damage.Disaster : default
+            });
+        }
+    }
+
+    internal void RestoreMap(CitySave save)
+    {
+        // Validate the whole layout before changing scene state. A snapshot can
+        // contain disconnected roads and service buildings with a damaged prerequisite.
+        var prefabs = new Dictionary<string, GameObject>(System.StringComparer.Ordinal);
+        foreach (var prefab in placeablePrefabs)
+        {
+            var definition = prefab != null ? prefab.GetComponent<GridPlaceable>()?.Definition : null;
+            if (definition != null && !string.IsNullOrEmpty(definition.BuildingId))
+                prefabs.Add(definition.BuildingId, prefab);
+        }
+
+        var occupied = new HashSet<Vector2Int>();
+        foreach (var entry in save.placements)
+        {
+            if (entry == null || string.IsNullOrEmpty(entry.buildingId) ||
+                !prefabs.TryGetValue(entry.buildingId, out var prefab) ||
+                entry.footprint != GetFootprint(prefab) || !FitsGrid(entry.anchor, entry.footprint) ||
+                entry.paidCost < 0 || entry.residents < 0 ||
+                (entry.damaged && !System.Enum.IsDefined(typeof(DisasterKind), entry.disaster)))
+                throw new System.IO.InvalidDataException("The save contains an invalid or unavailable building.");
+
+            var placeable = prefab.GetComponent<GridPlaceable>();
+            if (entry.damaged && placeable.IsRoad &&
+                (!placeable.IsBridge || placeable.IsStoneBridge || entry.disaster != DisasterKind.Flood))
+                throw new System.IO.InvalidDataException("The save contains invalid road damage.");
+
+            for (int x = 0; x < entry.footprint.x; x++)
+                for (int y = 0; y < entry.footprint.y; y++)
+                    if (!occupied.Add(entry.anchor + new Vector2Int(x, y)))
+                        throw new System.IO.InvalidDataException("The save contains overlapping buildings.");
+        }
+
+        if (restoredMap || objectCells.Count != 0)
+            throw new System.InvalidOperationException("A saved city must be restored into a fresh scene.");
+
+        var gameState = GameState.Instance;
+        if (gameState != null) gameState.RestoringMap = true;
+        try
+        {
+            foreach (var entry in save.placements)
+            {
+                var building = CreatePlacement(prefabs[entry.buildingId], entry.anchor, entry.footprint);
+                RegisterPlacement(building, entry.anchor, entry.footprint, entry.paidCost);
+                var placeable = building.GetComponent<GridPlaceable>();
+                placeable.RestoreResidents(entry.residents, entry.foundingApartment);
+                placeable.InitializeConstructionDay(entry.constructionDay);
+                if (entry.pausePurchase && save.keyboardPaused) pausePurchases.Add(building);
+            }
+
+            foreach (var entry in save.placements)
+            {
+                if (entry.damaged)
+                {
+                    var building = cellOwners[entry.anchor];
+                    (building.GetComponent<DisasterDamage>() ?? building.AddComponent<DisasterDamage>()).Apply(entry.disaster);
+                }
+            }
+        }
+        finally
+        {
+            if (gameState != null) gameState.RestoringMap = false;
+        }
+
+        freeRoadsUsed = save.freeRoadsUsed;
+        foundingApartmentsUsed = save.foundingApartmentsUsed;
+        HasPreviousDayStats = save.hasPreviousDayStats;
+        PreviousHappiness = save.previousHappiness;
+        PreviousEmployment = save.previousEmployment;
+        PreviousOccupancy = save.previousOccupancy;
+        PreviousPollution = save.previousPollution;
+        currency.RestoreBalance(save.balance);
+        foreach (var item in GetPlacedObjects())
+            if (item.IsRoad) SetRoadSprite(item.Object, item.Anchor, item.Footprint, true);
+
+        roadNetworkDirty = true;
+        restoredMap = true;
+        MapVersion++;
+        gameState?.RefreshPopulation();
     }
 
     public bool TryUpgradeBridge(Vector2Int cell)
@@ -480,8 +608,8 @@ private int ghostPrefabIndex = -1;
             int leaving = 0;
             if (residents >= 5)
             {
-                if (completedDay >= 3 && happiness < 30) { leaving += 2; unhappyDepartures += 2; }
-                if (completedDay >= 6 && employed == 0) { leaving += 2; unemployedDepartures += 2; }
+                if (completedDay >= CityRuleChanges.LowHappinessDepartureDay && happiness < 30) { leaving += 2; unhappyDepartures += 2; }
+                if (completedDay >= CityRuleChanges.UnemploymentDepartureDay && employed == 0) { leaving += 2; unemployedDepartures += 2; }
             }
             if (leaving > 0) departures.Add(home, leaving);
             weightedHappiness += (long)happiness * residents;
@@ -512,7 +640,7 @@ private int ghostPrefabIndex = -1;
         int departed = unhappyDepartures + unemployedDepartures;
         long closing = population + arrived - departed;
         var summary = new System.Text.StringBuilder();
-        summary.AppendLine($"Population at midnight: {population} → {closing} ({(arrived - departed).ToString("+0;-0;0")})");
+        summary.AppendLine($"Population at midnight: {population} to {closing} ({(arrived - departed).ToString("+0;-0;0")})");
         summary.AppendLine($"Arrivals: +{arrived}");
         summary.AppendLine($"  Happiness above 50: +{happinessArrivals}");
         summary.AppendLine($"  Net income incentive: +{earningsArrivals}");
@@ -675,11 +803,13 @@ private bool HasReachedBuildingLimit(GameObject prefab)
 
     return existing >= placeable.MaxAllowed;
 }
+    private bool FitsGrid(Vector2Int anchor, Vector2Int footprint) =>
+        anchor.x >= 0 && anchor.y >= 0 &&
+        anchor.x <= gridWidth - footprint.x && anchor.y <= gridHeight - footprint.y;
+
     private bool CanPlace(Vector2Int anchor, Vector2Int footprint, bool bridge)
     {
-        if (anchor.x < 0 || anchor.y < 0 ||
-            anchor.x + footprint.x > gridWidth ||
-            anchor.y + footprint.y > gridHeight)
+        if (!FitsGrid(anchor, footprint))
         {
             return false;
         }
@@ -900,7 +1030,7 @@ private bool HasReachedBuildingLimit(GameObject prefab)
             return;
         }
 
-        if (keyboard.escapeKey.wasPressedThisFrame || mouse.rightButton.isPressed) 
+        if (keyboard.escapeKey.wasPressedThisFrame || (mouse != null && mouse.rightButton.isPressed))
         {
             SelectPlaceable(-1);
             return;

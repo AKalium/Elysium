@@ -30,7 +30,7 @@ public class playerCam : MonoBehaviour
         var mouse = Mouse.current;
 
         // Read UI hover after the EventSystem has processed this frame's pointer input.
-        if (!DisasterSystem.IsCutsceneOpen && mouse != null)
+        if (!DisasterSystem.IsCutsceneOpen && !CityPauseMenu.BlocksGameplayInput && mouse != null)
         {
             float scroll = mouse.scroll.ReadValue().y;
             Vector2 pointer = mouse.position.ReadValue();
@@ -46,7 +46,8 @@ public class playerCam : MonoBehaviour
     private void UpdateDrag()
     {
         var mouse = Mouse.current;
-        if (DisasterSystem.IsCutsceneOpen || grid == null || mouse == null || grid.HasBuildingSelection ||
+        if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput ||
+            grid == null || mouse == null || grid.HasBuildingSelection ||
             !grid.HasMapHover || !mouse.leftButton.isPressed)
         {
             dragging = false;
@@ -69,6 +70,7 @@ public class playerCam : MonoBehaviour
     {
         controlledCamera = GetComponent<Camera>();
         controlledCamera.orthographic = true;
+        grid = GetComponent<GridPlacementSystem>();
 
         moveAction = new InputAction("Move", InputActionType.Value, expectedControlType: "Vector2");
         moveAction.AddCompositeBinding("2DVector")
@@ -95,7 +97,7 @@ public class playerCam : MonoBehaviour
 
     private void Update()
     {
-        if (DisasterSystem.IsCutsceneOpen) return;
+        if (DisasterSystem.IsCutsceneOpen || CityPauseMenu.BlocksGameplayInput) return;
         Vector2 input = moveAction.ReadValue<Vector2>();
         if (input.sqrMagnitude > 1f)
         {

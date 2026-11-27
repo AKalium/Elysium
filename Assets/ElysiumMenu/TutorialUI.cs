@@ -6,6 +6,8 @@ public class TutorialUI : MonoBehaviour
 
     [SerializeField] private AudioClip _Clip;
 
+    internal bool IsOpen => tutorialPanel != null && tutorialPanel.activeInHierarchy;
+
     public void CloseTutorial()
     {
         tutorialPanel.SetActive(false);

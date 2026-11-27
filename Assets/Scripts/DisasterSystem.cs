@@ -4,10 +4,13 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using TMPro;
 
-/// <summary>Scene-local disaster scheduling and a reusable in-scene Dawny conversation.</summary>
+/// <summary>Schedules in-scene Dawny cutscenes for disasters, milestones, and new city rules.</summary>
 public sealed class DisasterSystem : MonoBehaviour
 {
+    private static readonly int[] PopulationMilestones = { 25, 50, 100 };
+
     public const int FirstDisasterDay = 8;
     public const int FloodPollutionThreshold = 100;
     public const int FirePollutionThreshold = 150;
@@ -24,7 +27,7 @@ public sealed class DisasterSystem : MonoBehaviour
     [SerializeField] private Rect[] portraitUVs = {
         new Rect(0.06f, 0, 0.45f, 0.92f),
         new Rect(0.53f, 0, 0.44f, 0.92f),
-        new Rect(0.53f, 0.62f, 0.31f, 0.36f) };
+        new Rect(0.51f, 0, 0.37f, 1f) };
     [SerializeField, Range(0, 1)] private float dailyChance = 0.1f;
     [SerializeField, Min(0)] private int cooldownDays = 3;
     [SerializeField] private bool enableTestKeys = true;
@@ -36,9 +39,31 @@ public sealed class DisasterSystem : MonoBehaviour
     private float previousTimeScale;
     private GameObject overlay;
     private IntroDialogue conversation;
+    private int milestonesReached;
+    private int milestonesShown;
+    private int cityRuleAnnouncementsShown;
     public static bool IsCutsceneOpen { get; private set; }
     public string LastSummary { get; private set; }
     private float summaryUntil;
+
+    internal void CaptureSchedule(CitySave save)
+    {
+        RecordPopulationMilestones();
+        save.lastDisasterDay = lastDisasterDay;
+        save.pendingDisasterRoll = pendingDailyRoll;
+        save.populationMilestonesReached = milestonesReached;
+        save.populationMilestonesShown = milestonesShown;
+        save.cityRuleAnnouncementsShown = cityRuleAnnouncementsShown;
+    }
+
+    internal void RestoreSchedule(CitySave save)
+    {
+        lastDisasterDay = save.lastDisasterDay;
+        pendingDailyRoll = save.pendingDisasterRoll;
+        milestonesReached = Mathf.Clamp(save.populationMilestonesReached, 0, PopulationMilestones.Length);
+        milestonesShown = Mathf.Clamp(save.populationMilestonesShown, 0, milestonesReached);
+        cityRuleAnnouncementsShown = Mathf.Clamp(save.cityRuleAnnouncementsShown, 0, CityRuleChanges.Announcements.Length);
+    }
 
     private void Awake()
     {
@@ -47,6 +72,7 @@ public sealed class DisasterSystem : MonoBehaviour
         if (grid == null) grid = FindAnyObjectByType<GridPlacementSystem>();
     }
     private void OnEnable() { if (clock != null) clock.Midnight += QueueDailyRoll; }
+
     private void OnDisable()
     {
         if (clock != null) clock.Midnight -= QueueDailyRoll;
@@ -57,6 +83,13 @@ public sealed class DisasterSystem : MonoBehaviour
     }
     private void QueueDailyRoll(int day) => pendingDailyRoll = true;
 
+    private void RecordPopulationMilestones()
+    {
+        int population = GameState.Instance != null ? GameState.Instance.Population : 0;
+        while (milestonesReached < PopulationMilestones.Length && population >= PopulationMilestones[milestonesReached])
+            milestonesReached++;
+    }
+
     private bool AnotherScreenOpen()
     {
         if (IsCutsceneOpen || clock == null || clock.Paused || Time.timeScale == 0) return true;
@@ -66,15 +99,35 @@ public sealed class DisasterSystem : MonoBehaviour
 
     private void Update()
     {
+        // Count after placement has initialized the apartment's residents.
+        RecordPopulationMilestones();
         if (AnotherScreenOpen()) return;
+        bool canPlayDialogue = dialoguePrefab != null && FindAnyObjectByType<TutorialUI>()?.IsOpen != true;
+        if (canPlayDialogue && cityRuleAnnouncementsShown < CityRuleChanges.Announcements.Length)
+        {
+            var announcement = CityRuleChanges.Announcements[cityRuleAnnouncementsShown];
+            if (clock.Day >= announcement.Day)
+            {
+                StartCoroutine(PlayDawnyCutscene(announcement.Message, onFinished: () => cityRuleAnnouncementsShown++));
+                return;
+            }
+        }
+
         var selected = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
-        bool typing = selected != null && selected.GetComponent<InputField>() != null;
+        bool typing = selected != null && (selected.GetComponent<InputField>() != null || selected.GetComponent<TMP_InputField>() != null);
         var keyboard = Keyboard.current;
         if (enableTestKeys && !typing && keyboard != null)
         {
             if (keyboard.kKey.wasPressedThisFrame) { Trigger(DisasterKind.Fire); return; }
             if (keyboard.lKey.wasPressedThisFrame) { Trigger(DisasterKind.Flood); return; }
         }
+        if (milestonesShown < milestonesReached && canPlayDialogue)
+        {
+            int residents = PopulationMilestones[milestonesShown];
+            StartCoroutine(PlayDawnyCutscene($"You reached {residents} residents!", onFinished: () => milestonesShown++));
+            return;
+        }
+
         if (!pendingDailyRoll) return;
         pendingDailyRoll = false;
         if (clock.Day - lastDisasterDay <= cooldownDays || pollution == null) return;
@@ -120,11 +173,31 @@ public sealed class DisasterSystem : MonoBehaviour
         }
         lastDisasterDay = clock.Day;
         pendingDailyRoll = false;
-        StartCoroutine(PlayDisaster(kind, candidates));
+        StartCoroutine(PlayDawnyCutscene(() => ApplyDisaster(kind, candidates),
+            () => summaryUntil = Time.unscaledTime + 8));
         return true;
     }
 
-    private IEnumerator PlayDisaster(DisasterKind kind, List<GridPlaceable> candidates)
+    private string ApplyDisaster(DisasterKind kind, List<GridPlaceable> candidates)
+    {
+        int count = DamageCount(kind, candidates.Count);
+        var selectedTargets = new List<GridPlaceable>(count);
+        for (int i = 0; i < count; i++)
+        {
+            int pick = Random.Range(i, candidates.Count);
+            (candidates[i], candidates[pick]) = (candidates[pick], candidates[i]);
+            selectedTargets.Add(candidates[i]);
+        }
+        int damaged = ApplySelectedTargets(kind, selectedTargets, out int saved);
+        string savedText = kind == DisasterKind.Fire ? $" {saved} saved by fire stations." : "";
+        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {damaged} structures damaged.{savedText} Demolish and rebuild damaged bridges to restore access. Disconnected buildings are temporarily unavailable.";
+        return $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {damaged} structure{(damaged == 1 ? " is" : "s are")} damaged.{savedText} Demolish and rebuild damaged structures. Buildings cut off by a damaged bridge are preserved and will reactivate when road access is restored.";
+    }
+
+    private IEnumerator PlayDawnyCutscene(string line, System.Action onFinished) =>
+        PlayDawnyCutscene(() => line, onFinished);
+
+    private IEnumerator PlayDawnyCutscene(System.Func<string> getLine, System.Action onFinished)
     {
         previousPaused = clock.Paused;
         previousTimeScale = Time.timeScale;
@@ -132,7 +205,7 @@ public sealed class DisasterSystem : MonoBehaviour
         IsCutsceneOpen = true;
         clock.Paused = true;
         Time.timeScale = 0;
-        overlay = new GameObject("Disaster Fade", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
+        overlay = new GameObject("Dawny Cutscene Fade", typeof(RectTransform), typeof(Canvas), typeof(GraphicRaycaster));
         var canvas = overlay.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 30000;
@@ -144,24 +217,13 @@ public sealed class DisasterSystem : MonoBehaviour
         var image = shade.GetComponent<Image>();
         yield return Fade(image, 0, 1);
 
-        int count = DamageCount(kind, candidates.Count);
-        var selectedTargets = new List<GridPlaceable>();
-        for (int i = 0; i < count; i++)
-        {
-            int pick = Random.Range(i, candidates.Count);
-            (candidates[i], candidates[pick]) = (candidates[pick], candidates[i]);
-            selectedTargets.Add(candidates[i]);
-        }
-        int damaged = ApplySelectedTargets(kind, selectedTargets, out int saved);
-        string savedText = kind == DisasterKind.Fire ? $" {saved} saved by fire stations." : "";
-        LastSummary = $"{(kind == DisasterKind.Fire ? "Fire" : "Flood")}: {damaged} structures damaged.{savedText} Demolish and rebuild damaged bridges to restore access. Disconnected buildings are temporarily unavailable.";
+        string line = getLine();
         // Instantiate inactive so configuration happens before the dialogue starts.
-        var holder = new GameObject("Disaster Conversation Holder");
+        var holder = new GameObject("Dawny Conversation Holder");
         holder.SetActive(false);
         conversation = Instantiate(dialoguePrefab, holder.transform);
         int total = pollution != null ? pollution.TotalPollution : 0;
         int form = total >= FirePollutionThreshold ? 2 : total >= FloodPollutionThreshold ? 1 : 0;
-        string line = $"{(kind == DisasterKind.Fire ? "There was a fire" : "There was a small flood")} in Elysium. {damaged} structure{(damaged == 1 ? " is" : "s are")} damaged.{savedText} Demolish and rebuild damaged structures. Buildings cut off by a damaged bridge are preserved and will reactivate when road access is restored.";
         conversation.ConfigureConversation(line, idleForms[form], talkingForms[form], portraitUVs[form]);
         foreach (var uiCanvas in conversation.GetComponentsInChildren<Canvas>(true)) uiCanvas.sortingOrder = 30001;
         conversation.transform.SetParent(null, false);
@@ -172,7 +234,7 @@ public sealed class DisasterSystem : MonoBehaviour
         yield return Fade(image, 1, 0);
         Destroy(overlay);
         ReleasePause();
-        summaryUntil = Time.unscaledTime + 8;
+        onFinished?.Invoke();
     }
 
     public bool HasFireCoverage(GridPlaceable target)
